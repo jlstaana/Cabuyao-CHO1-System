@@ -21,7 +21,7 @@ class PrescriptionController extends Controller {
     }
     public function download($id) {
         $prescription = Prescription::with(['items.medicine', 'patient.user', 'doctor.user'])->findOrFail($id);
-        $pdf = Pdf::loadHTML('<h1>E-Prescription for ' . $prescription->patient->user->name . '</h1><p>Doctor: ' . $prescription->doctor->user->name . '</p><ul>' . $prescription->items->map(fn($i) => "<li>{$i->medicine->name} - {$i->dosage} ({$i->frequency})</li>")->join('') . '</ul>');
+        $pdf = Pdf::loadView('pdf.prescription', compact('prescription'));
         return $pdf->download("prescription_{$id}.pdf");
     }
 }
