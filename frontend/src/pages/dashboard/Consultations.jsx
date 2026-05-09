@@ -50,12 +50,12 @@ export default function Consultations() {
             </div>
             <div className="pt-4 border-t border-slate-100 flex gap-2">
               {c.status === 'Scheduled' && (
-                <Link to={\`/room/\${c.id}\`} className="flex-1 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors">
+                <Link to={`/room/${c.id}`} className="flex-1 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors">
                   <Video size={18} /> Join Call
                 </Link>
               )}
               {c.status === 'Completed' && user?.role === 'Doctor' && (
-                <Link to={\`/room/\${c.id}\`} className="flex-1 flex items-center justify-center gap-2 bg-sky-50 text-sky-700 py-2 rounded-lg font-medium hover:bg-sky-100 transition-colors">
+                <Link to={`/room/${c.id}`} className="flex-1 flex items-center justify-center gap-2 bg-sky-50 text-sky-700 py-2 rounded-lg font-medium hover:bg-sky-100 transition-colors">
                   <FilePlus size={18} /> E-Prescribe
                 </Link>
               )}
