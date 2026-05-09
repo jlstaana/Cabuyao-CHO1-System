@@ -17,9 +17,8 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // 1. Create Admin Account
-        User::create([
+        User::updateOrCreate(['email' => 'admin@cabuyao.gov.ph'], [
             'name' => 'System Admin',
-            'email' => 'admin@cabuyao.gov.ph',
             'password' => Hash::make('password123'),
             'role' => 'Admin',
             'first_login' => false,
@@ -27,39 +26,35 @@ class UserSeeder extends Seeder
         ]);
 
         // 2. Create Doctor Account
-        $doctorUser = User::create([
-            'name' => 'Dr. Jane Smith',
-            'email' => 'doctor@cabuyao.gov.ph',
+        $doctorUser = User::updateOrCreate(['email' => 'doctor@cabuyao.gov.ph'], [
+            'name' => 'CHO Doctor',
             'password' => Hash::make('password123'),
             'role' => 'Doctor',
             'first_login' => false,
             'is_active' => true,
         ]);
         
-        Doctor::create([
-            'user_id' => $doctorUser->id,
+        Doctor::updateOrCreate(['user_id' => $doctorUser->id], [
             'specialization' => 'General Medicine',
             'license_no' => 'LIC-123456',
         ]);
 
         // 3. Create Staff Account
-        $staffUser = User::create([
-            'name' => 'John Desk',
-            'email' => 'staff@cabuyao.gov.ph',
+        $staffUser = User::updateOrCreate(['email' => 'staff@cabuyao.gov.ph'], [
+            'name' => 'CHO Staff',
             'password' => Hash::make('password123'),
             'role' => 'Staff',
             'first_login' => false,
             'is_active' => true,
         ]);
         
-        Staff::create([
-            'user_id' => $staffUser->id,
+        Staff::updateOrCreate(['user_id' => $staffUser->id], [
             'department' => 'Records',
         ]);
 
         // 4. Create Patient Account
-        $patientUser = User::create([
-            'name' => 'Juan Dela Cruz',
+        $patientUser = User::updateOrCreate(['email' => 'patient@gmail.com'], [
+            'name' => 'CHO Patient',
             'email' => 'patient@gmail.com',
             'password' => Hash::make('password123'),
             'role' => 'Patient',
@@ -67,11 +62,10 @@ class UserSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        Patient::create([
-            'user_id' => $patientUser->id,
-            'dob' => '1990-01-01',
-            'address' => 'Brgy. Banlic, Cabuyao City',
-            'contact_no' => '09123456789',
+        Patient::updateOrCreate(['user_id' => $patientUser->id], [
+            'dob' => null,
+            'address' => null,
+            'contact_no' => null,
         ]);
     }
 }

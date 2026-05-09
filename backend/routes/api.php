@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController, PatientController, AdminController, ConsultationController, MedicineController, PrescriptionController, AnalyticsController};
+use App\Http\Controllers\{AuthController, PatientController, AdminController, ConsultationController, MedicineController, PrescriptionController, AnalyticsController, DoctorController};
 
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -16,6 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/patients/profile', [PatientController::class, 'profile']);
     Route::put('/patients/profile', [PatientController::class, 'updateProfile']);
     Route::get('/patients/history', [PatientController::class, 'history']);
+    Route::get('/doctor/profile', [DoctorController::class, 'profile']);
+    Route::put('/doctor/profile', [DoctorController::class, 'updateProfile']);
 
     // Consultations
     Route::get('/consultations', [ConsultationController::class, 'index']);
@@ -37,7 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/prescriptions/{id}/download', [PrescriptionController::class, 'download']);
 
     // Admin Users
-    Route::get('/admin/users', [AdminController::class, 'getUsers'])->middleware('role:Admin');
+    Route::get('/admin/users', [AdminController::class, 'getUsers'])->middleware('role:Admin,Staff');
     Route::post('/admin/doctors', [AdminController::class, 'createDoctor'])->middleware('role:Admin');
     Route::post('/admin/staff', [AdminController::class, 'createStaff'])->middleware('role:Admin');
 

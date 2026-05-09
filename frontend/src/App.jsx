@@ -19,6 +19,11 @@ const Profile = lazy(() => import('./pages/dashboard/Profile'));
 const TeleconsultationRoom = lazy(() => import('./pages/dashboard/TeleconsultationRoom'));
 const Medicines = lazy(() => import('./pages/dashboard/Medicines'));
 const Analytics = lazy(() => import('./pages/dashboard/Analytics'));
+const Notifications = lazy(() => import('./pages/dashboard/Notifications'));
+const VitalSigns = lazy(() => import('./pages/dashboard/VitalSigns'));
+const MedicalImages = lazy(() => import('./pages/dashboard/MedicalImages'));
+const ConsultationHistory = lazy(() => import('./pages/dashboard/ConsultationHistory'));
+const PatientRecords = lazy(() => import('./pages/dashboard/PatientRecords'));
 
 // Loading fallback spinner
 const PageLoader = () => (
@@ -50,6 +55,11 @@ function App() {
               <Route path="/room/:id" element={<TeleconsultationRoom />} />
               <Route path="/medicines" element={<Medicines />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/vitals" element={<VitalSigns />} />
+              <Route path="/medical-images" element={<MedicalImages />} />
+              <Route path="/consultation-history" element={<ConsultationHistory />} />
+              <Route path="/patient-records" element={<PatientRecords />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

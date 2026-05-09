@@ -23,14 +23,25 @@ export default function Medicines() {
     try {
       const response = await api.get('/medicines');
       setMedicines(response.data);
-    } catch (err) {
+    } catch {
       toast.error('Failed to load medicines');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchMedicines(); }, []);
+  useEffect(() => {
+    let isActive = true;
+    api.get('/medicines')
+      .then((response) => {
+        if (isActive) setMedicines(response.data);
+      })
+      .catch(() => toast.error('Failed to load medicines'))
+      .finally(() => {
+        if (isActive) setLoading(false);
+      });
+    return () => { isActive = false; };
+  }, []);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -52,7 +63,7 @@ export default function Medicines() {
       toast.success('Medicine updated!');
       setIsEditModalOpen(false);
       fetchMedicines();
-    } catch (err) {
+    } catch {
       toast.error('Failed to update medicine');
     }
   };
@@ -63,7 +74,7 @@ export default function Medicines() {
       await api.delete(`/medicines/${medicine.id}`);
       toast.success('Medicine deactivated');
       fetchMedicines();
-    } catch (err) {
+    } catch {
       toast.error('Failed to deactivate medicine');
     }
   };

@@ -7,6 +7,25 @@ use Illuminate\Http\Request;
 
 class DoctorController extends Controller
 {
+    public function profile(Request $request)
+    {
+        return response()->json($request->user()->load('doctor'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        if ($request->filled('name')) {
+            $request->user()->update(['name' => $request->name]);
+        }
+
+        $doctor = $request->user()->doctor;
+        if ($doctor) {
+            $doctor->update($request->only(['specialization', 'license_no']));
+        }
+
+        return response()->json($request->user()->load('doctor'));
+    }
+
     /**
      * Display a listing of the resource.
      */

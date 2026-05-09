@@ -10,13 +10,38 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [changingPwd, setChangingPwd] = useState(false);
   const [showPwdModal, setShowPwdModal] = useState(false);
-  const [profile, setProfile] = useState({ name: user?.name || '', contact_no: '', dob: '', address: '', availability: '' });
+  const [profile, setProfile] = useState({
+    name: user?.name || '',
+    contact_no: '', dob: '', address: '',
+    specialization: '', license_no: '',
+  });
   const [pwdForm, setPwdForm] = useState({ current_password: '', password: '', password_confirmation: '' });
 
   useEffect(() => {
+    if (!user) return;
     if (user?.role === 'Patient') {
       api.get('/patients/profile').then(res => {
-        if (res.data) setProfile(p => ({ ...p, ...res.data }));
+        if (res.data) {
+          setProfile(p => ({
+            ...p,
+            name: res.data.name || p.name,
+            contact_no: res.data.patient?.contact_no || '',
+            dob: res.data.patient?.dob || '',
+            address: res.data.patient?.address || '',
+          }));
+        }
+      }).catch(console.error);
+    }
+    if (user?.role === 'Doctor') {
+      api.get('/doctor/profile').then(res => {
+        if (res.data) {
+          setProfile(p => ({
+            ...p,
+            name: res.data.name || p.name,
+            specialization: res.data.doctor?.specialization || '',
+            license_no: res.data.doctor?.license_no || '',
+          }));
+        }
       }).catch(console.error);
     }
   }, [user]);
@@ -28,9 +53,12 @@ export default function Profile() {
       if (user.role === 'Patient') {
         await api.put('/patients/profile', profile);
       }
+      if (user.role === 'Doctor') {
+        await api.put('/doctor/profile', profile);
+      }
       await fetchUser();
       toast.success('Profile updated successfully!');
-    } catch (err) {
+    } catch {
       toast.error('Failed to save profile');
     } finally {
       setSaving(false);
@@ -94,7 +122,7 @@ export default function Profile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                  <input value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none" />
+                  <input value={profile.name || user?.name || ''} onChange={e => setProfile({ ...profile, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
@@ -122,9 +150,17 @@ export default function Profile() {
               )}
 
               {user?.role === 'Doctor' && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2"><Clock size={16} /> Availability Schedule</label>
-                  <input value={profile.availability} onChange={e => setProfile({ ...profile, availability: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. Mon-Fri, 9AM - 5PM" />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Specialization</label>
+                      <input value={profile.specialization} onChange={e => setProfile({ ...profile, specialization: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. General Practice" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2"><Clock size={16} /> License Number</label>
+                      <input value={profile.license_no} onChange={e => setProfile({ ...profile, license_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                    </div>
+                  </div>
                 </div>
               )}
 

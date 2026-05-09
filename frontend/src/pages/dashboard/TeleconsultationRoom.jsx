@@ -35,7 +35,7 @@ export default function TeleconsultationRoom() {
         const res = await api.get('/consultations');
         const current = res.data.find(c => c.id === parseInt(id));
         if (current) setConsultation(current);
-      } catch (err) {
+      } catch {
         toast.error("Could not load consultation context");
       }
     };
@@ -76,7 +76,7 @@ export default function TeleconsultationRoom() {
       }
       setCallActive(false);
       navigate('/consultations');
-      toast('Call ended', { icon: '👋' });
+      toast('Call ended');
     }
   };
 
@@ -105,7 +105,7 @@ export default function TeleconsultationRoom() {
     try {
       await api.post(`/consultations/${id}/vitals`, vitals);
       toast.success('Vitals recorded to database!');
-    } catch (err) {
+    } catch {
       toast.error('Failed to save vitals');
     }
   };
@@ -131,7 +131,7 @@ export default function TeleconsultationRoom() {
 
       toast.success('Consultation marked as Completed!');
       navigate('/consultations');
-    } catch (err) {
+    } catch {
       toast.error('Error completing consultation');
     }
   };
@@ -172,10 +172,8 @@ export default function TeleconsultationRoom() {
                />
                {!cameraActive && <div className="absolute inset-0 flex items-center justify-center text-slate-500">Camera Disabled</div>}
                
-               {/* PIP Local Camera Preview (Mocking the Remote User as main, Local as PIP) */}
                <div className="absolute bottom-6 right-6 w-32 h-48 bg-slate-700 rounded-2xl border-2 border-white/20 shadow-2xl overflow-hidden flex items-center justify-center">
-                  <span className="text-xs text-white/50 z-10 absolute">Remote User</span>
-                  <div className="w-full h-full bg-slate-600 animate-pulse"></div>
+                  <span className="text-xs text-white/50 px-3 text-center">Remote video connects through the telehealth service</span>
                </div>
              </>
            )}
@@ -208,11 +206,11 @@ export default function TeleconsultationRoom() {
                </form>
             ) : (
                <div className="space-y-2 text-sm">
-                  {consultation?.vital_signs?.length > 0 ? (
+                  {consultation?.vital_signs ? (
                     <>
-                      <div className="flex justify-between border-b border-slate-50 pb-2"><span className="text-slate-500">BP</span><span className="font-medium">{consultation.vital_signs[0].blood_pressure}</span></div>
-                      <div className="flex justify-between border-b border-slate-50 pb-2"><span className="text-slate-500">Heart Rate</span><span className="font-medium">{consultation.vital_signs[0].heart_rate} bpm</span></div>
-                      <div className="flex justify-between pb-2"><span className="text-slate-500">Temperature</span><span className="font-medium">{consultation.vital_signs[0].temperature} °C</span></div>
+                      <div className="flex justify-between border-b border-slate-50 pb-2"><span className="text-slate-500">BP</span><span className="font-medium">{consultation.vital_signs.blood_pressure}</span></div>
+                      <div className="flex justify-between border-b border-slate-50 pb-2"><span className="text-slate-500">Heart Rate</span><span className="font-medium">{consultation.vital_signs.heart_rate} bpm</span></div>
+                      <div className="flex justify-between pb-2"><span className="text-slate-500">Temperature</span><span className="font-medium">{consultation.vital_signs.temperature} °C</span></div>
                     </>
                   ) : <p className="text-slate-400 italic">Waiting for patient to submit vitals...</p>}
                </div>
@@ -223,7 +221,7 @@ export default function TeleconsultationRoom() {
          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><Upload size={18} className="text-indigo-500"/> Medical Images</h3>
             {user.role === 'Patient' && (
-               <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition-colors cursor-pointer mb-4" onClick={() => toast.success('Image upload simulator triggered')}>
+               <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition-colors cursor-pointer mb-4" onClick={() => navigate('/medical-images')}>
                   <Upload size={24} className="mx-auto text-slate-400 mb-2" />
                   <p className="text-xs text-slate-500">Click to upload lab results or imaging</p>
                </div>
