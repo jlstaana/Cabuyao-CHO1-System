@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import Skeleton from '../../components/Skeleton';
+import Modal from '../../components/Modal';
 import toast from 'react-hot-toast';
 import { Video, FilePlus, Calendar, CheckCircle, Clock } from 'lucide-react';
 
@@ -11,20 +12,56 @@ export default function Consultations() {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [consultations, setConsultations] = useState([]);
+  
+  // Modals state
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState(null);
+  const [doctors, setDoctors] = useState([]);
+  const [approveForm, setApproveForm] = useState({ doctor_id: '', scheduled_at: '' });
+
+  const fetchConsultations = async () => {
+    try {
+      const res = await api.get('/consultations');
+      setConsultations(res.data);
+    } catch (err) {
+      toast.error('Failed to load consultations');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchConsultations = async () => {
-      try {
-        const res = await api.get('/consultations');
-        setConsultations(res.data);
-      } catch (err) {
-        toast.error('Failed to load consultations');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchConsultations();
-  }, []);
+    if (user?.role === 'Admin' || user?.role === 'Staff') {
+       api.get('/admin/users').then(res => setDoctors(res.data.filter(u => u.role === 'Doctor'))).catch(console.error);
+    }
+  }, [user]);
+
+  const handleRequestConsultation = async () => {
+    try {
+      await api.post('/consultations/request');
+      toast.success('Consultation requested successfully!');
+      fetchConsultations();
+    } catch (err) {
+      toast.error('Failed to request consultation');
+    }
+  };
+
+  const handleApproveSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/consultations/${selectedConsultation.id}/status`, {
+        status: 'Scheduled',
+        doctor_id: approveForm.doctor_id,
+        scheduled_at: approveForm.scheduled_at
+      });
+      toast.success('Consultation Scheduled!');
+      setIsApproveModalOpen(false);
+      fetchConsultations();
+    } catch (err) {
+      toast.error('Failed to schedule consultation');
+    }
+  };
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -43,7 +80,7 @@ export default function Consultations() {
           <p className="text-slate-500">Manage and conduct online patient visits.</p>
         </div>
         {user?.role === 'Patient' && (
-          <button className="flex items-center gap-2 bg-sky-500 text-white px-4 py-2 rounded-xl hover:bg-sky-600 transition-colors shadow-sm">
+          <button onClick={handleRequestConsultation} className="flex items-center gap-2 bg-sky-500 text-white px-4 py-2 rounded-xl hover:bg-sky-600 transition-colors shadow-sm">
             <Calendar size={18} /> Request Consultation
           </button>
         )}
@@ -85,7 +122,7 @@ export default function Consultations() {
                 </Link>
               )}
               {c.status === 'Pending' && (user?.role === 'Admin' || user?.role === 'Staff') && (
-                <button className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-100 transition-colors">
+                <button onClick={() => { setSelectedConsultation(c); setIsApproveModalOpen(true); }} className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-100 transition-colors">
                   <CheckCircle size={18} /> Approve
                 </button>
               )}
@@ -93,6 +130,26 @@ export default function Consultations() {
           </div>
         ))}
       </div>
+
+      <Modal isOpen={isApproveModalOpen} onClose={() => setIsApproveModalOpen(false)} title="Approve & Schedule Consultation">
+        <form onSubmit={handleApproveSubmit} className="space-y-4">
+           <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Assign Doctor</label>
+              <select required value={approveForm.doctor_id} onChange={e => setApproveForm({...approveForm, doctor_id: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20">
+                 <option value="">Select Doctor...</option>
+                 {doctors.map(d => <option key={d.doctor?.id} value={d.doctor?.id}>Dr. {d.name}</option>)}
+              </select>
+           </div>
+           <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Date & Time</label>
+              <input required type="datetime-local" value={approveForm.scheduled_at} onChange={e => setApproveForm({...approveForm, scheduled_at: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20" />
+           </div>
+           <div className="pt-4 flex justify-end gap-3 mt-6">
+              <button type="button" onClick={() => setIsApproveModalOpen(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-emerald-500 text-white font-medium hover:bg-emerald-600 rounded-xl">Schedule Consultation</button>
+           </div>
+        </form>
+      </Modal>
     </div>
   );
 }

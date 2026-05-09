@@ -13,22 +13,37 @@ export default function ManageUsers() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
+  const [formData, setFormData] = useState({ name: '', email: '', role: 'Doctor', specialization: 'General', department: 'Outpatient' });
   
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get('/admin/users');
+      setUsers(response.data);
+    } catch (error) {
+      toast.error('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await api.get('/admin/users');
-        setUsers(response.data);
-      } catch (error) {
-        toast.error('Failed to load users');
-      } finally {
-        setLoading(false);
-      }
-    };
     if (user?.role === 'Admin' || user?.role === 'Staff') {
       fetchUsers();
     }
   }, [user]);
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const endpoint = formData.role === 'Doctor' ? '/admin/doctors' : '/admin/staff';
+      await api.post(endpoint, formData);
+      toast.success('User generated successfully!');
+      setIsModalOpen(false);
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create user');
+    }
+  };
 
   if (user?.role !== 'Admin' && user?.role !== 'Staff') {
     return <div className="p-8 text-center text-slate-500 bg-white rounded-2xl shadow-sm border border-slate-100">You do not have permission to view this page.</div>;
@@ -120,17 +135,25 @@ export default function ManageUsers() {
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create New User Account">
-        <form className="space-y-4">
-           <div><label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label><input className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20" /></div>
-           <div><label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label><input type="email" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20" /></div>
+        <form onSubmit={handleCreateUser} className="space-y-4">
+           <div><label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label><input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20" /></div>
+           <div><label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label><input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20" /></div>
            <div><label className="block text-sm font-medium text-slate-700 mb-1">Assign Role</label>
-              <select className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20">
-                 <option>Doctor</option><option>Staff</option>
+              <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20">
+                 <option value="Doctor">Doctor</option><option value="Staff">Staff</option>
               </select>
            </div>
+           
+           {formData.role === 'Doctor' && (
+             <div><label className="block text-sm font-medium text-slate-700 mb-1">Specialization</label><input required value={formData.specialization} onChange={e => setFormData({...formData, specialization: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20" /></div>
+           )}
+           {formData.role === 'Staff' && (
+             <div><label className="block text-sm font-medium text-slate-700 mb-1">Department</label><input required value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20" /></div>
+           )}
+
            <div className="pt-4 flex justify-end gap-3 mt-6">
               <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
-              <button type="button" onClick={() => {toast.success('User generated successfully!'); setIsModalOpen(false);}} className="px-5 py-2.5 bg-sky-500 text-white font-medium hover:bg-sky-600 rounded-xl">Create Account</button>
+              <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-medium hover:bg-sky-600 rounded-xl">Create Account</button>
            </div>
         </form>
       </Modal>

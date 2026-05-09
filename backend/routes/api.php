@@ -23,13 +23,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/consultations/{id}/vitals', [ConsultationController::class, 'recordVitals']);
     Route::post('/consultations/{id}/images', [ConsultationController::class, 'uploadImage']);
     Route::put('/consultations/{id}/status', [ConsultationController::class, 'updateStatus']);
+    Route::post('/consultations/{id}/status', [ConsultationController::class, 'updateStatus']);
     Route::post('/consultations/{id}/complete', [ConsultationController::class, 'complete']);
     
     // Medicines & Prescriptions
     Route::get('/medicines', [MedicineController::class, 'index']);
-    Route::post('/medicines', [MedicineController::class, 'store'])->middleware('role:Admin');
-    Route::put('/medicines/{id}', [MedicineController::class, 'update'])->middleware('role:Admin');
-    Route::delete('/medicines/{id}', [MedicineController::class, 'deactivate'])->middleware('role:Admin');
+    Route::post('/medicines', [MedicineController::class, 'store'])->middleware('role:Admin,Staff');
+    Route::put('/medicines/{id}', [MedicineController::class, 'update'])->middleware('role:Admin,Staff');
+    Route::delete('/medicines/{id}', [MedicineController::class, 'deactivate'])->middleware('role:Admin,Staff');
     
     Route::get('/prescriptions', [PrescriptionController::class, 'index']);
     Route::post('/prescriptions', [PrescriptionController::class, 'store']);
