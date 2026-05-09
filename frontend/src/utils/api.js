@@ -16,4 +16,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    } else if (error.message === 'Network Error' || (error.response && error.response.status >= 500)) {
+       // Only trigger a console error, UI components handle their own specific toast errors
+       console.error('API Network or Server Error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
