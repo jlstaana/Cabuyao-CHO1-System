@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/prescriptions/{id}/download', [PrescriptionController::class, 'download']);
 
     // Admin Users
+    Route::get('/admin/users', [AdminController::class, 'getUsers'])->middleware('role:Admin');
     Route::post('/admin/doctors', [AdminController::class, 'createDoctor'])->middleware('role:Admin');
     Route::post('/admin/staff', [AdminController::class, 'createStaff'])->middleware('role:Admin');
 

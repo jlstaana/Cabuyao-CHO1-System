@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import Modal from '../../components/Modal';
@@ -5,6 +6,7 @@ import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import { UserPlus, Archive, CheckCircle, Search, Filter } from 'lucide-react';
 import SEO from '../../components/SEO';
+import api from '../../utils/api';
 
 export default function ManageUsers() {
   const { user } = useAuthStore();
@@ -12,17 +14,21 @@ export default function ManageUsers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
   
-  // Simulate network loading skeletal states
   useEffect(() => {
-    setTimeout(() => {
-      setUsers([
-        { id: 1, name: 'Dr. Jane Smith', email: 'doctor@cabuyao.gov.ph', role: 'Doctor', active: true },
-        { id: 2, name: 'John Desk', email: 'staff@cabuyao.gov.ph', role: 'Staff', active: true },
-        { id: 3, name: 'Juan Dela Cruz', email: 'patient@gmail.com', role: 'Patient', active: false },
-      ]);
-      setLoading(false);
-    }, 800);
-  }, []);
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get('/admin/users');
+        setUsers(response.data);
+      } catch (error) {
+        toast.error('Failed to load users');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user?.role === 'Admin' || user?.role === 'Staff') {
+      fetchUsers();
+    }
+  }, [user]);
 
   if (user?.role !== 'Admin' && user?.role !== 'Staff') {
     return <div className="p-8 text-center text-slate-500 bg-white rounded-2xl shadow-sm border border-slate-100">You do not have permission to view this page.</div>;
@@ -51,16 +57,6 @@ export default function ManageUsers() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input type="text" placeholder="Search by name or email..." className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-slate-50 focus:bg-white transition-all" />
            </div>
-           <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <select className="pl-10 pr-8 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 appearance-none bg-slate-50 transition-all font-medium text-slate-700">
-                  <option>All Roles</option>
-                  <option>Admin</option>
-                  <option>Doctor</option>
-                  <option>Staff</option>
-                  <option>Patient</option>
-              </select>
-           </div>
         </div>
         
         <div className="overflow-x-auto">
@@ -75,7 +71,6 @@ export default function ManageUsers() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                // Skeletal Rows
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>
                     <td className="px-6 py-4"><Skeleton className="h-10 w-48" /></td>
@@ -107,14 +102,13 @@ export default function ManageUsers() {
                       `}>{u.role}</span>
                     </td>
                     <td className="px-6 py-4">
-                      {u.active ? (
+                      {u.is_active ? (
                         <span className="flex items-center gap-1.5 text-emerald-600 text-sm font-semibold bg-emerald-50 px-2.5 py-1 rounded-md w-fit"><CheckCircle size={16} /> Active</span>
                       ) : (
                         <span className="flex items-center gap-1.5 text-slate-500 text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded-md w-fit"><Archive size={16} /> Archived</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="text-sky-600 hover:text-sky-800 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-sky-50 transition-colors mr-2">Edit</button>
                       <button className="text-rose-500 hover:text-rose-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors">Deactivate</button>
                     </td>
                   </tr>
@@ -125,31 +119,18 @@ export default function ManageUsers() {
         </div>
       </div>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Create New User Account"
-      >
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create New User Account">
         <form className="space-y-4">
-           <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-              <input className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all" placeholder="e.g. Dr. Juan Santos" />
-           </div>
-           <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-              <input type="email" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all" placeholder="user@cabuyao.gov.ph" />
-           </div>
-           <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Assign Role</label>
-              <select className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all bg-white">
-                 <option>Doctor</option>
-                 <option>Staff</option>
-                 <option>Admin</option>
+           <div><label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label><input className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20" /></div>
+           <div><label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label><input type="email" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20" /></div>
+           <div><label className="block text-sm font-medium text-slate-700 mb-1">Assign Role</label>
+              <select className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20">
+                 <option>Doctor</option><option>Staff</option>
               </select>
            </div>
-           <div className="pt-4 border-t border-slate-100 flex justify-end gap-3 mt-6">
+           <div className="pt-4 flex justify-end gap-3 mt-6">
               <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
-              <button type="button" onClick={() => {toast.success('User generated successfully!'); setIsModalOpen(false);}} className="px-5 py-2.5 bg-sky-500 text-white font-medium hover:bg-sky-600 rounded-xl shadow-md shadow-sky-200 transition-all">Create Account</button>
+              <button type="button" onClick={() => {toast.success('User generated successfully!'); setIsModalOpen(false);}} className="px-5 py-2.5 bg-sky-500 text-white font-medium hover:bg-sky-600 rounded-xl">Create Account</button>
            </div>
         </form>
       </Modal>
