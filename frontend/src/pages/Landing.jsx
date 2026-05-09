@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white">
+      <SEO title="Home" description="Welcome to the Cabuyao City Health Office Portal" />
       <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
         <h1 className="text-2xl font-black text-sky-600 tracking-tighter">Cabuyao<span className="text-slate-800">CHO</span></h1>
         <div className="space-x-4">

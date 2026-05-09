@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { HelmetProvider } from 'react-helmet-async';
 
 // Eager load layout shells for immediate rendering without layout shift
 import AuthLayout from './layouts/AuthLayout';
@@ -24,28 +25,30 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <BrowserRouter>
-      <Toaster position="top-right" />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Route>
+    <HelmetProvider>
+      <BrowserRouter>
+        <Toaster position="top-right" />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Route>
 
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<Overview />} />
-            <Route path="/users" element={<ManageUsers />} />
-            <Route path="/consultations" element={<Consultations />} />
-            <Route path="/prescriptions" element={<Prescriptions />} />
-          </Route>
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<Overview />} />
+              <Route path="/users" element={<ManageUsers />} />
+              <Route path="/consultations" element={<Consultations />} />
+              <Route path="/prescriptions" element={<Prescriptions />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 }
 

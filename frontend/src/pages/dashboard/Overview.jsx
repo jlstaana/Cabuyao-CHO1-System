@@ -1,5 +1,6 @@
 import useAuthStore from '../../store/useAuthStore';
 import { Activity, Users, FileText, TrendingUp } from 'lucide-react';
+import SEO from '../../components/SEO';
 
 export default function Overview() {
   const { user } = useAuthStore();
@@ -13,6 +14,7 @@ export default function Overview() {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <SEO title="Dashboard" description="Overview of City Health Office metrics" />
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
         <p className="text-slate-500 mt-1">Welcome back, {user?.name}. Here's what's happening today.</p>

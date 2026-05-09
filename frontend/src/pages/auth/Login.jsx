@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import SEO from '../../components/SEO';
 
 export default function Login() {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -23,6 +24,7 @@ export default function Login() {
 
   return (
     <div>
+      <SEO title="Login" description="Sign in to your Cabuyao CHO account" />
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
         <p className="text-slate-500 mt-2 text-sm">Sign in to your Cabuyao CHO account</p>
