@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import { Video, FilePlus, Calendar, CheckCircle, Clock } from 'lucide-react';
 
@@ -49,14 +50,14 @@ export default function Consultations() {
             </div>
             <div className="pt-4 border-t border-slate-100 flex gap-2">
               {c.status === 'Scheduled' && (
-                <button className="flex-1 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors">
+                <Link to={\`/room/\${c.id}\`} className="flex-1 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors">
                   <Video size={18} /> Join Call
-                </button>
+                </Link>
               )}
               {c.status === 'Completed' && user?.role === 'Doctor' && (
-                <button className="flex-1 flex items-center justify-center gap-2 bg-sky-50 text-sky-700 py-2 rounded-lg font-medium hover:bg-sky-100 transition-colors">
+                <Link to={\`/room/\${c.id}\`} className="flex-1 flex items-center justify-center gap-2 bg-sky-50 text-sky-700 py-2 rounded-lg font-medium hover:bg-sky-100 transition-colors">
                   <FilePlus size={18} /> E-Prescribe
-                </button>
+                </Link>
               )}
               {c.status === 'Pending' && (user?.role === 'Admin' || user?.role === 'Staff') && (
                 <button className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-100 transition-colors">
