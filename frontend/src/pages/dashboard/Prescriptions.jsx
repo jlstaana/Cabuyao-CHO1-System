@@ -68,7 +68,7 @@ export default function Prescriptions() {
             </div>
             
             <button 
-              onClick={() => window.open(\`http://127.0.0.1:8000/api/prescriptions/\${p.id}/download\`, '_blank')}
+              onClick={() => window.open(`http://127.0.0.1:8000/api/prescriptions/${p.id}/download`, '_blank')}
               className="w-full flex items-center justify-center gap-2 bg-slate-50 text-slate-700 py-2.5 rounded-xl font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors border border-slate-200 hover:border-emerald-200"
             >
               <Download size={18} /> Download PDF
