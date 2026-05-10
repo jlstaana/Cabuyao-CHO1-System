@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
+import CHOLogo from '../components/CHOLogo';
 import {
   LogOut, Home, Users, FileText, Bell, Menu, X, Pill,
   BarChart2, ClipboardList, Stethoscope, ShieldCheck,
@@ -157,6 +158,7 @@ export default function DashboardLayout() {
       {/* Top Navbar */}
       <header className="bg-sky-600 text-white shadow-md px-4 py-3 flex justify-between items-center z-30 relative">
          <div className="flex items-center gap-4">
+            <CHOLogo light to="/dashboard" />
             {/* Desktop Sidebar Toggle */}
             <button 
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
@@ -171,10 +173,6 @@ export default function DashboardLayout() {
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            
-            <h1 className="text-xl font-black tracking-tight flex items-center gap-1">
-               Cabuyao<span className="text-sky-200 font-bold">CHO</span>
-            </h1>
          </div>
 
          <div className="flex items-center gap-4">

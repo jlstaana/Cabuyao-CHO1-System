@@ -8,6 +8,7 @@ import {
   Video, ClipboardList, AlertCircle, ImagePlus,
 } from 'lucide-react';
 import SEO from '../../components/SEO';
+import Footer from '../../components/Footer';
 
 const EMPTY_STATS = {
   summary: {},
@@ -295,6 +296,7 @@ export default function Overview() {
       {user?.role === 'Doctor' && <DoctorOverview user={user} consultations={consultations} prescriptions={prescriptions} />}
       {user?.role === 'Patient' && <PatientOverview user={user} consultations={consultations} prescriptions={prescriptions} />}
       {user?.role === 'Staff' && <StaffOverview user={user} stats={stats} consultations={consultations} medicines={medicines} />}
+      <Footer className="mt-10 overflow-hidden rounded-2xl" />
     </div>
   );
 }
