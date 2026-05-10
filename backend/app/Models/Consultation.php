@@ -3,7 +3,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Consultation extends Model {
-    protected $fillable = ['patient_id', 'doctor_id', 'status', 'scheduled_at'];
+    protected $fillable = ['patient_id', 'doctor_id', 'requested_specialization', 'status', 'scheduled_at'];
     protected $casts = ['scheduled_at' => 'datetime'];
     public function patient() { return $this->belongsTo(Patient::class); }
     public function doctor() { return $this->belongsTo(Doctor::class); }

@@ -15,6 +15,6 @@ class PatientController extends Controller {
         return response()->json($request->user()->load('patient'));
     }
     public function history(Request $request) {
-        return response()->json($request->user()->patient->consultations()->with('doctor.user', 'prescription')->get());
+        return response()->json($request->user()->patient->consultations()->with('doctor.user', 'prescription.items.medicine')->get());
     }
 }

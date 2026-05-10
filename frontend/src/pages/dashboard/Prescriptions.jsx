@@ -9,6 +9,7 @@ import PageTitle from '../../components/PageTitle';
 export default function Prescriptions() {
   const [loading, setLoading] = useState(true);
   const [prescriptions, setPrescriptions] = useState([]);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
     const fetchPrescriptions = async () => {
@@ -23,6 +24,27 @@ export default function Prescriptions() {
     };
     fetchPrescriptions();
   }, []);
+
+  const handleDownload = async (prescriptionId) => {
+    setDownloadingId(prescriptionId);
+    try {
+      const response = await api.get(`/prescriptions/${prescriptionId}/download`, {
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `prescription_${prescriptionId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download prescription PDF');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -64,10 +86,11 @@ export default function Prescriptions() {
             </div>
             
             <button 
-              onClick={() => window.open(`http://127.0.0.1:8000/api/prescriptions/${p.id}/download`, '_blank')}
+              onClick={() => handleDownload(p.id)}
+              disabled={downloadingId === p.id}
               className="w-full flex items-center justify-center gap-2 bg-slate-50 text-slate-700 py-2.5 rounded-xl font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors border border-slate-200 hover:border-emerald-200"
             >
-              <Download size={18} /> Download PDF
+              <Download size={18} /> {downloadingId === p.id ? 'Downloading...' : 'Download PDF'}
             </button>
           </div>
         ))}

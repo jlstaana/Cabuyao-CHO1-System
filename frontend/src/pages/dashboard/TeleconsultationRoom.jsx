@@ -1,10 +1,65 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import SEO from '../../components/SEO';
-import { Video, Mic, MicOff, VideoOff, PhoneOff, Upload, Activity, FileText, Pill, Plus, CheckCircle } from 'lucide-react';
+import { Video, Mic, MicOff, VideoOff, PhoneOff, Upload, Activity, FileText, Pill, Plus, CheckCircle, Wifi } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const VIDEO_QUALITY_PROFILES = {
+  high: {
+    label: 'High',
+    constraints: {
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
+      frameRate: { ideal: 30, max: 30 },
+    },
+  },
+  standard: {
+    label: 'Standard',
+    constraints: {
+      width: { ideal: 960 },
+      height: { ideal: 540 },
+      frameRate: { ideal: 24, max: 30 },
+    },
+  },
+  low: {
+    label: 'Low',
+    constraints: {
+      width: { ideal: 640 },
+      height: { ideal: 360 },
+      frameRate: { ideal: 15, max: 20 },
+    },
+  },
+};
+
+function getAdaptiveVideoQuality() {
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+  if (connection?.saveData || ['slow-2g', '2g'].includes(connection?.effectiveType)) {
+    return 'low';
+  }
+
+  if (connection?.effectiveType === '3g' || window.innerWidth < 768) {
+    return 'standard';
+  }
+
+  return 'high';
+}
+
+function getAdaptiveNoiseThreshold() {
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+  if (connection?.saveData || ['slow-2g', '2g'].includes(connection?.effectiveType)) {
+    return 0.045;
+  }
+
+  if (connection?.effectiveType === '3g' || window.innerWidth < 768) {
+    return 0.035;
+  }
+
+  return 0.025;
+}
 
 export default function TeleconsultationRoom() {
   const { id } = useParams();
@@ -16,6 +71,8 @@ export default function TeleconsultationRoom() {
   const [consultation, setConsultation] = useState(null);
   const [medicines, setMedicines] = useState([]);
   const [prescriptionItems, setPrescriptionItems] = useState([]);
+  const [videoQuality, setVideoQuality] = useState(getAdaptiveVideoQuality);
+  const [noiseCancellationActive, setNoiseCancellationActive] = useState(false);
   
   // Vitals State
   const [vitals, setVitals] = useState({ blood_pressure: '', heart_rate: '', temperature: '' });
@@ -26,6 +83,100 @@ export default function TeleconsultationRoom() {
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const noiseGateFrameRef = useRef(null);
+
+  const stopAudioProcessing = useCallback(() => {
+    if (noiseGateFrameRef.current) {
+      cancelAnimationFrame(noiseGateFrameRef.current);
+      noiseGateFrameRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    setNoiseCancellationActive(false);
+  }, []);
+
+  const enhanceAudioStream = useCallback((stream) => {
+    const audioTrack = stream.getAudioTracks()[0];
+    if (!audioTrack || !window.AudioContext) {
+      setNoiseCancellationActive(Boolean(audioTrack));
+      return stream;
+    }
+
+    stopAudioProcessing();
+
+    try {
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(new MediaStream([audioTrack]));
+      const analyser = audioContext.createAnalyser();
+      const compressor = audioContext.createDynamicsCompressor();
+      const gate = audioContext.createGain();
+      const destination = audioContext.createMediaStreamDestination();
+      const samples = new Uint8Array(analyser.fftSize);
+
+      analyser.fftSize = 512;
+      compressor.threshold.value = -45;
+      compressor.knee.value = 24;
+      compressor.ratio.value = 6;
+      compressor.attack.value = 0.01;
+      compressor.release.value = 0.18;
+
+      source.connect(analyser);
+      source.connect(compressor);
+      compressor.connect(gate);
+      gate.connect(destination);
+
+      const updateGate = () => {
+        analyser.getByteTimeDomainData(samples);
+        let total = 0;
+
+        for (const sample of samples) {
+          const normalized = (sample - 128) / 128;
+          total += normalized * normalized;
+        }
+
+        const rms = Math.sqrt(total / samples.length);
+        const targetGain = rms < getAdaptiveNoiseThreshold() ? 0.08 : 1;
+        gate.gain.setTargetAtTime(targetGain, audioContext.currentTime, 0.08);
+        noiseGateFrameRef.current = requestAnimationFrame(updateGate);
+      };
+
+      updateGate();
+      audioContextRef.current = audioContext;
+      setNoiseCancellationActive(true);
+
+      return new MediaStream([
+        ...stream.getVideoTracks(),
+        ...destination.stream.getAudioTracks(),
+      ]);
+    } catch {
+      setNoiseCancellationActive(Boolean(audioTrack));
+      return stream;
+    }
+  }, [stopAudioProcessing]);
+
+  const applyVideoQuality = useCallback(async (quality) => {
+    const videoTrack = streamRef.current?.getVideoTracks()[0];
+    if (!videoTrack) return;
+
+    const fallbackOrder = quality === 'high'
+      ? ['high', 'standard', 'low']
+      : quality === 'standard'
+        ? ['standard', 'low']
+        : ['low'];
+
+    for (const nextQuality of fallbackOrder) {
+      try {
+        await videoTrack.applyConstraints(VIDEO_QUALITY_PROFILES[nextQuality].constraints);
+        setVideoQuality(nextQuality);
+        return;
+      } catch {
+        // Try the next lower profile when a camera cannot satisfy the requested constraints.
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Fetch consultation details
@@ -51,13 +202,56 @@ export default function TeleconsultationRoom() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
+      stopAudioProcessing();
     };
-  }, [id, user]);
+  }, [id, stopAudioProcessing, user]);
+
+  useEffect(() => {
+    if (!callActive) return;
+
+    const adaptQuality = () => {
+      applyVideoQuality(getAdaptiveVideoQuality());
+    };
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+    connection?.addEventListener?.('change', adaptQuality);
+    window.addEventListener('resize', adaptQuality);
+
+    return () => {
+      connection?.removeEventListener?.('change', adaptQuality);
+      window.removeEventListener('resize', adaptQuality);
+    };
+  }, [applyVideoQuality, callActive]);
 
   const toggleCall = async () => {
     if (!callActive) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const initialQuality = getAdaptiveVideoQuality();
+        let stream;
+
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: VIDEO_QUALITY_PROFILES[initialQuality].constraints,
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+          setVideoQuality(initialQuality);
+        } catch {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: VIDEO_QUALITY_PROFILES.low.constraints,
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+          setVideoQuality('low');
+        }
+
+        stream = enhanceAudioStream(stream);
         streamRef.current = stream;
         setCallActive(true);
         // Delay attaching stream to allow video element to render
@@ -74,6 +268,7 @@ export default function TeleconsultationRoom() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
+      stopAudioProcessing();
       setCallActive(false);
       navigate('/consultations');
       toast('Call ended');
@@ -153,6 +348,16 @@ export default function TeleconsultationRoom() {
             <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium">
                {consultation ? (user.role === 'Patient' ? `Consulting Dr. ${consultation?.doctor?.user?.name || 'Assigned Doctor'}` : `Patient: ${consultation?.patient?.user?.name}`) : 'Loading...'}
             </span>
+            {callActive && (
+              <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
+                <Wifi size={12} /> Auto {VIDEO_QUALITY_PROFILES[videoQuality].label}
+              </span>
+            )}
+            {callActive && noiseCancellationActive && (
+              <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
+                <Mic size={12} /> Noise Cancel
+              </span>
+            )}
         </div>
         
         <div className="flex-1 flex items-center justify-center bg-slate-800 relative overflow-hidden">

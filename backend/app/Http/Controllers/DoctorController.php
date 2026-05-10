@@ -7,6 +7,42 @@ use Illuminate\Http\Request;
 
 class DoctorController extends Controller
 {
+    private const DEFAULT_SPECIALIZATIONS = [
+        'General Medicine',
+        'Cardio',
+        'Pulmo',
+        'Mental',
+        'Endo',
+    ];
+
+    private function canonicalSpecialization(?string $specialization): ?string
+    {
+        if (!$specialization) {
+            return null;
+        }
+
+        $value = strtolower(trim($specialization));
+        $aliases = [
+            'general' => 'General Medicine',
+            'general medicine' => 'General Medicine',
+            'cardio' => 'Cardio',
+            'cardiology' => 'Cardio',
+            'cardiologist' => 'Cardio',
+            'pulmo' => 'Pulmo',
+            'pulmonology' => 'Pulmo',
+            'pulmonologist' => 'Pulmo',
+            'mental' => 'Mental',
+            'mental health' => 'Mental',
+            'psychiatry' => 'Mental',
+            'psychology' => 'Mental',
+            'endo' => 'Endo',
+            'endocrinology' => 'Endo',
+            'endocrinologist' => 'Endo',
+        ];
+
+        return $aliases[$value] ?? $specialization;
+    }
+
     public function profile(Request $request)
     {
         return response()->json($request->user()->load('doctor'));
@@ -24,6 +60,25 @@ class DoctorController extends Controller
         }
 
         return response()->json($request->user()->load('doctor'));
+    }
+
+    public function specializations()
+    {
+        $existing = Doctor::query()
+            ->whereHas('user', fn ($q) => $q->where('is_active', true))
+            ->where(function ($q) {
+                $q->whereNull('active_until')->orWhere('active_until', '>=', now());
+            })
+            ->pluck('specialization')
+            ->map(fn ($specialization) => $this->canonicalSpecialization($specialization))
+            ->filter();
+
+        return response()->json(
+            collect(self::DEFAULT_SPECIALIZATIONS)
+                ->merge($existing)
+                ->unique()
+                ->values()
+        );
     }
 
     /**
