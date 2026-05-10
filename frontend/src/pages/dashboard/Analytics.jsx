@@ -4,6 +4,7 @@ import SEO from '../../components/SEO';
 import api from '../../utils/api';
 import { BarChart2, Activity, Download, List, TrendingUp, FileText, Users, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
+import PageTitle from '../../components/PageTitle';
 
 const REPORT_TABS = [
   { key: 'consultations', label: 'Consultation Statistics', icon: Activity },
@@ -215,10 +216,7 @@ export default function Analytics() {
       <SEO title="Analytics & Reports" description="Descriptive analytics and system activity for Cabuyao CHO" />
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Analytics &amp; Reports</h1>
-          <p className="text-slate-500 mt-1">Generate descriptive analytics reports and monitor system activity logs.</p>
-        </div>
+        <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports and monitor system activity logs." iconClassName="bg-indigo-50 text-indigo-600" />
         <button
           onClick={handleExportFullReport}
           disabled={exporting || loading}

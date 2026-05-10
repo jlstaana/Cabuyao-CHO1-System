@@ -6,6 +6,7 @@ import Skeleton from '../../components/Skeleton';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import { Pill, Plus, Search, Archive, Pencil, CheckCircle } from 'lucide-react';
+import PageTitle from '../../components/PageTitle';
 
 const CATEGORIES = ['Analgesic', 'Antibiotic', 'Antihistamine', 'Vitamins', 'Antacid', 'Antidiabetic', 'Antihypertensive', 'Other'];
 
@@ -88,10 +89,7 @@ export default function Medicines() {
     <div className="animate-in fade-in duration-500">
       <SEO title="Medicine Database" />
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Medicine Database</h1>
-          <p className="text-slate-500">View and manage the inventory of available medicines.</p>
-        </div>
+        <PageTitle icon={Pill} title="Medicine Database" description="View and manage the inventory of available medicines." iconClassName="bg-emerald-50 text-emerald-600" />
         {(user?.role === 'Admin' || user?.role === 'Staff') && (
           <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl hover:bg-emerald-600 transition-colors shadow-sm font-medium">
             <Plus size={18} /> Add Medicine

@@ -7,6 +7,7 @@ import {
   ClipboardList, Video, FileText, Search, Filter,
   Calendar, Clock, CheckCircle, XCircle, Loader2, ChevronDown, ChevronUp,
 } from 'lucide-react';
+import PageTitle from '../../components/PageTitle';
 
 const STATUS_CONFIG = {
   Completed:  { color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
@@ -84,8 +85,7 @@ export default function ConsultationHistory() {
 
       {/* Header */}
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">Consultation History</h1>
-        <p className="text-slate-500 mt-1">A complete record of all your past and upcoming consultations.</p>
+        <PageTitle icon={ClipboardList} title="Consultation History" description="A complete record of all your past and upcoming consultations." iconClassName="bg-sky-50 text-sky-600" />
       </header>
 
       {/* Summary stats */}

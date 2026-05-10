@@ -4,6 +4,7 @@ import SEO from '../../components/SEO';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import { HeartPulse, Thermometer, Wind, Activity, Plus, Clock, TrendingUp, AlertCircle } from 'lucide-react';
+import PageTitle from '../../components/PageTitle';
 
 const VITAL_FIELDS = [
   { key: 'blood_pressure', label: 'Blood Pressure', unit: 'mmHg', icon: Activity,     placeholder: 'e.g. 120/80',   color: 'sky',     normal: '90/60 – 120/80' },
@@ -112,10 +113,7 @@ export default function VitalSigns() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Vital Signs</h1>
-          <p className="text-slate-500 mt-1">Record and track your daily health measurements.</p>
-        </div>
+        <PageTitle icon={HeartPulse} title="Vital Signs" description="Record and track your daily health measurements." iconClassName="bg-rose-50 text-rose-600" />
         <button
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 bg-rose-500 text-white px-5 py-2.5 rounded-xl hover:bg-rose-600 transition-all shadow-md shadow-rose-200 font-medium active:scale-95"

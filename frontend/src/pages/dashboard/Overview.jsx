@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import SEO from '../../components/SEO';
 import Footer from '../../components/Footer';
+import PageTitle from '../../components/PageTitle';
 
 const EMPTY_STATS = {
   summary: {},
@@ -137,8 +138,7 @@ function AdminOverview({ user, stats }) {
     <>
       <SEO title="Dashboard" description="Health Officer administration overview" />
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Health Officer Dashboard</h1>
-        <p className="text-slate-500 mt-1">Welcome, {user?.name}. Here's the current system overview.</p>
+        <PageTitle icon={ShieldCheck} title="Health Officer Dashboard" description={`Welcome, ${user?.name}. Here's the current system overview.`} iconClassName="bg-sky-50 text-sky-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} icon={Activity} color="text-sky-500" bg="bg-sky-100" />
@@ -179,8 +179,7 @@ function DoctorOverview({ user, consultations, prescriptions }) {
     <>
       <SEO title="Dashboard" description="Doctor overview and consultation queue" />
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Good day, Dr. {user?.name?.split(' ')[0]}!</h1>
-        <p className="text-slate-500 mt-1">Here's your consultation overview.</p>
+        <PageTitle icon={Stethoscope} title={`Good day, Dr. ${user?.name?.split(' ')[0]}!`} description="Here's your consultation overview." iconClassName="bg-emerald-50 text-emerald-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Pending Requests" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" />
@@ -211,8 +210,7 @@ function PatientOverview({ user, consultations, prescriptions }) {
     <>
       <SEO title="Dashboard" description="Patient health dashboard" />
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Hello, {user?.name?.split(' ')[0]}!</h1>
-        <p className="text-slate-500 mt-1">Here's your health summary and upcoming activities.</p>
+        <PageTitle icon={HeartPulse} title={`Hello, ${user?.name?.split(' ')[0]}!`} description="Here's your health summary and upcoming activities." iconClassName="bg-rose-50 text-rose-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Consultations" value={consultations.length} icon={Stethoscope} color="text-sky-500" bg="bg-sky-100" />
@@ -257,8 +255,7 @@ function StaffOverview({ user, stats, consultations, medicines }) {
     <>
       <SEO title="Dashboard" description="Staff dashboard overview" />
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Staff Dashboard</h1>
-        <p className="text-slate-500 mt-1">Welcome, {user?.name}. Here's the current workload.</p>
+        <PageTitle icon={Users} title="Staff Dashboard" description={`Welcome, ${user?.name}. Here's the current workload.`} iconClassName="bg-amber-50 text-amber-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Pending Approvals" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" />

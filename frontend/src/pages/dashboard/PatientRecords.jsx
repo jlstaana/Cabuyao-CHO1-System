@@ -9,6 +9,7 @@ import {
   AlertCircle, HeartPulse, Phone,
   MapPin, User, ClipboardList,
 } from 'lucide-react';
+import PageTitle from '../../components/PageTitle';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function calcAge(dob) {
@@ -166,10 +167,7 @@ export default function PatientRecords() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Patient Records</h1>
-          <p className="text-slate-500 mt-1">View medical history, vitals, images, and consultations for your patients.</p>
-        </div>
+        <PageTitle icon={Users} title="Patient Records" description="View medical history, vitals, images, and consultations for your patients." iconClassName="bg-indigo-50 text-indigo-600" />
         <div className="text-right">
           <p className="text-2xl font-black text-sky-600">{patients.length}</p>
           <p className="text-xs text-slate-400 font-medium">Assigned Patients</p>

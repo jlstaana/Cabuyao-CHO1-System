@@ -4,6 +4,7 @@ import SEO from '../../components/SEO';
 import api from '../../utils/api';
 import { User, Clock, Save, Key } from 'lucide-react';
 import toast from 'react-hot-toast';
+import PageTitle from '../../components/PageTitle';
 
 export default function Profile() {
   const { user, fetchUser } = useAuthStore();
@@ -88,8 +89,7 @@ export default function Profile() {
     <div className="animate-in fade-in duration-500">
       <SEO title="Profile Settings" />
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Account Profile</h1>
-        <p className="text-slate-500">Manage your personal information and system preferences.</p>
+        <PageTitle icon={User} title="Account Profile" description="Manage your personal information and system preferences." iconClassName="bg-sky-50 text-sky-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

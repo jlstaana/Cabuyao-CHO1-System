@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { UserPlus, Archive, CheckCircle, Search, Copy, RefreshCw, UserCheck } from 'lucide-react';
 import SEO from '../../components/SEO';
 import api from '../../utils/api';
+import PageTitle from '../../components/PageTitle';
 
 // Generates a random temporary password
 function generateTempPassword(length = 10) {
@@ -116,12 +117,7 @@ export default function ManageUsers() {
 
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Account Management</h1>
-          <p className="text-slate-500 mt-1">
-            Create doctor &amp; staff accounts, assign visiting doctor access, and manage credentials.
-          </p>
-        </div>
+        <PageTitle icon={UserPlus} title="Account Management" description="Create doctor & staff accounts, assign visiting doctor access, and manage credentials." iconClassName="bg-sky-50 text-sky-600" />
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => { setFormData(f => ({ ...f, role: 'Doctor', access_type: 'visiting' })); setIsCreateOpen(true); }}

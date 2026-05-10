@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import api from '../../utils/api';
+import { KeyRound, LockKeyhole, LogIn } from 'lucide-react';
 
 export default function Login() {
   const { register, handleSubmit } = useForm();
@@ -76,6 +77,9 @@ export default function Login() {
       <div>
         <SEO title="Forgot Password" description="Reset your Cabuyao CHO account password" />
         <div className="text-center mb-8">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+            <KeyRound size={24} />
+          </div>
           <h1 className="text-2xl font-bold text-slate-900">Reset Password</h1>
           <p className="text-slate-500 mt-2 text-sm">Enter your email and we will send a reset code.</p>
         </div>
@@ -107,6 +111,9 @@ export default function Login() {
       <div>
         <SEO title="Set New Password" description="Set a new Cabuyao CHO account password" />
         <div className="text-center mb-8">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+            <LockKeyhole size={24} />
+          </div>
           <h1 className="text-2xl font-bold text-slate-900">Set New Password</h1>
           <p className="text-slate-500 mt-2 text-sm">Enter the code sent to {resetEmail}.</p>
         </div>
@@ -170,6 +177,9 @@ export default function Login() {
     <div>
       <SEO title="Login" description="Sign in to your Cabuyao CHO account" />
       <div className="text-center mb-8">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+          <LogIn size={24} />
+        </div>
         <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
         <p className="text-slate-500 mt-2 text-sm">Sign in to your Cabuyao CHO account</p>
       </div>

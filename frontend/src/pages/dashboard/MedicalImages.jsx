@@ -7,6 +7,7 @@ import {
   ImagePlus, Upload, X, Eye, FileImage, CheckCircle,
   AlertCircle, Info, Loader,
 } from 'lucide-react';
+import PageTitle from '../../components/PageTitle';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE_MB = 10;
@@ -171,8 +172,7 @@ export default function MedicalImages() {
 
       {/* Header */}
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">Medical Images</h1>
-        <p className="text-slate-500 mt-1">Upload X-rays, lab results, and other medical documents for your doctor to review.</p>
+        <PageTitle icon={ImagePlus} title="Medical Images" description="Upload X-rays, lab results, and other medical documents for your doctor to review." iconClassName="bg-indigo-50 text-indigo-600" />
       </header>
 
       {/* Upload form */}

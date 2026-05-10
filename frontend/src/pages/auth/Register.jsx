@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
+import { ShieldCheck, UserPlus } from 'lucide-react';
 
 export default function Register() {
   const { register, handleSubmit } = useForm();
@@ -77,6 +78,9 @@ export default function Register() {
     return (
       <div>
         <div className="text-center mb-8">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+            <ShieldCheck size={24} />
+          </div>
           <h1 className="text-2xl font-bold text-slate-900">Verify Your Account</h1>
           <p className="text-slate-500 mt-2 text-sm">Enter the 6-digit code sent to {pendingEmail}.</p>
         </div>
@@ -120,6 +124,9 @@ export default function Register() {
   return (
     <div>
       <div className="text-center mb-8">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+          <UserPlus size={24} />
+        </div>
         <h1 className="text-2xl font-bold text-slate-900">Create Account</h1>
         <p className="text-slate-500 mt-2 text-sm">Register for Cabuyao CHO Services</p>
       </div>

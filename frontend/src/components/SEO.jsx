@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 
 export default function SEO({ title, description, name, type }) {
-  const siteName = "Cabuyao CHO Telehealth";
+  const siteName = "Cabuyao CHO-I Telehealth";
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
   const defaultDesc = "Access teleconsultations, digital prescriptions, and secure health records seamlessly through the Cabuyao City Health Office Portal.";
 

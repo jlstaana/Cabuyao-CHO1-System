@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import { FileText, Download, User } from 'lucide-react';
 import SEO from '../../components/SEO';
+import PageTitle from '../../components/PageTitle';
 
 export default function Prescriptions() {
-  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [prescriptions, setPrescriptions] = useState([]);
 
@@ -16,7 +15,7 @@ export default function Prescriptions() {
       try {
         const response = await api.get('/prescriptions');
         setPrescriptions(response.data);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load prescriptions');
       } finally {
         setLoading(false);
@@ -29,10 +28,7 @@ export default function Prescriptions() {
     <div className="animate-in fade-in duration-500">
       <SEO title="E-Prescriptions" />
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">E-Prescriptions</h1>
-          <p className="text-slate-500">Access and manage digitally signed medical prescriptions.</p>
-        </div>
+        <PageTitle icon={FileText} title="E-Prescriptions" description="Access and manage digitally signed medical prescriptions." iconClassName="bg-emerald-50 text-emerald-600" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

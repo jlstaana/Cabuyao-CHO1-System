@@ -6,6 +6,7 @@ import Modal from '../../components/Modal';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import SEO from '../../components/SEO';
+import PageTitle from '../../components/PageTitle';
 import {
   Video, Calendar, Clock, CheckCircle, XCircle,
   Stethoscope, FilePlus, AlertCircle, Plus,
@@ -17,6 +18,14 @@ const STATUS = {
   Scheduled: { pill: 'bg-sky-100 text-sky-700',       dot: 'bg-sky-400',     icon: Calendar },
   Completed: { pill: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-400', icon: CheckCircle },
   Cancelled: { pill: 'bg-slate-100 text-slate-500',   dot: 'bg-slate-300',   icon: XCircle },
+};
+
+const TAB_ICON = {
+  All: Stethoscope,
+  Pending: Clock,
+  Scheduled: Calendar,
+  Completed: CheckCircle,
+  Cancelled: XCircle,
 };
 
 function StatusPill({ status }) {
@@ -63,11 +72,14 @@ function PatientView({ consultations, loading, onRequest }) {
 
       {/* Status tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {tabs.map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:border-sky-300 hover:text-sky-600'}`}
-          >{t}</button>
-        ))}
+        {tabs.map(t => {
+          const Icon = TAB_ICON[t] || Stethoscope;
+          return (
+            <button key={t} onClick={() => setTab(t)}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:border-sky-300 hover:text-sky-600'}`}
+            ><Icon size={14} /> {t}</button>
+          );
+        })}
       </div>
 
       {/* Cards */}
@@ -143,16 +155,19 @@ function DoctorView({ consultations, loading }) {
 
       {/* Tabs */}
       <div className="flex gap-2">
-        {['Pending', 'Scheduled', 'Completed'].map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`relative px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:border-sky-300 hover:text-sky-600'}`}
-          >
-            {t}
-            {counts[t] > 0 && t === 'Pending' && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">{counts[t]}</span>
-            )}
-          </button>
-        ))}
+        {['Pending', 'Scheduled', 'Completed'].map(t => {
+          const Icon = TAB_ICON[t] || Stethoscope;
+          return (
+            <button key={t} onClick={() => setTab(t)}
+              className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:border-sky-300 hover:text-sky-600'}`}
+            >
+              <Icon size={14} /> {t}
+              {counts[t] > 0 && t === 'Pending' && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">{counts[t]}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Queue list */}
@@ -233,11 +248,14 @@ function AdminView({ consultations, loading, onApprove }) {
 
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {['Pending','Scheduled','Completed','Cancelled'].map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:border-sky-300 hover:text-sky-600'}`}
-          >{t} ({consultations.filter(c => c.status === t).length})</button>
-        ))}
+        {['Pending','Scheduled','Completed','Cancelled'].map(t => {
+          const Icon = TAB_ICON[t] || Stethoscope;
+          return (
+            <button key={t} onClick={() => setTab(t)}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200 hover:border-sky-300 hover:text-sky-600'}`}
+            ><Icon size={14} /> {t} ({consultations.filter(c => c.status === t).length})</button>
+          );
+        })}
       </div>
 
       {/* Table */}
@@ -374,8 +392,7 @@ export default function Consultations() {
       <SEO title={title.h1} description={title.sub} />
 
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">{title.h1}</h1>
-        <p className="text-slate-500 mt-1">{title.sub}</p>
+        <PageTitle icon={Stethoscope} title={title.h1} description={title.sub} iconClassName="bg-sky-50 text-sky-600" />
       </header>
 
       {user?.role === 'Patient' && <PatientView consultations={consultations} loading={loading} onRequest={handleRequest} />}

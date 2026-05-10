@@ -3,6 +3,7 @@ import { Bell, CheckCheck, Trash2, Filter, FileText, Users, CheckCircle, X, Stet
 import useAuthStore from '../../store/useAuthStore';
 import SEO from '../../components/SEO';
 import api from '../../utils/api';
+import PageTitle from '../../components/PageTitle';
 
 const ROLE_FILTERS = {
   Admin: ['All', 'Unread', 'Consultation', 'Account', 'System'],
@@ -120,14 +121,13 @@ export default function Notifications() {
       <header className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-slate-900">{meta.title}</h1>
+            <PageTitle icon={Bell} title={meta.title} description={meta.sub} iconClassName="bg-sky-50 text-sky-600" />
             {unreadCount > 0 && (
               <span className="inline-flex items-center justify-center w-7 h-7 text-xs font-bold bg-rose-500 text-white rounded-full">
                 {unreadCount}
               </span>
             )}
           </div>
-          <p className="text-slate-500 mt-1">{meta.sub}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {selectedIds.length > 0 && (
