@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0ea5e9;
+  --color-primary-dark: #0284c7;
+  --color-secondary: #f43f5e;
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.landing-bg-slide {
+  animation: landing-bg-fade 18s ease-in-out infinite;
+  height: 100vh;
+  inset: 0;
+  min-height: 100%;
+  min-width: 100%;
+  object-fit: cover;
+  object-position: 58% 38%;
+  opacity: 0;
+  position: absolute;
+  width: 100vw;
+}
+
+@media (max-width: 767px) {
+  .landing-bg-slide {
+    height: 100%;
+    object-position: 62% 35%;
+    width: 100%;
+  }
+}
+
+@media (min-width: 1280px) {
+  .landing-bg-slide {
+    object-position: 55% 36%;
+  }
+}
+
+.auth-bg-slide {
+  animation: landing-bg-fade 18s ease-in-out infinite;
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  object-position: 62% center;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
+@keyframes landing-bg-fade {
+  0%,
+  27% {
+    opacity: 0.58;
+  }
+
+  33%,
+  100% {
+    opacity: 0;
+  }
+}

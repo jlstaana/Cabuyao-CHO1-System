@@ -4,8 +4,9 @@ use Closure;
 use Illuminate\Http\Request;
 
 class RoleMiddleware {
-    public function handle(Request $request, Closure $next, $role) {
-        if (!$request->user() || $request->user()->role !== $role) {
+    public function handle(Request $request, Closure $next, ...$roles) {
+        $user = $request->user();
+        if (!$user || !in_array($user->role, $roles)) {
             return response()->json(['message' => 'Unauthorized role'], 403);
         }
         return $next($request);

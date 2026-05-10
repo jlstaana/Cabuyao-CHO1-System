@@ -30,10 +30,14 @@ class ConsultationController extends Controller {
     }
     public function updateStatus(Request $request, $id) {
         $c = Consultation::findOrFail($id);
-        $c->update(['status' => $request->status, 'scheduled_at' => $request->scheduled_at]);
-        if ($request->status === 'Approved' && $request->has('doctor_id')) {
-            $c->update(['doctor_id' => $request->doctor_id]);
+        $data = [
+            'status' => $request->status,
+            'scheduled_at' => $request->scheduled_at,
+        ];
+        if ($request->filled('doctor_id')) {
+            $data['doctor_id'] = $request->doctor_id;
         }
+        $c->update($data);
         return response()->json($c);
     }
     public function complete(Request $request, $id) {

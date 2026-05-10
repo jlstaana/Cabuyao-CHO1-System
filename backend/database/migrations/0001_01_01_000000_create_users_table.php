@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->enum('role', ['Admin', 'Doctor', 'Staff', 'Patient'])->default('Patient');
             $table->boolean('first_login')->default(true);
+            $table->boolean('is_active')->default(true);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

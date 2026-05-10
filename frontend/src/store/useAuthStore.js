@@ -1,0 +1,37 @@
+import { create } from 'zustand';
+import api from '../utils/api';
+
+const useAuthStore = create((set) => ({
+  user: null,
+  token: localStorage.getItem('token') || null,
+  isAuthenticated: !!localStorage.getItem('token'),
+  loading: true,
+
+  login: async (email, password) => {
+    const response = await api.post('/auth/login', { email, password });
+    const { token, user } = response.data;
+    localStorage.setItem('token', token);
+    set({ token, user, isAuthenticated: true });
+    return user;
+  },
+
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (e) {}
+    localStorage.removeItem('token');
+    set({ token: null, user: null, isAuthenticated: false });
+  },
+
+  fetchUser: async () => {
+    try {
+      const response = await api.get('/user');
+      set({ user: response.data, isAuthenticated: true, loading: false });
+    } catch (error) {
+      localStorage.removeItem('token');
+      set({ user: null, token: null, isAuthenticated: false, loading: false });
+    }
+  }
+}));
+
+export default useAuthStore;
