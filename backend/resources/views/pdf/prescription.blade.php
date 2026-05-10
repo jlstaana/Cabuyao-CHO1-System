@@ -160,7 +160,7 @@
         <table class="info-grid">
             <tr>
                 <td class="info-label">Patient Name:</td>
-                <td class="info-value"><strong>{{ $prescription->patient->user->name }}</strong></td>
+                <td class="info-value"><strong>{{ optional(optional($prescription->patient)->user)->name ?? 'Unknown Patient' }}</strong></td>
                 <td class="info-label">Date Issued:</td>
                 <td class="info-value">{{ $prescription->created_at->format('M d, Y') }}</td>
             </tr>
@@ -186,8 +186,8 @@
                 @foreach($prescription->items as $item)
                 <tr>
                     <td>
-                        <div class="medicine-name">{{ $item->medicine->name }}</div>
-                        <div class="medicine-desc">{{ $item->medicine->category ?? 'General Medicine' }}</div>
+                        <div class="medicine-name">{{ optional($item->medicine)->name ?? 'Medicine unavailable' }}</div>
+                        <div class="medicine-desc">{{ optional($item->medicine)->category ?? 'General Medicine' }}</div>
                     </td>
                     <td><strong>{{ $item->dosage }}</strong></td>
                     <td>{{ $item->frequency }}</td>
@@ -210,9 +210,9 @@
             </div>
             <div class="signature-box">
                 <div class="signature-line"></div>
-                <p class="doctor-name">Dr. {{ $prescription->doctor->user->name }}</p>
-                <p class="doctor-license">Lic No: {{ $prescription->doctor->license_no ?: 'PRC-' . rand(100000, 999999) }}</p>
-                <p class="doctor-license">{{ $prescription->doctor->specialization }}</p>
+                <p class="doctor-name">Dr. {{ optional(optional($prescription->doctor)->user)->name ?? 'Attending Physician' }}</p>
+                <p class="doctor-license">Lic No: {{ optional($prescription->doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}</p>
+                <p class="doctor-license">{{ optional($prescription->doctor)->specialization ?? 'General Practice' }}</p>
                 <div class="stamp">E-SIGNED VALID</div>
             </div>
         </div>

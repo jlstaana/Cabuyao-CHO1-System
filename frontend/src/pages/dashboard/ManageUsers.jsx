@@ -22,6 +22,14 @@ const ROLE_STYLES = {
   Patient: 'bg-slate-100 text-slate-700',
 };
 
+const SPECIALIZATION_OPTIONS = [
+  'General Medicine',
+  'Cardio',
+  'Pulmo',
+  'Mental',
+  'Endo',
+];
+
 export default function ManageUsers() {
   const { user } = useAuthStore();
   const [loading, setLoading]         = useState(true);
@@ -32,9 +40,12 @@ export default function ManageUsers() {
   const [generatedCreds, setGeneratedCreds] = useState(null);
   const [formData, setFormData] = useState({
     name: '', email: '', role: 'Doctor',
-    specialization: 'General', department: 'Outpatient',
+    specialization: 'General Medicine', department: 'Outpatient',
     access_type: 'permanent',          // 'permanent' | 'visiting'
     expires_at: '',
+    availability_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    start_time: '08:00',
+    end_time: '17:00',
   });
 
   const fetchUsers = async () => {
@@ -73,7 +84,7 @@ export default function ManageUsers() {
       setIsCreateOpen(false);
       setGeneratedCreds({ name: formData.name, email: formData.email, password: tmpPass, role: formData.role, access_type: formData.access_type });
       setIsCredsOpen(true);
-      setFormData({ name: '', email: '', role: 'Doctor', specialization: 'General', department: 'Outpatient', access_type: 'permanent', expires_at: '' });
+      setFormData({ name: '', email: '', role: 'Doctor', specialization: 'General Medicine', department: 'Outpatient', access_type: 'permanent', expires_at: '', availability_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], start_time: '08:00', end_time: '17:00' });
       fetchUsers();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create user');
@@ -95,6 +106,15 @@ export default function ManageUsers() {
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard!');
+  };
+
+  const toggleAvailabilityDay = (day) => {
+    setFormData((current) => ({
+      ...current,
+      availability_days: current.availability_days.includes(day)
+        ? current.availability_days.filter((item) => item !== day)
+        : [...current.availability_days, day],
+    }));
   };
 
   const filtered = users.filter(
@@ -268,7 +288,43 @@ export default function ManageUsers() {
           {(formData.role === 'Doctor' || formData.access_type === 'visiting') && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Specialization</label>
-              <input required value={formData.specialization} onChange={e => setFormData({...formData, specialization: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. General Practice, Pediatrics" />
+              <select required value={formData.specialization} onChange={e => setFormData({...formData, specialization: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20 outline-none">
+                {SPECIALIZATION_OPTIONS.map((specialization) => (
+                  <option key={specialization} value={specialization}>{specialization}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {(formData.role === 'Doctor' || formData.access_type === 'visiting') && (
+            <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
+              <label className="block text-sm font-semibold text-slate-700">Consultation Schedule</label>
+              <div className="flex flex-wrap gap-2">
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleAvailabilityDay(day)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      formData.availability_days.includes(day)
+                        ? 'bg-sky-500 text-white'
+                        : 'bg-white text-slate-500 border border-slate-200 hover:text-sky-600'
+                    }`}
+                  >
+                    {day.slice(0, 3)}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Start Time</label>
+                  <input type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">End Time</label>
+                  <input type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                </div>
+              </div>
             </div>
           )}
 

@@ -9,15 +9,59 @@ class AdminController extends Controller {
         return response()->json(User::with(['doctor', 'staff', 'patient'])->get());
     }
     public function createDoctor(Request $request) {
-        $request->validate(['name' => 'required', 'email' => 'required|email|unique:users', 'specialization' => 'required']);
-        $user = User::create(['name' => $request->name, 'email' => $request->email, 'password' => Hash::make('password123'), 'role' => 'Doctor', 'first_login' => true]);
-        Doctor::create(['user_id' => $user->id, 'specialization' => $request->specialization, 'license_no' => $request->license_no ?? '']);
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:8',
+            'specialization' => 'required',
+            'license_no' => 'nullable|unique:doctors,license_no',
+            'expires_at' => 'nullable|date',
+            'availability_days' => 'nullable|array',
+            'availability_days.*' => 'in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i|after:start_time',
+        ]);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'Doctor',
+            'first_login' => true,
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+        $doctor = Doctor::create([
+            'user_id' => $user->id,
+            'specialization' => $request->specialization,
+            'license_no' => $request->license_no ?: 'VIS-' . str_pad($user->id, 6, '0', STR_PAD_LEFT),
+            'active_until' => $request->expires_at,
+        ]);
+        foreach ($request->availability_days ?: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as $day) {
+            $doctor->availability()->create([
+                'day_of_week' => $day,
+                'start_time' => $request->start_time ?: '08:00',
+                'end_time' => $request->end_time ?: '17:00',
+            ]);
+        }
         AuditLog::create(['user_id' => $request->user()->id, 'action' => "Created Doctor $user->email", 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Doctor created', 'user' => $user]);
     }
     public function createStaff(Request $request) {
-        $request->validate(['name' => 'required', 'email' => 'required|email|unique:users', 'department' => 'required']);
-        $user = User::create(['name' => $request->name, 'email' => $request->email, 'password' => Hash::make('password123'), 'role' => 'Staff', 'first_login' => true]);
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:8',
+            'department' => 'required',
+        ]);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'Staff',
+            'first_login' => true,
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
         Staff::create(['user_id' => $user->id, 'department' => $request->department]);
         AuditLog::create(['user_id' => $request->user()->id, 'action' => "Created Staff $user->email", 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Staff created', 'user' => $user]);
