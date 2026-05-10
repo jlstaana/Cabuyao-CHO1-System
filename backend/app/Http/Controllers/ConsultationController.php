@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 use App\Models\{Consultation, Doctor, VitalSign, MedicalImage, ConsultationForm};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ConsultationController extends Controller {
     private function specializationTerms(string $specialization): array {
@@ -101,10 +103,52 @@ class ConsultationController extends Controller {
         return response()->json($v);
     }
     public function uploadImage(Request $request, $id) {
-        $request->validate(['image' => 'required|mimes:jpg,png,pdf|max:10240']);
-        $path = $request->file('image')->store('medical_images', 'public');
-        $img = MedicalImage::create(['consultation_id' => $id, 'patient_id' => $request->user()->patient->id, 'file_path' => $path, 'file_type' => $request->file('image')->extension(), 'file_size' => $request->file('image')->getSize()]);
+        $consultation = Consultation::findOrFail($id);
+        if ((int) $consultation->patient_id !== (int) $request->user()->patient->id) {
+            return response()->json(['message' => 'Unauthorized consultation upload'], 403);
+        }
+
+        $request->validate([
+            'image' => 'required|mimes:jpg,jpeg,png,webp,gif,pdf,doc,docx|max:20480',
+            'document_type' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $file = $request->file('image');
+        $extension = strtolower($file->extension());
+        $folder = 'medical_uploads/consultations/' . $consultation->id . '/' . now()->format('Y/m');
+        $baseName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'medical-file';
+        $fileName = now()->format('YmdHis') . '-' . $baseName . '-' . Str::random(6) . '.' . $extension;
+        $path = $file->storeAs($folder, $fileName, 'public');
+
+        $img = MedicalImage::create([
+            'consultation_id' => $consultation->id,
+            'patient_id' => $request->user()->patient->id,
+            'file_path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'file_type' => $extension,
+            'mime_type' => $file->getMimeType(),
+            'document_type' => $request->document_type,
+            'notes' => $request->notes,
+            'file_size' => $file->getSize(),
+        ]);
         return response()->json($img);
+    }
+    public function downloadMedicalFile(Request $request, $imageId) {
+        $image = MedicalImage::with('consultation.doctor')->findOrFail($imageId);
+        $user = $request->user();
+        $canAccess = in_array($user->role, ['Admin', 'Staff'])
+            || ($user->role === 'Patient' && (int) $image->patient_id === (int) $user->patient->id)
+            || ($user->role === 'Doctor' && (int) $image->consultation?->doctor_id === (int) $user->doctor->id);
+
+        if (!$canAccess) {
+            return response()->json(['message' => 'Unauthorized file access'], 403);
+        }
+        if (!Storage::disk('public')->exists($image->file_path)) {
+            return response()->json(['message' => 'File not found in storage'], 404);
+        }
+
+        return Storage::disk('public')->download($image->file_path, $image->original_name ?: basename($image->file_path));
     }
     public function updateStatus(Request $request, $id) {
         $c = Consultation::findOrFail($id);

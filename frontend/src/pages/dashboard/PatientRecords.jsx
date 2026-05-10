@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import SEO from '../../components/SEO';
 import api from '../../utils/api';
+import toast from 'react-hot-toast';
 import {
   Users, Search, ChevronDown, ChevronUp,
   Calendar, Clock, FileText, Video, ImagePlus,
   AlertCircle, HeartPulse, Phone,
-  MapPin, User, ClipboardList,
+  MapPin, User, ClipboardList, Download, FileImage,
 } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 
@@ -24,6 +25,14 @@ function formatDate(value) {
 
 function formatTime(value) {
   return value ? new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+}
+
+function isImageType(mimeType = '') {
+  return mimeType.startsWith('image/');
+}
+
+function fileLabel(file) {
+  return file.document_type || file.file_type?.toUpperCase() || 'Medical File';
 }
 
 function buildPatientRecords(consultations) {
@@ -64,8 +73,11 @@ function buildPatientRecords(consultations) {
     const medicalImages = consultation.medical_images || consultation.medicalImages || [];
     existing.images.push(...medicalImages.map((image) => ({
       id: image.id,
-      name: image.file_path?.split('/').pop() || `Image #${image.id}`,
-      type: image.file_type || 'Medical Image',
+      name: image.original_name || image.file_path?.split('/').pop() || `Medical file #${image.id}`,
+      type: fileLabel(image),
+      mimeType: image.mime_type || '',
+      fileType: image.file_type || '',
+      notes: image.notes,
       date: formatDate(image.created_at),
       status: 'Uploaded',
     })));
@@ -155,6 +167,21 @@ export default function PatientRecords() {
 
   const getTab = (id) => activeTab[id] || 'overview';
   const setTab = (id, tab) => setActiveTab((prev) => ({ ...prev, [id]: tab }));
+  const handleDownload = async (file) => {
+    try {
+      const response = await api.get(`/medical-images/${file.id}/download`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([response.data], { type: file.mimeType || 'application/octet-stream' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download file');
+    }
+  };
 
   const filtered = patients.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -404,15 +431,21 @@ export default function PatientRecords() {
                           ) : patient.images.map((img) => (
                             <div key={img.id} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
                               <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                                <ImagePlus size={18} className="text-indigo-500" />
+                                {isImageType(img.mimeType) ? <FileImage size={18} className="text-indigo-500" /> : <FileText size={18} className="text-indigo-500" />}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-slate-800 truncate">{img.name}</p>
-                                <p className="text-xs text-slate-400 mt-0.5">{img.type} · {img.date}</p>
+                                <p className="text-xs text-slate-400 mt-0.5">{img.type} · {img.fileType?.toUpperCase()} · {img.date}</p>
+                                {img.notes && <p className="text-xs text-slate-400 mt-0.5 truncate">{img.notes}</p>}
                               </div>
-                              <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${IMAGE_STATUS_STYLE[img.status] || 'bg-slate-100 text-slate-500'}`}>
-                                {img.status}
-                              </span>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${IMAGE_STATUS_STYLE[img.status] || 'bg-slate-100 text-slate-500'}`}>
+                                  {img.status}
+                                </span>
+                                <button type="button" onClick={() => handleDownload(img)} className="p-2 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors" title="Download file">
+                                  <Download size={16} />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
