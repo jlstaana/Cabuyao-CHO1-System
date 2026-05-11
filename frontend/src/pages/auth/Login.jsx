@@ -4,7 +4,7 @@ import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
-import api from '../../utils/api';
+import api, { apiBaseUrl } from '../../utils/api';
 import { KeyRound, LockKeyhole, LogIn } from 'lucide-react';
 
 export default function Login() {
@@ -245,6 +245,9 @@ export default function Login() {
       >
         Use demo admin account
       </button>
+      <p className="mt-3 break-all text-center text-[11px] text-slate-400">
+        API: {apiBaseUrl}
+      </p>
     </div>
   );
 }

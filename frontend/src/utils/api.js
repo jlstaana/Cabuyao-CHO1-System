@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
-const isNgrokApi = /ngrok(-free)?\.app|ngrok\.io/i.test(apiBaseUrl);
+export const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://morphing-pebble-grandkid.ngrok-free.dev/api';
+const isNgrokApi = /ngrok(-free)?\.(app|dev)|ngrok\.io/i.test(apiBaseUrl);
 
 const api = axios.create({
   baseURL: apiBaseUrl,
