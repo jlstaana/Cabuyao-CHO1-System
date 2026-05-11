@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller {
+    private function shouldExposeAuthCodes(): bool {
+        return app()->environment('local') || filter_var(env('AUTH_EXPOSE_CODES', false), FILTER_VALIDATE_BOOL);
+    }
+
     private function createVerificationCode(User $user): string {
         $code = (string) random_int(100000, 999999);
         $user->update([
@@ -58,7 +62,7 @@ class AuthController extends Controller {
                 return response()->json([
                     'message' => 'This email already has a pending registration. A new verification code was sent.',
                     'email' => $existingUser->email,
-                    'verification_code' => app()->environment('local') ? $code : null,
+                    'verification_code' => $this->shouldExposeAuthCodes() ? $code : null,
                 ], 202);
             }
             throw ValidationException::withMessages(['email' => ['Email is already registered.']]);
@@ -71,7 +75,7 @@ class AuthController extends Controller {
         return response()->json([
             'message' => 'Registration submitted. Please enter the verification code sent to your email.',
             'email' => $user->email,
-            'verification_code' => app()->environment('local') ? $code : null,
+            'verification_code' => $this->shouldExposeAuthCodes() ? $code : null,
         ], 201);
     }
     public function verifyRegistration(Request $request) {
@@ -111,7 +115,7 @@ class AuthController extends Controller {
         $this->sendVerificationCode($user, $code);
         return response()->json([
             'message' => 'A new verification code was sent.',
-            'verification_code' => app()->environment('local') ? $code : null,
+            'verification_code' => $this->shouldExposeAuthCodes() ? $code : null,
         ]);
     }
     public function login(Request $request) {
@@ -137,7 +141,7 @@ class AuthController extends Controller {
         $this->sendPasswordResetCode($user, $code);
         return response()->json([
             'message' => 'Password reset code sent.',
-            'reset_code' => app()->environment('local') ? $code : null,
+            'reset_code' => $this->shouldExposeAuthCodes() ? $code : null,
         ]);
     }
     public function resetPassword(Request $request) {

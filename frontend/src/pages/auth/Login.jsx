@@ -23,8 +23,11 @@ export default function Login() {
     try {
       await login(data.email, data.password);
       toast.success('Logged in successfully!');
-    } catch {
-      toast.error('Invalid credentials');
+    } catch (error) {
+      const message = error.response?.data?.errors?.email?.[0]
+        || error.response?.data?.message
+        || 'Invalid credentials';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
