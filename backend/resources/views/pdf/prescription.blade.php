@@ -5,12 +5,12 @@
     <title>E-Prescription</title>
     <style>
         @page {
-            margin: 24px;
+            margin: 14px 18px;
         }
         body {
             font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
             color: #111827;
-            line-height: 1.45;
+            line-height: 1.28;
             margin: 0;
             padding: 0;
             background-color: #ffffff;
@@ -18,55 +18,89 @@
         .container {
             width: 100%;
             margin: 0 auto;
-            padding: 24px 28px;
+            padding: 14px 18px;
             box-sizing: border-box;
             border: 1px solid #cbd5e1;
         }
         .header {
-            border-bottom: 4px solid #0369a1;
-            padding-bottom: 14px;
-            margin-bottom: 18px;
+            border-bottom: 3px solid #0369a1;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
             text-align: center;
+        }
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .header-table td {
+            vertical-align: middle;
+        }
+        .logo-cell {
+            width: 96px;
+            text-align: center;
+        }
+        .heading-cell {
+            text-align: center;
+        }
+        .header-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+        .seal-fallback {
+            width: 58px;
+            height: 58px;
+            border: 2px solid #0369a1;
+            border-radius: 50%;
+            color: #075985;
+            font-size: 9px;
+            font-weight: bold;
+            line-height: 1.2;
+            padding-top: 14px;
+            box-sizing: border-box;
+            text-align: center;
+            text-transform: uppercase;
         }
         .header .republic {
             color: #475569;
             font-size: 11px;
-            margin: 0 0 2px 0;
+            margin: 0;
             text-transform: uppercase;
             letter-spacing: 0.8px;
         }
         .header h1 {
             color: #075985;
             margin: 0;
-            font-size: 24px;
+            font-size: 21px;
             text-transform: uppercase;
             letter-spacing: 0.7px;
         }
         .header h2 {
             color: #0f172a;
-            margin: 2px 0 4px 0;
-            font-size: 15px;
+            margin: 1px 0 2px 0;
+            font-size: 13px;
             text-transform: uppercase;
         }
         .header p {
             margin: 1px 0;
             color: #475569;
-            font-size: 11px;
+            font-size: 10px;
         }
         .meta-bar {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 14px;
+            margin-bottom: 8px;
             font-size: 12px;
         }
         .meta-bar td {
-            padding: 4px 0;
+            padding: 2px 0;
             vertical-align: top;
         }
         .patient-box {
             border: 1px solid #cbd5e1;
-            padding: 10px 12px;
-            margin-bottom: 14px;
+            padding: 7px 9px;
+            margin-bottom: 8px;
         }
         .patient-grid {
             width: 100%;
@@ -74,7 +108,7 @@
             font-size: 12px;
         }
         .patient-grid td {
-            padding: 5px 6px;
+            padding: 3px 5px;
             vertical-align: bottom;
         }
         .label {
@@ -86,24 +120,39 @@
         }
         .line-value {
             border-bottom: 1px solid #94a3b8;
-            min-height: 18px;
+            min-height: 15px;
             color: #0f172a;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
         }
         .rx-symbol {
-            font-size: 70px;
+            text-align: center;
+            font-size: 44px;
             font-weight: bold;
             font-family: DejaVu Serif, serif;
-            color: #0f172a;
-            margin: 8px 0 4px 0;
+            color: #075985;
+            margin: 4px 0 0 0;
             line-height: 1;
+        }
+        .rx-title {
+            text-align: center;
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            margin: 0 0 5px 0;
+        }
+        .rx-divider {
+            border: 0;
+            border-top: 1px solid #94a3b8;
+            margin: 0 0 8px 0;
         }
         .medicines-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
-            margin-bottom: 18px;
+            margin-top: 4px;
+            margin-bottom: 10px;
             font-size: 12px;
         }
         .medicines-table th {
@@ -111,22 +160,27 @@
             color: #0c4a6e;
             font-weight: bold;
             text-align: left;
-            padding: 9px 10px;
+            padding: 6px 8px;
             border: 1px solid #bae6fd;
             text-transform: uppercase;
             font-size: 10px;
             letter-spacing: 0.4px;
         }
         .medicines-table td {
-            padding: 11px 10px;
+            padding: 7px 8px;
             border: 1px solid #e2e8f0;
             vertical-align: top;
+        }
+        .medicines-table tr,
+        .instructions,
+        .footer {
+            page-break-inside: avoid;
         }
         .medicine-name {
             font-weight: bold;
             color: #0f172a;
-            font-size: 15px;
-            margin-bottom: 4px;
+            font-size: 13px;
+            margin-bottom: 2px;
         }
         .medicine-desc {
             font-size: 11px;
@@ -134,12 +188,13 @@
         }
         .instructions {
             border: 1px solid #cbd5e1;
-            padding: 12px 14px;
-            margin-bottom: 22px;
-            min-height: 54px;
+            padding: 8px 10px;
+            margin-bottom: 12px;
+            min-height: 34px;
         }
         .instructions h3 {
             margin-top: 0;
+            margin-bottom: 5px;
             color: #0f172a;
             font-size: 12px;
             text-transform: uppercase;
@@ -151,8 +206,8 @@
             font-size: 12px;
         }
         .footer {
-            margin-top: 28px;
-            padding-top: 18px;
+            margin-top: 12px;
+            padding-top: 10px;
             border-top: 2px solid #cbd5e1;
         }
         .validity {
@@ -168,8 +223,8 @@
         }
         .signature-line {
             border-bottom: 1px solid #000;
-            height: 34px;
-            margin-bottom: 8px;
+            height: 24px;
+            margin-bottom: 5px;
         }
         .doctor-name {
             font-weight: bold;
@@ -180,23 +235,23 @@
         .doctor-license {
             font-size: 12px;
             color: #64748b;
-            margin: 0 0 2px 0;
+            margin: 0 0 1px 0;
         }
         .stamp {
             color: #b91c1c;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
             border: 2px solid #b91c1c;
             display: inline-block;
             padding: 4px 9px;
             transform: rotate(-5deg);
             opacity: 0.75;
-            margin-top: 12px;
+            margin-top: 6px;
         }
         .small-note {
             color: #64748b;
-            font-size: 10px;
-            margin-top: 16px;
+            font-size: 9px;
+            margin-top: 9px;
             text-align: center;
         }
         .clearfix::after {
@@ -213,16 +268,36 @@
         $doctor = $prescription->doctor;
         $doctorUser = optional($doctor)->user;
         $patientAge = optional($patient)->dob ? \Carbon\Carbon::parse($patient->dob)->age : null;
+        $choLogoPath = public_path('images/cho1-logo.jpg');
+        $municipalLogoPath = public_path('images/municipal-logo.jpg');
     @endphp
 
     <div class="container">
         <div class="header">
-            <p class="republic">Republic of the Philippines</p>
-            <p class="republic">Province of Laguna</p>
-            <h1>City Government of Cabuyao</h1>
-            <h2>City Health Office I</h2>
-            <p>Brgy. Poblacion, City of Cabuyao, Laguna</p>
-            <p>Tel. No.: (049) 534-1234 | Email: cho@cabuyao.gov.ph</p>
+            <table class="header-table">
+                <tr>
+                    <td class="logo-cell">
+                        @if(file_exists($choLogoPath))
+                            <img class="header-logo" src="{{ $choLogoPath }}" alt="CHO-I Logo">
+                        @endif
+                    </td>
+                    <td class="heading-cell">
+                        <p class="republic">Republic of the Philippines</p>
+                        <p class="republic">Province of Laguna</p>
+                        <h1>City Government of Cabuyao</h1>
+                        <h2>City Health Office I</h2>
+                        <p>Brgy. Poblacion, City of Cabuyao, Laguna</p>
+                        <p>Tel. No.: (049) 534-1234 | Email: cho@cabuyao.gov.ph</p>
+                    </td>
+                    <td class="logo-cell">
+                        @if(file_exists($municipalLogoPath))
+                            <img class="header-logo" src="{{ $municipalLogoPath }}" alt="City Government of Cabuyao Logo">
+                        @else
+                            <div class="seal-fallback">City of<br>Cabuyao</div>
+                        @endif
+                    </td>
+                </tr>
+            </table>
         </div>
 
         <table class="meta-bar">
@@ -266,6 +341,8 @@
         </div>
 
         <div class="rx-symbol">Rx</div>
+        <div class="rx-title">Electronic Prescription</div>
+        <hr class="rx-divider">
 
         <table class="medicines-table">
             <thead>

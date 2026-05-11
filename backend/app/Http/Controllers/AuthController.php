@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller {
+    private function shouldExposeAuthCodes(): bool {
+        return app()->environment('local') || filter_var(env('AUTH_EXPOSE_CODES', false), FILTER_VALIDATE_BOOL);
+    }
+
     private function createVerificationCode(User $user): string {
         $code = (string) random_int(100000, 999999);
         $user->update([
@@ -49,6 +53,7 @@ class AuthController extends Controller {
     }
 
     public function register(Request $request) {
+        $request->merge(['email' => strtolower(trim((string) $request->email))]);
         $request->validate(['name' => 'required', 'email' => 'required|email', 'password' => 'required|min:8', 'dob' => 'required|date', 'contact_no' => 'required']);
         $existingUser = User::where('email', $request->email)->first();
         if ($existingUser) {
@@ -58,7 +63,7 @@ class AuthController extends Controller {
                 return response()->json([
                     'message' => 'This email already has a pending registration. A new verification code was sent.',
                     'email' => $existingUser->email,
-                    'verification_code' => app()->environment('local') ? $code : null,
+                    'verification_code' => $this->shouldExposeAuthCodes() ? $code : null,
                 ], 202);
             }
             throw ValidationException::withMessages(['email' => ['Email is already registered.']]);
@@ -71,10 +76,11 @@ class AuthController extends Controller {
         return response()->json([
             'message' => 'Registration submitted. Please enter the verification code sent to your email.',
             'email' => $user->email,
-            'verification_code' => app()->environment('local') ? $code : null,
+            'verification_code' => $this->shouldExposeAuthCodes() ? $code : null,
         ], 201);
     }
     public function verifyRegistration(Request $request) {
+        $request->merge(['email' => strtolower(trim((string) $request->email))]);
         $request->validate(['email' => 'required|email', 'code' => 'required|string|size:6']);
         $user = User::where('email', $request->email)->where('role', 'Patient')->first();
         if (!$user) {
@@ -99,6 +105,7 @@ class AuthController extends Controller {
         return response()->json(['message' => 'Account verified successfully. You can now log in.']);
     }
     public function resendVerificationCode(Request $request) {
+        $request->merge(['email' => strtolower(trim((string) $request->email))]);
         $request->validate(['email' => 'required|email']);
         $user = User::where('email', $request->email)->where('role', 'Patient')->first();
         if (!$user) {
@@ -111,10 +118,11 @@ class AuthController extends Controller {
         $this->sendVerificationCode($user, $code);
         return response()->json([
             'message' => 'A new verification code was sent.',
-            'verification_code' => app()->environment('local') ? $code : null,
+            'verification_code' => $this->shouldExposeAuthCodes() ? $code : null,
         ]);
     }
     public function login(Request $request) {
+        $request->merge(['email' => strtolower(trim((string) $request->email))]);
         $request->validate(['email' => 'required|email', 'password' => 'required']);
         $user = User::where('email', $request->email)->first();
         if (!$user || !Hash::check($request->password, $user->password) || !$user->is_active) {
@@ -137,7 +145,7 @@ class AuthController extends Controller {
         $this->sendPasswordResetCode($user, $code);
         return response()->json([
             'message' => 'Password reset code sent.',
-            'reset_code' => app()->environment('local') ? $code : null,
+            'reset_code' => $this->shouldExposeAuthCodes() ? $code : null,
         ]);
     }
     public function resetPassword(Request $request) {
