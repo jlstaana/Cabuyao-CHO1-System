@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => array_filter(array_map('trim', explode(',', env(
+        'FRONTEND_URL',
+        'https://cabuyao-cho-1-system.vercel.app'
+    )))),
 
     'allowed_origins_patterns' => [],
 
