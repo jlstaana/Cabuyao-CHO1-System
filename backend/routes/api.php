@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/consultations/request', [ConsultationController::class, 'requestConsultation']);
     Route::post('/consultations/{id}/vitals', [ConsultationController::class, 'recordVitals']);
     Route::post('/consultations/{id}/images', [ConsultationController::class, 'uploadImage']);
+    Route::get('/medical-images/{image}/download', [ConsultationController::class, 'downloadMedicalFile']);
     Route::put('/consultations/{id}/status', [ConsultationController::class, 'updateStatus']);
     Route::post('/consultations/{id}/status', [ConsultationController::class, 'updateStatus']);
     Route::post('/consultations/{id}/complete', [ConsultationController::class, 'complete']);

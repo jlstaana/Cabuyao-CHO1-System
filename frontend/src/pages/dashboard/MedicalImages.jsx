@@ -5,12 +5,21 @@ import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import {
   ImagePlus, Upload, X, Eye, FileImage, CheckCircle,
-  AlertCircle, Info, Loader,
+  AlertCircle, Info, Loader, FileText, Download,
 } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_SIZE_MB = 10;
+const ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
+const MAX_SIZE_MB = 20;
+const IMAGE_MIME_PREFIX = 'image/';
 
 const IMAGE_TYPES = [
   'X-Ray',
@@ -27,15 +36,25 @@ function formatSize(bytes) {
   return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
 }
 
+function isImageType(mimeType = '') {
+  return mimeType.startsWith(IMAGE_MIME_PREFIX);
+}
+
+function fileLabel(file) {
+  return file.document_type || file.file_type?.toUpperCase() || 'Medical File';
+}
+
 function flattenUploads(consultations) {
   return consultations.flatMap((consultation) => {
     const images = consultation.medical_images || consultation.medicalImages || [];
     return images.map((image) => ({
       id: image.id,
       consultation_id: consultation.id,
-      name: image.file_path?.split('/').pop() || `Medical image #${image.id}`,
-      type: image.file_type || 'Medical Image',
-      notes: `Consultation #${consultation.id}`,
+      name: image.original_name || image.file_path?.split('/').pop() || `Medical file #${image.id}`,
+      type: fileLabel(image),
+      mimeType: image.mime_type || '',
+      fileType: image.file_type || '',
+      notes: image.notes || `Consultation #${consultation.id}`,
       date: image.created_at ? new Date(image.created_at).toLocaleDateString() : 'N/A',
       size: formatSize(image.file_size),
       status: 'Uploaded',
@@ -98,16 +117,18 @@ export default function MedicalImages() {
     if (!valid.length) return;
     const withPreviews = valid.map((f) => ({
       file: f,
-      url: URL.createObjectURL(f),
+      url: isImageType(f.type) ? URL.createObjectURL(f) : null,
       name: f.name,
-      size: `${(f.size / 1024).toFixed(0)} KB`,
+      type: f.type,
+      extension: f.name.split('.').pop()?.toUpperCase() || 'FILE',
+      size: formatSize(f.size),
     }));
     setPreviews((prev) => [...prev, ...withPreviews]);
   };
 
   const removePreview = (idx) => {
     setPreviews((prev) => {
-      URL.revokeObjectURL(prev[idx].url);
+      if (prev[idx].url) URL.revokeObjectURL(prev[idx].url);
       return prev.filter((_, i) => i !== idx);
     });
   };
@@ -132,6 +153,8 @@ export default function MedicalImages() {
       for (const preview of previews) {
         const fd = new FormData();
         fd.append('image', preview.file);
+        fd.append('document_type', imageType);
+        if (notes) fd.append('notes', notes);
         const { data } = await api.post(`/consultations/${target.id}/images`, fd, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
@@ -141,14 +164,18 @@ export default function MedicalImages() {
         id: saved[i]?.id || Date.now() + i,
         consultation_id: target.id,
         name: p.name,
-        type: saved[i]?.file_type || imageType,
+        type: saved[i]?.document_type || imageType,
+        mimeType: saved[i]?.mime_type || p.type,
+        fileType: saved[i]?.file_type || p.extension,
         notes: notes || `Consultation #${target.id}`,
         date: new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }),
         size: p.size,
         status: 'Uploaded',
       }));
       setUploads((prev) => [...newEntries, ...prev]);
-      previews.forEach((p) => URL.revokeObjectURL(p.url));
+      previews.forEach((p) => {
+        if (p.url) URL.revokeObjectURL(p.url);
+      });
       setPreviews([]);
       setNotes('');
       setImageType('X-Ray');
@@ -164,6 +191,22 @@ export default function MedicalImages() {
     'Reviewed':       'bg-emerald-100 text-emerald-700',
     'Pending Review': 'bg-amber-100 text-amber-700',
     'Uploaded':       'bg-sky-100 text-sky-700',
+  };
+
+  const handleDownload = async (upload) => {
+    try {
+      const response = await api.get(`/medical-images/${upload.id}/download`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([response.data], { type: upload.mimeType || 'application/octet-stream' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = upload.name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download file');
+    }
   };
 
   return (
@@ -198,7 +241,7 @@ export default function MedicalImages() {
           </div>
           <div className="text-center">
             <p className="font-semibold text-slate-700">Drag &amp; drop images here</p>
-            <p className="text-sm text-slate-400 mt-1">or click to browse — JPG, PNG, WEBP up to {MAX_SIZE_MB} MB</p>
+            <p className="text-sm text-slate-400 mt-1">or click to browse — JPG, PNG, WEBP, PDF, DOC up to {MAX_SIZE_MB} MB</p>
           </div>
           <input
             ref={fileInputRef}
@@ -215,11 +258,20 @@ export default function MedicalImages() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {previews.map((p, idx) => (
               <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 aspect-square bg-slate-100">
-                <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
+                {p.url ? (
+                  <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-slate-50 text-slate-500">
+                    <FileText size={34} />
+                    <span className="text-xs font-bold">{p.extension}</span>
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                  <button type="button" onClick={() => setLightbox(p.url)} className="p-1.5 bg-white rounded-lg text-slate-700 hover:text-sky-600">
-                    <Eye size={16} />
-                  </button>
+                  {p.url && (
+                    <button type="button" onClick={() => setLightbox(p.url)} className="p-1.5 bg-white rounded-lg text-slate-700 hover:text-sky-600">
+                      <Eye size={16} />
+                    </button>
+                  )}
                   <button type="button" onClick={() => removePreview(idx)} className="p-1.5 bg-white rounded-lg text-slate-700 hover:text-rose-600">
                     <X size={16} />
                   </button>
@@ -288,7 +340,7 @@ export default function MedicalImages() {
             {uploads.map((img) => (
               <div key={img.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/60 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                  <FileImage size={20} className="text-indigo-500" />
+                  {isImageType(img.mimeType) ? <FileImage size={20} className="text-indigo-500" /> : <FileText size={20} className="text-indigo-500" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-slate-900 text-sm truncate">{img.name}</p>
@@ -296,10 +348,14 @@ export default function MedicalImages() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700">{img.type}</span>
+                  <span className="hidden sm:inline-flex text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{img.fileType?.toUpperCase()}</span>
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 ${STATUS_STYLE[img.status] || 'bg-slate-100 text-slate-500'}`}>
                     {img.status === 'Reviewed' ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
                     {img.status}
                   </span>
+                  <button type="button" onClick={() => handleDownload(img)} className="p-2 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors" title="Download file">
+                    <Download size={16} />
+                  </button>
                 </div>
               </div>
             ))}

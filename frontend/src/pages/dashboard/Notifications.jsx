@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, Trash2, Filter, FileText, Users, CheckCircle, X, Stethoscope, ShieldCheck } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import SEO from '../../components/SEO';
@@ -26,7 +27,23 @@ const TYPE_ICON = {
   system: ShieldCheck,
 };
 
-function buildConsultationNotifications(consultations, role) {
+const readStorageKey = (userId) => `cho1-read-notifications-${userId || 'guest'}`;
+
+function getStoredReadIds(userId) {
+  try {
+    return JSON.parse(localStorage.getItem(readStorageKey(userId)) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function storeReadIds(userId, ids) {
+  localStorage.setItem(readStorageKey(userId), JSON.stringify(Array.from(new Set(ids))));
+}
+
+function buildConsultationNotifications(consultations, role, readIds = []) {
+  const readSet = new Set(readIds);
+
   return consultations.slice(0, 20).map((consultation) => {
     const isPatient = role === 'Patient';
     const otherPerson = isPatient
@@ -37,6 +54,15 @@ function buildConsultationNotifications(consultations, role) {
       : consultation.status === 'Scheduled'
         ? 'Consultation Scheduled'
         : 'Consultation Update';
+    const targetPath = consultation.status === 'Scheduled'
+      ? `/room/${consultation.id}`
+      : consultation.status === 'Completed' && consultation.prescription?.id
+        ? '/prescriptions'
+        : role === 'Patient' && consultation.status === 'Completed'
+          ? '/consultation-history'
+          : role === 'Doctor' && consultation.status === 'Completed'
+            ? '/patient-records'
+            : '/consultations';
 
     return {
       id: `consultation-${consultation.id}`,
@@ -45,15 +71,17 @@ function buildConsultationNotifications(consultations, role) {
       title,
       message: `${isPatient ? otherPerson : `Patient ${otherPerson}`} - ${consultation.status}`,
       time: consultation.updated_at ? new Date(consultation.updated_at).toLocaleString() : 'N/A',
-      read: true,
+      read: readSet.has(`consultation-${consultation.id}`),
       iconBg: 'bg-sky-100',
       iconColor: 'text-sky-600',
+      targetPath,
     };
   });
 }
 
 export default function Notifications() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const role = user?.role || 'Patient';
   const filters = ROLE_FILTERS[role] || ROLE_FILTERS.Patient;
 
@@ -65,13 +93,13 @@ export default function Notifications() {
     let isActive = true;
     api.get('/consultations')
       .then((res) => {
-        if (isActive) setNotifications(buildConsultationNotifications(res.data || [], role));
+        if (isActive) setNotifications(buildConsultationNotifications(res.data || [], role, getStoredReadIds(user?.id)));
       })
       .catch(() => {
         if (isActive) setNotifications([]);
       });
     return () => { isActive = false; };
-  }, [role]);
+  }, [role, user?.id]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -82,12 +110,23 @@ export default function Notifications() {
   });
 
   const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifications((prev) => {
+      storeReadIds(user?.id, prev.map((n) => n.id));
+      return prev.map((n) => ({ ...n, read: true }));
+    });
     setSelectedIds([]);
   };
 
   const markOneRead = (id) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    setNotifications((prev) => {
+      storeReadIds(user?.id, [...getStoredReadIds(user?.id), id]);
+      return prev.map((n) => (n.id === id ? { ...n, read: true } : n));
+    });
+  };
+
+  const openNotification = (notification) => {
+    if (!notification.read) markOneRead(notification.id);
+    if (notification.targetPath) navigate(notification.targetPath);
   };
 
   const deleteOne = (id) => {
@@ -194,7 +233,15 @@ export default function Notifications() {
                     ? 'bg-white border-sky-200 shadow-sm shadow-sky-50'
                     : 'bg-white border-slate-100 opacity-80'
                 } ${isSelected ? 'ring-2 ring-sky-400' : 'hover:shadow-md hover:border-slate-200'}`}
-                onClick={() => !notification.read && markOneRead(notification.id)}
+                onClick={() => openNotification(notification)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openNotification(notification);
+                  }
+                }}
               >
                 <div className="pt-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(notification.id)} className="w-4 h-4 rounded accent-sky-600 cursor-pointer" />
@@ -221,7 +268,15 @@ export default function Notifications() {
                     </button>
                   </div>
                   <p className="text-sm text-slate-500 mt-1 leading-relaxed">{notification.message}</p>
-                  <p className="text-xs text-slate-400 mt-2 font-medium">{notification.time}</p>
+                  <div className="mt-2 flex items-center gap-2 text-xs text-slate-400 font-medium">
+                    <span>{notification.time}</span>
+                    {notification.targetPath && (
+                      <>
+                        <span>·</span>
+                        <span className="text-sky-600 group-hover:underline">Open details</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             );

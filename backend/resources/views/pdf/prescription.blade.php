@@ -4,143 +4,200 @@
     <meta charset="utf-8">
     <title>E-Prescription</title>
     <style>
+        @page {
+            margin: 24px;
+        }
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #333;
-            line-height: 1.6;
+            font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
+            color: #111827;
+            line-height: 1.45;
             margin: 0;
             padding: 0;
-            background-color: #fff;
+            background-color: #ffffff;
         }
         .container {
             width: 100%;
-            max-width: 800px;
             margin: 0 auto;
-            padding: 40px;
+            padding: 24px 28px;
             box-sizing: border-box;
+            border: 1px solid #cbd5e1;
         }
         .header {
-            border-bottom: 2px solid #0284c7;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            border-bottom: 4px solid #0369a1;
+            padding-bottom: 14px;
+            margin-bottom: 18px;
             text-align: center;
         }
-        .header h1 {
-            color: #0284c7;
-            margin: 0 0 5px 0;
-            font-size: 28px;
+        .header .republic {
+            color: #475569;
+            font-size: 11px;
+            margin: 0 0 2px 0;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
+        }
+        .header h1 {
+            color: #075985;
+            margin: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+        .header h2 {
+            color: #0f172a;
+            margin: 2px 0 4px 0;
+            font-size: 15px;
+            text-transform: uppercase;
         }
         .header p {
-            margin: 0;
-            color: #64748b;
-            font-size: 14px;
+            margin: 1px 0;
+            color: #475569;
+            font-size: 11px;
         }
-        .rx-symbol {
-            font-size: 64px;
-            font-weight: bold;
-            font-family: serif;
-            color: #0284c7;
-            margin-bottom: 20px;
-            line-height: 1;
-        }
-        .info-grid {
+        .meta-bar {
             width: 100%;
-            margin-bottom: 30px;
             border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 12px;
         }
-        .info-grid td {
-            padding: 8px 0;
+        .meta-bar td {
+            padding: 4px 0;
             vertical-align: top;
         }
-        .info-label {
-            font-weight: bold;
-            color: #475569;
-            width: 120px;
+        .patient-box {
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            margin-bottom: 14px;
         }
-        .info-value {
+        .patient-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .patient-grid td {
+            padding: 5px 6px;
+            vertical-align: bottom;
+        }
+        .label {
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-weight: bold;
+        }
+        .line-value {
+            border-bottom: 1px solid #94a3b8;
+            min-height: 18px;
             color: #0f172a;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .rx-symbol {
+            font-size: 70px;
+            font-weight: bold;
+            font-family: DejaVu Serif, serif;
+            color: #0f172a;
+            margin: 8px 0 4px 0;
+            line-height: 1;
         }
         .medicines-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 30px;
-            margin-bottom: 40px;
+            margin-top: 6px;
+            margin-bottom: 18px;
+            font-size: 12px;
         }
         .medicines-table th {
-            background-color: #f1f5f9;
-            color: #334155;
+            background-color: #e0f2fe;
+            color: #0c4a6e;
             font-weight: bold;
             text-align: left;
-            padding: 12px;
-            border-bottom: 2px solid #cbd5e1;
+            padding: 9px 10px;
+            border: 1px solid #bae6fd;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.4px;
         }
         .medicines-table td {
-            padding: 15px 12px;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 11px 10px;
+            border: 1px solid #e2e8f0;
             vertical-align: top;
         }
         .medicine-name {
             font-weight: bold;
             color: #0f172a;
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 4px;
         }
         .medicine-desc {
-            font-size: 13px;
+            font-size: 11px;
             color: #64748b;
         }
         .instructions {
-            background-color: #f8fafc;
-            border-left: 4px solid #0284c7;
-            padding: 15px 20px;
-            margin-bottom: 40px;
+            border: 1px solid #cbd5e1;
+            padding: 12px 14px;
+            margin-bottom: 22px;
+            min-height: 54px;
         }
         .instructions h3 {
             margin-top: 0;
             color: #0f172a;
-            font-size: 16px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
         .instructions p {
             margin: 0;
             color: #475569;
+            font-size: 12px;
         }
         .footer {
-            margin-top: 60px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 2px solid #cbd5e1;
+        }
+        .validity {
+            float: left;
+            width: 45%;
+            font-size: 10px;
+            color: #475569;
         }
         .signature-box {
             float: right;
             text-align: center;
-            width: 250px;
+            width: 280px;
         }
         .signature-line {
             border-bottom: 1px solid #000;
-            height: 40px;
-            margin-bottom: 10px;
+            height: 34px;
+            margin-bottom: 8px;
         }
         .doctor-name {
             font-weight: bold;
             color: #0f172a;
-            margin: 0;
+            margin: 0 0 2px 0;
+            text-transform: uppercase;
         }
         .doctor-license {
             font-size: 12px;
             color: #64748b;
-            margin: 0;
+            margin: 0 0 2px 0;
         }
         .stamp {
-            color: #ef4444;
-            font-size: 14px;
+            color: #b91c1c;
+            font-size: 12px;
             font-weight: bold;
-            border: 2px solid #ef4444;
+            border: 2px solid #b91c1c;
             display: inline-block;
-            padding: 5px 10px;
+            padding: 4px 9px;
             transform: rotate(-5deg);
-            opacity: 0.7;
-            margin-top: 20px;
+            opacity: 0.75;
+            margin-top: 12px;
+        }
+        .small-note {
+            color: #64748b;
+            font-size: 10px;
+            margin-top: 16px;
+            text-align: center;
         }
         .clearfix::after {
             content: "";
@@ -150,27 +207,63 @@
     </style>
 </head>
 <body>
+    @php
+        $patient = $prescription->patient;
+        $patientUser = optional($patient)->user;
+        $doctor = $prescription->doctor;
+        $doctorUser = optional($doctor)->user;
+        $patientAge = optional($patient)->dob ? \Carbon\Carbon::parse($patient->dob)->age : null;
+    @endphp
+
     <div class="container">
         <div class="header">
-            <h1>Cabuyao City Health Office</h1>
-            <p>123 National Highway, City of Cabuyao, Laguna</p>
-            <p>Contact: (049) 534-1234 | Email: cho@cabuyao.gov.ph</p>
+            <p class="republic">Republic of the Philippines</p>
+            <p class="republic">Province of Laguna</p>
+            <h1>City Government of Cabuyao</h1>
+            <h2>City Health Office I</h2>
+            <p>Brgy. Poblacion, City of Cabuyao, Laguna</p>
+            <p>Tel. No.: (049) 534-1234 | Email: cho@cabuyao.gov.ph</p>
         </div>
 
-        <table class="info-grid">
+        <table class="meta-bar">
             <tr>
-                <td class="info-label">Patient Name:</td>
-                <td class="info-value"><strong>{{ optional(optional($prescription->patient)->user)->name ?? 'Unknown Patient' }}</strong></td>
-                <td class="info-label">Date Issued:</td>
-                <td class="info-value">{{ $prescription->created_at->format('M d, Y') }}</td>
+                <td><strong>Prescription No.:</strong> RX-{{ str_pad($prescription->id, 6, '0', STR_PAD_LEFT) }}</td>
+                <td style="text-align: right;"><strong>Date:</strong> {{ $prescription->created_at->format('F d, Y') }}</td>
             </tr>
             <tr>
-                <td class="info-label">Patient ID:</td>
-                <td class="info-value">PT-{{ str_pad($prescription->patient_id, 5, '0', STR_PAD_LEFT) }}</td>
-                <td class="info-label">Prescription #:</td>
-                <td class="info-value">RX-{{ str_pad($prescription->id, 6, '0', STR_PAD_LEFT) }}</td>
+                <td><strong>Patient ID:</strong> PT-{{ str_pad($prescription->patient_id, 5, '0', STR_PAD_LEFT) }}</td>
+                <td style="text-align: right;"><strong>Consultation ID:</strong> CN-{{ str_pad($prescription->consultation_id, 6, '0', STR_PAD_LEFT) }}</td>
             </tr>
         </table>
+
+        <div class="patient-box">
+            <table class="patient-grid">
+                <tr>
+                    <td width="56%">
+                        <div class="label">Name</div>
+                        <div class="line-value">{{ optional($patientUser)->name ?? 'Unknown Patient' }}</div>
+                    </td>
+                    <td width="14%">
+                        <div class="label">Age</div>
+                        <div class="line-value">{{ $patientAge ?: 'N/A' }}</div>
+                    </td>
+                    <td width="14%">
+                        <div class="label">Sex</div>
+                        <div class="line-value">N/A</div>
+                    </td>
+                    <td width="16%">
+                        <div class="label">Date</div>
+                        <div class="line-value">{{ $prescription->created_at->format('m/d/Y') }}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <div class="label">Address</div>
+                        <div class="line-value">{{ optional($patient)->address ?: 'N/A' }}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
 
         <div class="rx-symbol">Rx</div>
 
@@ -187,34 +280,50 @@
                 <tr>
                     <td>
                         <div class="medicine-name">{{ optional($item->medicine)->name ?? 'Medicine unavailable' }}</div>
-                        <div class="medicine-desc">{{ optional($item->medicine)->category ?? 'General Medicine' }}</div>
+                        <div class="medicine-desc">
+                            {{ optional($item->medicine)->category ?? 'General Medicine' }}
+                            @if(optional($item->medicine)->dosage_form)
+                                | {{ optional($item->medicine)->dosage_form }}
+                            @endif
+                        </div>
                     </td>
-                    <td><strong>{{ $item->dosage }}</strong></td>
-                    <td>{{ $item->frequency }}</td>
+                    <td><strong>{{ $item->dosage ?: 'As directed' }}</strong></td>
+                    <td>
+                        {{ $item->frequency ?: 'As directed by physician' }}
+                        @if($item->duration)
+                            <br><strong>Duration:</strong> {{ $item->duration }}
+                        @endif
+                        @if($item->instructions)
+                            <br>{{ $item->instructions }}
+                        @endif
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
 
         <div class="instructions">
-            <h3>Clinical Diagnosis / Notes</h3>
-            <p>{{ $prescription->notes ?: 'Please take all medications exactly as prescribed above. If you experience any severe allergic reactions, contact the clinic immediately.' }}</p>
+            <h3>Diagnosis / Clinical Notes</h3>
+            <p>{{ $prescription->notes ?: 'Please take all medications exactly as prescribed. For adverse reactions or worsening symptoms, contact the City Health Office or proceed to the nearest health facility.' }}</p>
         </div>
 
         <div class="footer clearfix">
-            <div style="float: left; width: 40%;">
-                <p style="font-size: 12px; color: #94a3b8; margin-top: 40px;">
-                    * This is a digitally generated e-prescription.<br>
-                    Valid for dispensing at any pharmacy.
-                </p>
+            <div class="validity">
+                <p><strong>Reminder:</strong> Present this prescription with a valid ID when claiming medicines or purchasing from a pharmacy.</p>
+                <p>This electronically generated prescription is issued through the Cabuyao CHO-I Telehealth System.</p>
             </div>
             <div class="signature-box">
                 <div class="signature-line"></div>
-                <p class="doctor-name">Dr. {{ optional(optional($prescription->doctor)->user)->name ?? 'Attending Physician' }}</p>
-                <p class="doctor-license">Lic No: {{ optional($prescription->doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}</p>
-                <p class="doctor-license">{{ optional($prescription->doctor)->specialization ?? 'General Practice' }}</p>
-                <div class="stamp">E-SIGNED VALID</div>
+                <p class="doctor-name">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
+                <p class="doctor-license">PRC Lic. No.: {{ optional($doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}</p>
+                <p class="doctor-license">{{ optional($doctor)->specialization ?? 'General Practice' }}</p>
+                <p class="doctor-license">PTR No.: ____________ &nbsp; S2 No.: ____________</p>
+                <div class="stamp">E-SIGNED</div>
             </div>
+        </div>
+
+        <div class="small-note">
+            This document was generated electronically and is valid without a wet signature when verified through Cabuyao CHO-I records.
         </div>
     </div>
 </body>
