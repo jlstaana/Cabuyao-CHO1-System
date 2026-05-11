@@ -23,6 +23,7 @@ class UserSeeder extends Seeder
             'role' => 'Admin',
             'first_login' => false,
             'is_active' => true,
+            'email_verified_at' => now(),
         ]);
 
         // 2. Create Doctor Account
@@ -32,6 +33,7 @@ class UserSeeder extends Seeder
             'role' => 'Doctor',
             'first_login' => false,
             'is_active' => true,
+            'email_verified_at' => now(),
         ]);
         
         Doctor::updateOrCreate(['user_id' => $doctorUser->id], [
@@ -46,6 +48,7 @@ class UserSeeder extends Seeder
             'role' => 'Staff',
             'first_login' => false,
             'is_active' => true,
+            'email_verified_at' => now(),
         ]);
         
         Staff::updateOrCreate(['user_id' => $staffUser->id], [
@@ -60,6 +63,7 @@ class UserSeeder extends Seeder
             'role' => 'Patient',
             'first_login' => false,
             'is_active' => true,
+            'email_verified_at' => now(),
         ]);
 
         Patient::updateOrCreate(['user_id' => $patientUser->id], [
