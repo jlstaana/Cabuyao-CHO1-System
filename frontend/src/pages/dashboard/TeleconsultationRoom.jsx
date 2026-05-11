@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import SEO from '../../components/SEO';
-import { Video, Mic, MicOff, VideoOff, PhoneOff, Upload, Activity, FileText, Pill, Plus, CheckCircle, Wifi } from 'lucide-react';
+import { Video, Mic, MicOff, VideoOff, PhoneOff, Upload, Activity, FileText, Pill, Plus, CheckCircle, Wifi, MessageCircle, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const VIDEO_QUALITY_PROFILES = {
@@ -73,6 +73,9 @@ export default function TeleconsultationRoom() {
   const [prescriptionItems, setPrescriptionItems] = useState([]);
   const [videoQuality, setVideoQuality] = useState(getAdaptiveVideoQuality);
   const [noiseCancellationActive, setNoiseCancellationActive] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatSending, setChatSending] = useState(false);
   
   // Vitals State
   const [vitals, setVitals] = useState({ blood_pressure: '', heart_rate: '', temperature: '' });
@@ -85,6 +88,7 @@ export default function TeleconsultationRoom() {
   const streamRef = useRef(null);
   const audioContextRef = useRef(null);
   const noiseGateFrameRef = useRef(null);
+  const chatEndRef = useRef(null);
 
   const stopAudioProcessing = useCallback(() => {
     if (noiseGateFrameRef.current) {
@@ -205,6 +209,25 @@ export default function TeleconsultationRoom() {
       stopAudioProcessing();
     };
   }, [id, stopAudioProcessing, user]);
+
+  const fetchChatMessages = useCallback(async () => {
+    try {
+      const res = await api.get(`/consultations/${id}/messages`);
+      setChatMessages(res.data || []);
+    } catch {
+      // Chat polling is intentionally quiet so the room is not interrupted.
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchChatMessages();
+    const interval = setInterval(fetchChatMessages, 4000);
+    return () => clearInterval(interval);
+  }, [fetchChatMessages]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [chatMessages]);
 
   useEffect(() => {
     if (!callActive) return;
@@ -335,6 +358,23 @@ export default function TeleconsultationRoom() {
     setPrescriptionItems([...prescriptionItems, { medicine_id: '', dosage: '', frequency: '' }]);
   };
 
+  const sendChatMessage = async (e) => {
+    e.preventDefault();
+    const message = chatMessage.trim();
+    if (!message) return;
+
+    setChatSending(true);
+    try {
+      const res = await api.post(`/consultations/${id}/messages`, { message });
+      setChatMessages((current) => [...current, res.data]);
+      setChatMessage('');
+    } catch {
+      toast.error('Failed to send chat message');
+    } finally {
+      setChatSending(false);
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6 animate-in fade-in duration-500">
       <SEO title="Live Teleconsultation" />
@@ -420,6 +460,44 @@ export default function TeleconsultationRoom() {
                   ) : <p className="text-slate-400 italic">Waiting for patient to submit vitals...</p>}
                </div>
             )}
+         </div>
+
+         {/* Session Chat */}
+         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
+            <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><MessageCircle size={18} className="text-teal-500"/> Session Chat</h3>
+            <div className="h-56 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-3 custom-scrollbar">
+              {chatMessages.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-16">No messages yet.</p>
+              ) : chatMessages.map((message) => {
+                const isMine = message.sender_id === user?.id;
+                return (
+                  <div key={message.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm ${isMine ? 'bg-teal-500 text-white rounded-br-md' : 'bg-white text-slate-700 border border-slate-200 rounded-bl-md'}`}>
+                      <div className={`mb-1 text-[10px] font-semibold ${isMine ? 'text-teal-50' : 'text-slate-400'}`}>
+                        {isMine ? 'You' : message.sender?.name || 'Participant'}
+                      </div>
+                      <p className="whitespace-pre-wrap break-words leading-relaxed">{message.message}</p>
+                      <div className={`mt-1 text-[10px] ${isMine ? 'text-teal-50' : 'text-slate-400'}`}>
+                        {message.created_at ? new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={chatEndRef} />
+            </div>
+            <form onSubmit={sendChatMessage} className="mt-3 flex gap-2">
+              <input
+                value={chatMessage}
+                onChange={e => setChatMessage(e.target.value)}
+                placeholder="Type a message..."
+                className="min-w-0 flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 outline-none"
+                maxLength={1000}
+              />
+              <button type="submit" disabled={chatSending || !chatMessage.trim()} className="w-11 h-11 rounded-xl bg-teal-500 text-white flex items-center justify-center hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <Send size={17} />
+              </button>
+            </form>
          </div>
 
          {/* Medical Images */}

@@ -1,11 +1,17 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\{Consultation, Doctor, VitalSign, MedicalImage, ConsultationForm};
+use App\Models\{Consultation, Doctor, VitalSign, MedicalImage, ConsultationForm, ConsultationMessage};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ConsultationController extends Controller {
+    private function canAccessConsultation($user, Consultation $consultation): bool {
+        return in_array($user->role, ['Admin', 'Staff'])
+            || ($user->role === 'Patient' && (int) $consultation->patient_id === (int) $user->patient?->id)
+            || ($user->role === 'Doctor' && (!$consultation->doctor_id || (int) $consultation->doctor_id === (int) $user->doctor?->id));
+    }
+
     private function specializationTerms(string $specialization): array {
         $value = strtolower($specialization);
         $aliases = [
@@ -101,6 +107,37 @@ class ConsultationController extends Controller {
     public function recordVitals(Request $request, $id) {
         $v = VitalSign::updateOrCreate(['consultation_id' => $id], $request->all());
         return response()->json($v);
+    }
+    public function messages(Request $request, $id) {
+        $consultation = Consultation::findOrFail($id);
+        if (!$this->canAccessConsultation($request->user(), $consultation)) {
+            return response()->json(['message' => 'Unauthorized consultation chat'], 403);
+        }
+
+        return response()->json(
+            ConsultationMessage::with('sender:id,name,role')
+                ->where('consultation_id', $consultation->id)
+                ->orderBy('created_at')
+                ->get()
+        );
+    }
+    public function sendMessage(Request $request, $id) {
+        $consultation = Consultation::findOrFail($id);
+        if (!$this->canAccessConsultation($request->user(), $consultation)) {
+            return response()->json(['message' => 'Unauthorized consultation chat'], 403);
+        }
+
+        $data = $request->validate([
+            'message' => 'required|string|max:1000',
+        ]);
+
+        $message = ConsultationMessage::create([
+            'consultation_id' => $consultation->id,
+            'sender_id' => $request->user()->id,
+            'message' => trim($data['message']),
+        ]);
+
+        return response()->json($message->load('sender:id,name,role'), 201);
     }
     public function uploadImage(Request $request, $id) {
         $consultation = Consultation::findOrFail($id);

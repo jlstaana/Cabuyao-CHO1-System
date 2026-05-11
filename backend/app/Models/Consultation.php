@@ -11,4 +11,5 @@ class Consultation extends Model {
     public function vitalSigns() { return $this->hasOne(VitalSign::class); }
     public function medicalImages() { return $this->hasMany(MedicalImage::class); }
     public function prescription() { return $this->hasOne(Prescription::class); }
+    public function messages() { return $this->hasMany(ConsultationMessage::class); }
 }
