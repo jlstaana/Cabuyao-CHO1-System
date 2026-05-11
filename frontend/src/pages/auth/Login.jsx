@@ -18,15 +18,33 @@ export default function Login() {
   const [resetPasswordConfirmation, setResetPasswordConfirmation] = useState('');
   const [devResetCode, setDevResetCode] = useState('');
 
+  const submitLogin = async (email, password) => {
+    await login(email.trim().toLowerCase(), password);
+    toast.success('Logged in successfully!');
+  };
+
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      await login(data.email, data.password);
-      toast.success('Logged in successfully!');
+      await submitLogin(data.email, data.password);
     } catch (error) {
       const message = error.response?.data?.errors?.email?.[0]
         || error.response?.data?.message
         || 'Invalid credentials';
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    try {
+      await submitLogin('admin@cabuyao.gov.ph', 'password123');
+    } catch (error) {
+      const message = error.response?.data?.errors?.email?.[0]
+        || error.response?.data?.message
+        || 'Demo login failed';
       toast.error(message);
     } finally {
       setLoading(false);
@@ -219,6 +237,14 @@ export default function Login() {
       <p className="text-center mt-6 text-sm text-slate-600">
         Don't have an account? <Link to="/register" className="text-sky-600 font-semibold hover:underline">Register here</Link>
       </p>
+      <button
+        type="button"
+        onClick={handleDemoLogin}
+        disabled={loading}
+        className="mt-4 w-full rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-700 transition-colors hover:bg-sky-100 disabled:opacity-70"
+      >
+        Use demo admin account
+      </button>
     </div>
   );
 }

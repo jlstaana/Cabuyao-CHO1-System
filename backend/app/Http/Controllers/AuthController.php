@@ -53,6 +53,7 @@ class AuthController extends Controller {
     }
 
     public function register(Request $request) {
+        $request->merge(['email' => strtolower(trim((string) $request->email))]);
         $request->validate(['name' => 'required', 'email' => 'required|email', 'password' => 'required|min:8', 'dob' => 'required|date', 'contact_no' => 'required']);
         $existingUser = User::where('email', $request->email)->first();
         if ($existingUser) {
@@ -79,6 +80,7 @@ class AuthController extends Controller {
         ], 201);
     }
     public function verifyRegistration(Request $request) {
+        $request->merge(['email' => strtolower(trim((string) $request->email))]);
         $request->validate(['email' => 'required|email', 'code' => 'required|string|size:6']);
         $user = User::where('email', $request->email)->where('role', 'Patient')->first();
         if (!$user) {
@@ -103,6 +105,7 @@ class AuthController extends Controller {
         return response()->json(['message' => 'Account verified successfully. You can now log in.']);
     }
     public function resendVerificationCode(Request $request) {
+        $request->merge(['email' => strtolower(trim((string) $request->email))]);
         $request->validate(['email' => 'required|email']);
         $user = User::where('email', $request->email)->where('role', 'Patient')->first();
         if (!$user) {
@@ -119,6 +122,7 @@ class AuthController extends Controller {
         ]);
     }
     public function login(Request $request) {
+        $request->merge(['email' => strtolower(trim((string) $request->email))]);
         $request->validate(['email' => 'required|email', 'password' => 'required']);
         $user = User::where('email', $request->email)->first();
         if (!$user || !Hash::check($request->password, $user->password) || !$user->is_active) {
