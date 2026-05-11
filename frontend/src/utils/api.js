@@ -1,10 +1,14 @@
 import axios from 'axios';
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+const isNgrokApi = /ngrok(-free)?\.app|ngrok\.io/i.test(apiBaseUrl);
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    ...(isNgrokApi ? { 'ngrok-skip-browser-warning': 'true' } : {}),
   }
 });
 
