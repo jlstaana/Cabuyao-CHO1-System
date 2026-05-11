@@ -1,15 +1,21 @@
 FROM php:8.4-cli
 
 RUN apt-get update && apt-get install -y \
+    curl \
     git \
     unzip \
+    libcurl4-openssl-dev \
     libfreetype6-dev \
+    libicu-dev \
     libjpeg62-turbo-dev \
+    libonig-dev \
     libpng-dev \
     libpq-dev \
+    libsqlite3-dev \
+    libxml2-dev \
     libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) bcmath gd pdo_mysql pdo_pgsql zip \
+    && docker-php-ext-install -j$(nproc) bcmath curl dom gd intl mbstring pdo_mysql pdo_pgsql pdo_sqlite xml xmlreader xmlwriter zip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
