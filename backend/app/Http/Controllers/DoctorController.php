@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Doctor;
+use App\Models\{AuditLog, Doctor};
 use Illuminate\Http\Request;
 
 class DoctorController extends Controller
 {
+    private const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
     private const DEFAULT_SPECIALIZATIONS = [
         'General Medicine',
         'Cardio',
@@ -45,7 +47,7 @@ class DoctorController extends Controller
 
     public function profile(Request $request)
     {
-        return response()->json($request->user()->load('doctor'));
+        return response()->json($request->user()->load('doctor.availability'));
     }
 
     public function updateProfile(Request $request)
@@ -60,6 +62,100 @@ class DoctorController extends Controller
         }
 
         return response()->json($request->user()->load('doctor'));
+    }
+
+    private function minutes(string $time): int
+    {
+        [$hours, $minutes] = array_map('intval', explode(':', substr($time, 0, 5)));
+        return ($hours * 60) + $minutes;
+    }
+
+    private function hasScheduleConflict(array $entries): bool
+    {
+        $byDay = [];
+        foreach ($entries as $entry) {
+            $byDay[$entry['day_of_week']][] = [
+                'start' => $this->minutes($entry['start_time']),
+                'end' => $this->minutes($entry['end_time']),
+            ];
+        }
+
+        foreach ($byDay as $slots) {
+            usort($slots, fn ($a, $b) => $a['start'] <=> $b['start']);
+            for ($i = 1; $i < count($slots); $i++) {
+                if ($slots[$i]['start'] < $slots[$i - 1]['end']) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function updateAvailability(Request $request)
+    {
+        if ($request->user()->role !== 'Doctor' || !$request->user()->doctor) {
+            return response()->json(['message' => 'Only doctors can update availability settings.'], 403);
+        }
+
+        $data = $request->validate([
+            'doctor_type' => 'required|in:Resident,Visiting',
+            'availability' => 'required|array|min:1',
+            'availability.*.day_of_week' => 'required|in:' . implode(',', self::DAYS),
+            'availability.*.start_time' => 'required|date_format:H:i',
+            'availability.*.end_time' => 'required|date_format:H:i',
+        ]);
+
+        $doctor = $request->user()->doctor()->with('availability')->first();
+        $entries = collect($data['availability'])
+            ->map(fn ($entry) => [
+                'day_of_week' => $entry['day_of_week'],
+                'start_time' => substr($entry['start_time'], 0, 5),
+                'end_time' => substr($entry['end_time'], 0, 5),
+            ])
+            ->values()
+            ->all();
+
+        $hasInvalidTime = collect($entries)->contains(fn ($entry) => $this->minutes($entry['end_time']) <= $this->minutes($entry['start_time']));
+        if ($hasInvalidTime) {
+            return response()->json([
+                'message' => 'Invalid schedule. End time must be later than start time.',
+            ], 422);
+        }
+
+        if ($this->hasScheduleConflict($entries)) {
+            return response()->json([
+                'message' => 'Schedule conflict found. Previous schedule was kept.',
+            ], 409);
+        }
+
+        if ($data['doctor_type'] === 'Visiting') {
+            $days = collect($entries)->pluck('day_of_week')->unique();
+            $hasLongSlot = collect($entries)->contains(fn ($entry) => ($this->minutes($entry['end_time']) - $this->minutes($entry['start_time'])) > 240);
+            if ($days->count() > 3 || $hasLongSlot) {
+                return response()->json([
+                    'message' => 'Invalid schedule. Visiting doctors are limited to 3 days per week and 4 hours per time slot.',
+                ], 422);
+            }
+        }
+
+        $doctor->availability()->delete();
+        foreach ($entries as $entry) {
+            $doctor->availability()->create($entry);
+        }
+        $doctor->update(['doctor_type' => $data['doctor_type']]);
+
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'Updated Doctor Availability',
+            'description' => "Updated {$data['doctor_type']} doctor schedule.",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json([
+            'message' => "{$data['doctor_type']} doctor availability saved.",
+            'doctor' => $doctor->fresh(['availability', 'user:id,name,is_active']),
+        ]);
     }
 
     public function specializations()
@@ -105,6 +201,7 @@ class DoctorController extends Controller
                     'user_id' => $doctor->user_id,
                     'name' => $doctor->user?->name,
                     'specialization' => $this->canonicalSpecialization($doctor->specialization),
+                    'doctor_type' => $doctor->doctor_type ?: 'Resident',
                     'is_active' => (bool) $doctor->user?->is_active,
                     'is_available_now' => $isOnSchedule,
                     'availability' => $doctor->availability->map(fn ($slot) => [

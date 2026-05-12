@@ -19,9 +19,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Patient Profile & History
     Route::get('/patients/profile', [PatientController::class, 'profile']);
     Route::put('/patients/profile', [PatientController::class, 'updateProfile']);
+    Route::put('/patients/{patient}/record', [PatientController::class, 'updateRecord'])->middleware('role:Admin,Staff');
+    Route::post('/patients/{patient}/archive', [PatientController::class, 'archiveRecord'])->middleware('role:Admin,Staff');
     Route::get('/patients/history', [PatientController::class, 'history']);
     Route::get('/doctor/profile', [DoctorController::class, 'profile']);
     Route::put('/doctor/profile', [DoctorController::class, 'updateProfile']);
+    Route::put('/doctor/availability', [DoctorController::class, 'updateAvailability']);
     Route::get('/doctors/specializations', [DoctorController::class, 'specializations']);
     Route::get('/doctors/available', [DoctorController::class, 'availableDoctors']);
 
@@ -45,10 +48,12 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::get('/prescriptions', [PrescriptionController::class, 'index']);
     Route::post('/prescriptions', [PrescriptionController::class, 'store']);
+    Route::put('/prescriptions/{id}', [PrescriptionController::class, 'update']);
     Route::get('/prescriptions/{id}/download', [PrescriptionController::class, 'download']);
 
     // Admin Users
     Route::get('/admin/users', [AdminController::class, 'getUsers'])->middleware('role:Admin,Staff');
+    Route::patch('/admin/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->middleware('role:Admin,Staff');
     Route::post('/admin/doctors', [AdminController::class, 'createDoctor'])->middleware('role:Admin');
     Route::post('/admin/staff', [AdminController::class, 'createStaff'])->middleware('role:Admin');
 

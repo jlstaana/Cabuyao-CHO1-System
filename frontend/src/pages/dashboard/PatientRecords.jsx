@@ -9,8 +9,10 @@ import {
   Calendar, Clock, FileText, Video, ImagePlus,
   AlertCircle, HeartPulse, Phone,
   MapPin, User, ClipboardList, Download, FileImage,
+  Edit, Save, Archive,
 } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
+import Modal from '../../components/Modal';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function calcAge(dob) {
@@ -47,6 +49,7 @@ function buildPatientRecords(consultations) {
       dob: patient.dob,
       contact: patient.contact_no || 'N/A',
       address: patient.address || 'N/A',
+      medical_history: patient.record?.medical_history || '',
       blood_type: 'N/A',
       allergies: 'N/A',
       last_visit: 'N/A',
@@ -136,10 +139,15 @@ export default function PatientRecords() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState({}); // per patient
+  const [editModal, setEditModal] = useState(false);
+  const [archiveModal, setArchiveModal] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', dob: '', contact_no: '', address: '', medical_history: '' });
+  const [archiveReason, setArchiveReason] = useState('');
 
   // All hooks must run before any conditional return
   useEffect(() => {
-    if (user?.role !== 'Doctor') {
+    if (!['Doctor', 'Admin', 'Staff'].includes(user?.role)) {
       return;
     }
     let isActive = true;
@@ -156,17 +164,73 @@ export default function PatientRecords() {
     return () => { isActive = false; };
   }, [user]);
 
-  // Guard: Doctor only
-  if (user?.role !== 'Doctor') {
+  // Guard: clinical/admin roles only
+  if (!['Doctor', 'Admin', 'Staff'].includes(user?.role)) {
     return (
       <div className="p-8 text-center text-slate-500 bg-white rounded-2xl shadow-sm border border-slate-100">
-        This page is only accessible to doctors.
+        This page is only accessible to doctors, health officers, and admins.
       </div>
     );
   }
 
+  const canEditRecords = ['Admin', 'Staff'].includes(user?.role);
   const getTab = (id) => activeTab[id] || 'overview';
   const setTab = (id, tab) => setActiveTab((prev) => ({ ...prev, [id]: tab }));
+  const openEdit = (patient) => {
+    setSelected(patient);
+    setEditForm({
+      name: patient.name || '',
+      dob: patient.dob ? String(patient.dob).slice(0, 10) : '',
+      contact_no: patient.contact === 'N/A' ? '' : patient.contact || '',
+      address: patient.address === 'N/A' ? '' : patient.address || '',
+      medical_history: patient.medical_history || '',
+    });
+    setEditModal(true);
+  };
+
+  const handleUpdateRecord = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.put(`/patients/${selected.id}/record`, editForm);
+      const updated = response.data?.patient;
+      setPatients((rows) => rows.map((patient) => patient.id === selected.id ? {
+        ...patient,
+        name: updated?.user?.name || editForm.name,
+        dob: updated?.dob || editForm.dob,
+        contact: updated?.contact_no || 'N/A',
+        address: updated?.address || 'N/A',
+        medical_history: updated?.record?.medical_history || '',
+      } : patient));
+      toast.success(response.data?.message || 'Patient record updated successfully.');
+      setEditModal(false);
+    } catch (err) {
+      const errors = err.response?.data?.errors;
+      const firstError = errors ? Object.values(errors).flat()[0] : null;
+      toast.error(firstError || err.response?.data?.message || 'Validation error. Changes were rejected.');
+    }
+  };
+
+  const openArchive = (patient) => {
+    setSelected(patient);
+    setArchiveReason('');
+    setArchiveModal(true);
+  };
+
+  const handleArchiveRecord = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post(`/patients/${selected.id}/archive`, { reason: archiveReason });
+      setPatients((rows) => rows.filter((patient) => patient.id !== selected.id));
+      setExpandedId((current) => current === selected.id ? null : current);
+      toast.success(response.data?.message || 'Patient record archived successfully.');
+      setArchiveModal(false);
+    } catch (err) {
+      const errors = err.response?.data?.errors;
+      const firstError = errors ? Object.values(errors).flat()[0] : null;
+      toast.error(firstError || err.response?.data?.message || 'Archive not allowed.');
+    }
+  };
+
   const handleDownload = async (file) => {
     try {
       const response = await api.get(`/medical-images/${file.id}/download`, { responseType: 'blob' });
@@ -194,7 +258,7 @@ export default function PatientRecords() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageTitle icon={Users} title="Patient Records" description="View medical history, vitals, images, and consultations for your patients." iconClassName="bg-indigo-50 text-indigo-600" />
+        <PageTitle icon={Users} title="Patient Records" description={canEditRecords ? 'Open patient records, update permitted information, and review history.' : 'View medical history, vitals, images, and consultations for your patients.'} iconClassName="bg-indigo-50 text-indigo-600" />
         <div className="text-right">
           <p className="text-2xl font-black text-sky-600">{patients.length}</p>
           <p className="text-xs text-slate-400 font-medium">Assigned Patients</p>
@@ -314,9 +378,31 @@ export default function PatientRecords() {
                             <InfoChip icon={HeartPulse} label="Blood Type" value={patient.blood_type} />
                             <InfoChip icon={AlertCircle} label="Allergies" value={patient.allergies} />
                           </div>
+                          {patient.medical_history && (
+                            <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Medical History</p>
+                              <p className="mt-1 text-sm text-slate-600 whitespace-pre-wrap">{patient.medical_history}</p>
+                            </div>
+                          )}
 
                           {/* Quick action buttons */}
                           <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                            {canEditRecords && (
+                              <>
+                                <button
+                                  onClick={() => openEdit(patient)}
+                                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-medium hover:bg-indigo-100 transition-colors"
+                                >
+                                  <Edit size={15} /> Edit Record
+                                </button>
+                                <button
+                                  onClick={() => openArchive(patient)}
+                                  className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors"
+                                >
+                                  <Archive size={15} /> Archive
+                                </button>
+                              </>
+                            )}
                             <button
                               onClick={() => setTab(patient.id, 'consultations')}
                               className="flex items-center gap-2 px-4 py-2 bg-sky-50 text-sky-700 rounded-xl text-sm font-medium hover:bg-sky-100 transition-colors"
@@ -459,6 +545,71 @@ export default function PatientRecords() {
           })
         )}
       </div>
+
+      <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Update Patient Record">
+        {selected && (
+          <form onSubmit={handleUpdateRecord} className="space-y-4">
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+              Edit permitted patient information. Invalid changes are rejected and the previous record is kept.
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+              <input required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                <input type="date" value={editForm.dob} onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Contact No.</label>
+                <input value={editForm.contact_no} onChange={(e) => setEditForm({ ...editForm, contact_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
+              <textarea rows={2} value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Medical History</label>
+              <textarea rows={4} value={editForm.medical_history} onChange={(e) => setEditForm({ ...editForm, medical_history: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
+            </div>
+            <div className="pt-2 flex justify-end gap-3">
+              <button type="button" onClick={() => setEditModal(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-indigo-500 text-white font-semibold hover:bg-indigo-600 rounded-xl flex items-center gap-2 shadow-md shadow-indigo-200">
+                <Save size={16} /> Submit Changes
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      <Modal isOpen={archiveModal} onClose={() => setArchiveModal(false)} title="Archive Patient Record">
+        {selected && (
+          <form onSubmit={handleArchiveRecord} className="space-y-4">
+            <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              Provide a reason before archiving {selected.name}. Records with active consultation requests or schedules cannot be archived.
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Archive Reason</label>
+              <textarea
+                required
+                rows={4}
+                value={archiveReason}
+                onChange={(e) => setArchiveReason(e.target.value)}
+                placeholder="Enter the reason for archiving this patient record"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-rose-500/20 outline-none resize-none"
+              />
+            </div>
+            <div className="pt-2 flex justify-end gap-3">
+              <button type="button" onClick={() => setArchiveModal(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-rose-500 text-white font-semibold hover:bg-rose-600 rounded-xl flex items-center gap-2 shadow-md shadow-rose-200">
+                <Archive size={16} /> Confirm Archive
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

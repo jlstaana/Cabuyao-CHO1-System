@@ -1,18 +1,49 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\{Consultation, Prescription};
+use App\Models\{AuditLog, Consultation, Prescription, PrescriptionVersion};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PrescriptionController extends Controller {
+    private function validatePrescriptionItems(Request $request): array {
+        return $request->validate([
+            'notes' => 'nullable|string|max:2000',
+            'items' => 'required|array|min:1',
+            'items.*.medicine_id' => 'required|exists:medicines,id',
+            'items.*.dosage' => 'required|string|max:255',
+            'items.*.frequency' => 'required|string|max:255',
+            'items.*.duration' => 'nullable|string|max:255',
+            'items.*.instructions' => 'nullable|string|max:2000',
+        ]);
+    }
+
+    private function prescriptionSnapshot(Prescription $prescription): array {
+        $prescription->loadMissing('items.medicine');
+        return [
+            'notes' => $prescription->notes,
+            'doctor_signature_svg' => $prescription->doctor_signature_svg,
+            'items' => $prescription->items->map(fn ($item) => [
+                'medicine_id' => $item->medicine_id,
+                'medicine_name' => $item->medicine?->name,
+                'dosage' => $item->dosage,
+                'frequency' => $item->frequency,
+                'duration' => $item->duration,
+                'instructions' => $item->instructions,
+            ])->values()->all(),
+        ];
+    }
+
     public function index(Request $request) {
         $user = $request->user();
         if ($user->role === 'Patient') {
-            return response()->json(Prescription::where('patient_id', $user->patient->id)->with('items.medicine', 'doctor.user')->get());
+            return response()->json(Prescription::where('patient_id', $user->patient->id)->with('items.medicine', 'doctor.user', 'patient.user')->latest('updated_at')->get());
         }
-        return response()->json(Prescription::with('items.medicine', 'patient.user', 'doctor.user')->get());
+        if ($user->role === 'Doctor') {
+            return response()->json(Prescription::where('doctor_id', $user->doctor?->id)->with('items.medicine', 'patient.user', 'doctor.user')->latest('updated_at')->get());
+        }
+        return response()->json(Prescription::with('items.medicine', 'patient.user', 'doctor.user')->latest('updated_at')->get());
     }
     public function store(Request $request) {
         $request->validate([
@@ -65,6 +96,48 @@ class PrescriptionController extends Controller {
         });
 
         return response()->json($prescription->load('items.medicine', 'patient.user', 'doctor.user'));
+    }
+    public function update(Request $request, $id) {
+        $data = $this->validatePrescriptionItems($request);
+        $doctor = $request->user()->doctor;
+        if (!$doctor) {
+            throw ValidationException::withMessages(['doctor' => ['Only doctors can update prescriptions.']]);
+        }
+
+        $prescription = DB::transaction(function () use ($id, $data, $request, $doctor) {
+            $prescription = Prescription::with('items.medicine')->lockForUpdate()->findOrFail($id);
+            if ((int) $prescription->doctor_id !== (int) $doctor->id) {
+                throw ValidationException::withMessages(['prescription' => ['You can only update prescriptions you created.']]);
+            }
+
+            $nextVersion = ((int) $prescription->versions()->max('version')) + 1;
+            PrescriptionVersion::create([
+                'prescription_id' => $prescription->id,
+                'version' => $nextVersion,
+                'snapshot' => $this->prescriptionSnapshot($prescription),
+                'updated_by' => $request->user()->id,
+            ]);
+
+            $prescription->update(['notes' => $data['notes'] ?? null]);
+            $prescription->items()->delete();
+            foreach ($data['items'] as $item) {
+                $prescription->items()->create($item);
+            }
+
+            AuditLog::create([
+                'user_id' => $request->user()->id,
+                'action' => "Updated Prescription #{$prescription->id}",
+                'description' => "Recorded previous prescription version {$nextVersion}.",
+                'ip_address' => $request->ip(),
+            ]);
+
+            return $prescription;
+        });
+
+        return response()->json([
+            'message' => 'Prescription updated. Patient has been notified.',
+            'prescription' => $prescription->load('items.medicine', 'patient.user', 'doctor.user', 'versions'),
+        ]);
     }
     public function download($id) {
         $prescription = Prescription::with(['items.medicine', 'patient.user', 'doctor.user'])->findOrFail($id);

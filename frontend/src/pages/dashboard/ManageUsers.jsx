@@ -215,13 +215,13 @@ export default function ManageUsers() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      {u.access_type === 'visiting' ? (
+                      {u.doctor?.doctor_type === 'Visiting' ? (
                         <span className="flex items-center gap-1.5 text-purple-600 text-xs font-semibold bg-purple-50 px-2.5 py-1 rounded-md w-fit">
                           <UserCheck size={13} /> Visiting
-                          {u.expires_at && <span className="text-purple-400 ml-1">· {u.expires_at}</span>}
+                          {u.doctor?.active_until && <span className="text-purple-400 ml-1">· {new Date(u.doctor.active_until).toLocaleDateString()}</span>}
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-xs font-medium">Permanent</span>
+                        <span className="text-slate-400 text-xs font-medium">{u.role === 'Doctor' ? 'Resident' : 'Permanent'}</span>
                       )}
                     </td>
                     <td className="px-6 py-4">

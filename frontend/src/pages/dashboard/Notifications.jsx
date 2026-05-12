@@ -53,7 +53,14 @@ function buildConsultationNotifications(consultations, role, readIds = []) {
       ? 'Consultation Completed'
       : consultation.status === 'Scheduled'
         ? 'Consultation Scheduled'
-        : 'Consultation Update';
+        : consultation.status === 'Pending'
+          ? 'Consultation Queued'
+          : 'Consultation Update';
+    const message = consultation.status === 'Scheduled'
+      ? `${isPatient ? `Dr. ${otherPerson}` : `Patient ${otherPerson}`} is scheduled${consultation.scheduled_at ? ` for ${new Date(consultation.scheduled_at).toLocaleString()}` : ''}.`
+      : consultation.status === 'Pending'
+        ? `${isPatient ? 'Your request' : `Patient ${otherPerson}`} is queued until a doctor confirms availability${consultation.scheduled_at ? ` for ${new Date(consultation.scheduled_at).toLocaleString()}` : ''}.`
+        : `${isPatient ? otherPerson : `Patient ${otherPerson}`} - ${consultation.status}`;
     const targetPath = consultation.status === 'Scheduled'
       ? `/room/${consultation.id}`
       : consultation.status === 'Completed' && consultation.prescription?.id
@@ -69,12 +76,41 @@ function buildConsultationNotifications(consultations, role, readIds = []) {
       type: 'consultation',
       category: consultation.status === 'Completed' ? 'success' : consultation.status === 'Cancelled' ? 'error' : 'info',
       title,
-      message: `${isPatient ? otherPerson : `Patient ${otherPerson}`} - ${consultation.status}`,
+      message,
       time: consultation.updated_at ? new Date(consultation.updated_at).toLocaleString() : 'N/A',
       read: readSet.has(`consultation-${consultation.id}`),
       iconBg: 'bg-sky-100',
       iconColor: 'text-sky-600',
       targetPath,
+    };
+  });
+}
+
+function buildPrescriptionNotifications(prescriptions, role, readIds = []) {
+  const readSet = new Set(readIds);
+
+  return prescriptions.slice(0, 20).map((prescription) => {
+    const isPatient = role === 'Patient';
+    const otherPerson = isPatient
+      ? prescription.doctor?.user?.name || 'Assigned doctor'
+      : prescription.patient?.user?.name || 'Patient';
+    const createdAt = prescription.created_at ? new Date(prescription.created_at).getTime() : 0;
+    const updatedAt = prescription.updated_at ? new Date(prescription.updated_at).getTime() : 0;
+    const wasUpdated = updatedAt > createdAt + 1000;
+
+    return {
+      id: `prescription-${prescription.id}`,
+      type: 'prescription',
+      category: wasUpdated ? 'info' : 'success',
+      title: wasUpdated ? 'Prescription Updated' : 'Prescription Available',
+      message: wasUpdated
+        ? `${isPatient ? `Dr. ${otherPerson}` : `Prescription for ${otherPerson}`} updated an e-prescription.`
+        : `${isPatient ? `Dr. ${otherPerson}` : `Prescription for ${otherPerson}`} created an e-prescription.`,
+      time: prescription.updated_at ? new Date(prescription.updated_at).toLocaleString() : 'N/A',
+      read: readSet.has(`prescription-${prescription.id}`),
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+      targetPath: '/prescriptions',
     };
   });
 }
@@ -91,9 +127,15 @@ export default function Notifications() {
 
   useEffect(() => {
     let isActive = true;
-    api.get('/consultations')
-      .then((res) => {
-        if (isActive) setNotifications(buildConsultationNotifications(res.data || [], role, getStoredReadIds(user?.id)));
+    Promise.all([api.get('/consultations'), api.get('/prescriptions')])
+      .then(([consultationRes, prescriptionRes]) => {
+        if (isActive) {
+          const readIds = getStoredReadIds(user?.id);
+          setNotifications([
+            ...buildConsultationNotifications(consultationRes.data || [], role, readIds),
+            ...buildPrescriptionNotifications(prescriptionRes.data || [], role, readIds),
+          ].sort((a, b) => new Date(b.time) - new Date(a.time)));
+        }
       })
       .catch(() => {
         if (isActive) setNotifications([]);

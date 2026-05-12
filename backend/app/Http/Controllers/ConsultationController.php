@@ -85,7 +85,8 @@ class ConsultationController extends Controller {
 
     public function index(Request $request) {
         $user = $request->user();
-        $query = Consultation::with(['patient.user', 'doctor.user', 'vitalSigns', 'medicalImages', 'form', 'prescription.items.medicine']);
+        $query = Consultation::with(['patient.user', 'patient.record', 'doctor.user', 'vitalSigns', 'medicalImages', 'form', 'prescription.items.medicine']);
+        $query->whereHas('patient', fn ($patientQuery) => $patientQuery->where('archived', false));
         if ($user->role === 'Patient') {
             $query->where('patient_id', $user->patient->id);
         } elseif ($user->role === 'Doctor') {
@@ -105,24 +106,69 @@ class ConsultationController extends Controller {
         return response()->json($query->orderBy('created_at', 'desc')->get());
     }
     public function requestConsultation(Request $request) {
-        $request->validate([
+        $data = $request->validate([
             'requested_specialization' => 'required|string|max:255',
-            'scheduled_at' => 'nullable|date',
+            'scheduled_at' => 'required|date',
+            'symptoms' => 'required|string|max:2000',
+            'notes' => 'nullable|string|max:2000',
+            'vitals' => 'required|array',
+            'vitals.height' => 'nullable|string|max:50',
+            'vitals.weight' => 'nullable|string|max:50',
+            'vitals.blood_pressure' => 'required|string|max:50',
+            'vitals.heart_rate' => 'required|string|max:50',
+            'vitals.temperature' => 'required|string|max:50',
+            'vitals.respiratory' => 'nullable|string|max:50',
+            'vitals.oxygen' => 'nullable|string|max:50',
         ]);
 
-        $doctor = $this->matchingDoctor($request->requested_specialization, $request->scheduled_at);
+        $doctor = $this->matchingDoctor($data['requested_specialization'], $data['scheduled_at']);
+        $status = $doctor ? 'Scheduled' : 'Pending';
 
         $c = Consultation::create([
             'patient_id' => $request->user()->patient->id,
             'doctor_id' => $doctor?->id,
-            'requested_specialization' => $request->requested_specialization,
-            'scheduled_at' => $request->scheduled_at,
-            'status' => $doctor && $request->scheduled_at ? 'Scheduled' : 'Pending',
+            'requested_specialization' => $data['requested_specialization'],
+            'scheduled_at' => $data['scheduled_at'],
+            'status' => $status,
         ]);
-        return response()->json($c);
+
+        ConsultationForm::create([
+            'consultation_id' => $c->id,
+            'symptoms' => $data['symptoms'],
+            'notes' => $data['notes'] ?? null,
+        ]);
+
+        VitalSign::create([
+            'consultation_id' => $c->id,
+            ...array_filter($data['vitals'], fn ($value) => $value !== null && $value !== ''),
+        ]);
+
+        $message = $doctor
+            ? 'Consultation scheduled with an available doctor.'
+            : 'No doctor is available for the selected schedule. Your request has been queued for coordination.';
+
+        return response()->json([
+            ...$c->load(['doctor.user', 'form', 'vitalSigns'])->toArray(),
+            'message' => $message,
+        ], 201);
     }
     public function recordVitals(Request $request, $id) {
-        $v = VitalSign::updateOrCreate(['consultation_id' => $id], $request->all());
+        $consultation = Consultation::findOrFail($id);
+        if (!$this->canAccessConsultation($request->user(), $consultation)) {
+            return response()->json(['message' => 'Unauthorized vital sign record'], 403);
+        }
+
+        $data = $request->validate([
+            'height' => 'nullable|string|max:50',
+            'weight' => 'nullable|string|max:50',
+            'blood_pressure' => 'nullable|string|max:50',
+            'heart_rate' => 'nullable|string|max:50',
+            'temperature' => 'nullable|string|max:50',
+            'respiratory' => 'nullable|string|max:50',
+            'oxygen' => 'nullable|string|max:50',
+        ]);
+
+        $v = VitalSign::updateOrCreate(['consultation_id' => $id], $data);
         return response()->json($v);
     }
     public function messages(Request $request, $id) {
@@ -190,10 +236,7 @@ class ConsultationController extends Controller {
     }
     public function downloadMedicalFile(Request $request, $imageId) {
         $image = MedicalImage::with('consultation.doctor')->findOrFail($imageId);
-        $user = $request->user();
-        $canAccess = in_array($user->role, ['Admin', 'Staff'])
-            || ($user->role === 'Patient' && (int) $image->patient_id === (int) $user->patient->id)
-            || ($user->role === 'Doctor' && (int) $image->consultation?->doctor_id === (int) $user->doctor->id);
+        $canAccess = $image->consultation && $this->canAccessConsultation($request->user(), $image->consultation);
 
         if (!$canAccess) {
             return response()->json(['message' => 'Unauthorized file access'], 403);

@@ -16,6 +16,7 @@ class AdminController extends Controller {
             'specialization' => 'required',
             'license_no' => 'nullable|unique:doctors,license_no',
             'expires_at' => 'nullable|date',
+            'access_type' => 'nullable|in:permanent,visiting',
             'availability_days' => 'nullable|array',
             'availability_days.*' => 'in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
             'start_time' => 'nullable|date_format:H:i',
@@ -35,6 +36,7 @@ class AdminController extends Controller {
             'specialization' => $request->specialization,
             'license_no' => $request->license_no ?: 'VIS-' . str_pad($user->id, 6, '0', STR_PAD_LEFT),
             'active_until' => $request->expires_at,
+            'doctor_type' => $request->access_type === 'visiting' ? 'Visiting' : 'Resident',
         ]);
         foreach ($request->availability_days ?: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as $day) {
             $doctor->availability()->create([
@@ -65,5 +67,28 @@ class AdminController extends Controller {
         Staff::create(['user_id' => $user->id, 'department' => $request->department]);
         AuditLog::create(['user_id' => $request->user()->id, 'action' => "Created Staff $user->email", 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Staff created', 'user' => $user]);
+    }
+
+    public function deactivateUser(Request $request, User $user) {
+        if ((int) $request->user()->id === (int) $user->id) {
+            return response()->json(['message' => 'You cannot archive your own account.'], 422);
+        }
+
+        if ($user->role === 'Admin' && User::where('role', 'Admin')->where('is_active', true)->count() <= 1) {
+            return response()->json(['message' => 'At least one active admin account is required.'], 422);
+        }
+
+        $user->update(['is_active' => false]);
+        if ($user->patient) {
+            $user->patient->update(['archived' => true]);
+        }
+
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => "Archived User $user->email",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json(['message' => 'Account archived', 'user' => $user->load(['doctor', 'staff', 'patient'])]);
     }
 }

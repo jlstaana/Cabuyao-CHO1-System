@@ -2,14 +2,23 @@ import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
-import { FileText, Download, User } from 'lucide-react';
+import { FileText, Download, User, Edit, Plus, Trash2, Save } from 'lucide-react';
 import SEO from '../../components/SEO';
 import PageTitle from '../../components/PageTitle';
+import Modal from '../../components/Modal';
+import useAuthStore from '../../store/useAuthStore';
+
+const emptyItem = { medicine_id: '', dosage: '', frequency: '', duration: '', instructions: '' };
 
 export default function Prescriptions() {
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [prescriptions, setPrescriptions] = useState([]);
+  const [medicines, setMedicines] = useState([]);
   const [downloadingId, setDownloadingId] = useState(null);
+  const [editModal, setEditModal] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [editForm, setEditForm] = useState({ notes: '', items: [{ ...emptyItem }] });
 
   useEffect(() => {
     const fetchPrescriptions = async () => {
@@ -24,6 +33,13 @@ export default function Prescriptions() {
     };
     fetchPrescriptions();
   }, []);
+
+  useEffect(() => {
+    if (user?.role !== 'Doctor') return;
+    api.get('/medicines')
+      .then((response) => setMedicines(response.data || []))
+      .catch(() => setMedicines([]));
+  }, [user?.role]);
 
   const handleDownload = async (prescriptionId) => {
     setDownloadingId(prescriptionId);
@@ -43,6 +59,57 @@ export default function Prescriptions() {
       toast.error('Failed to download prescription PDF');
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  const openEdit = (prescription) => {
+    setSelected(prescription);
+    setEditForm({
+      notes: prescription.notes || '',
+      items: prescription.items?.length
+        ? prescription.items.map((item) => ({
+            medicine_id: String(item.medicine_id || ''),
+            dosage: item.dosage || '',
+            frequency: item.frequency || '',
+            duration: item.duration || '',
+            instructions: item.instructions || '',
+          }))
+        : [{ ...emptyItem }],
+    });
+    setEditModal(true);
+  };
+
+  const updateItem = (index, key, value) => {
+    setEditForm((form) => ({
+      ...form,
+      items: form.items.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item),
+    }));
+  };
+
+  const addItem = () => {
+    setEditForm((form) => ({ ...form, items: [...form.items, { ...emptyItem }] }));
+  };
+
+  const removeItem = (index) => {
+    setEditForm((form) => ({ ...form, items: form.items.filter((_, itemIndex) => itemIndex !== index) }));
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        notes: editForm.notes,
+        items: editForm.items.map((item) => ({ ...item, medicine_id: Number(item.medicine_id) })),
+      };
+      const response = await api.put(`/prescriptions/${selected.id}`, payload);
+      const updated = response.data?.prescription;
+      if (updated) {
+        setPrescriptions((rows) => rows.map((row) => row.id === updated.id ? updated : row));
+      }
+      toast.success(response.data?.message || 'Prescription updated.');
+      setEditModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Update error. Previous prescription was kept.');
     }
   };
 
@@ -85,16 +152,84 @@ export default function Prescriptions() {
               </p>
             </div>
             
-            <button 
-              onClick={() => handleDownload(p.id)}
-              disabled={downloadingId === p.id}
-              className="w-full flex items-center justify-center gap-2 bg-slate-50 text-slate-700 py-2.5 rounded-xl font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors border border-slate-200 hover:border-emerald-200"
-            >
-              <Download size={18} /> {downloadingId === p.id ? 'Downloading...' : 'Download PDF'}
-            </button>
+            <div className="space-y-2">
+              {user?.role === 'Doctor' && (
+                <button
+                  onClick={() => openEdit(p)}
+                  className="w-full flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 py-2.5 rounded-xl font-medium hover:bg-emerald-100 transition-colors border border-emerald-100"
+                >
+                  <Edit size={17} /> Edit Prescription
+                </button>
+              )}
+              <button
+                onClick={() => handleDownload(p.id)}
+                disabled={downloadingId === p.id}
+                className="w-full flex items-center justify-center gap-2 bg-slate-50 text-slate-700 py-2.5 rounded-xl font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors border border-slate-200 hover:border-emerald-200"
+              >
+                <Download size={18} /> {downloadingId === p.id ? 'Downloading...' : 'Download PDF'}
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Update E-Prescription">
+        {selected && (
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              Modify the medicine, dosage, frequency, duration, or instructions. Invalid updates keep the previous prescription unchanged.
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Prescription Notes</label>
+              <textarea
+                rows={2}
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-slate-700">Medicines</p>
+                <button type="button" onClick={addItem} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100">
+                  <Plus size={13} /> Add Medicine
+                </button>
+              </div>
+
+              {editForm.items.map((item, index) => (
+                <div key={index} className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                    <select required value={item.medicine_id} onChange={(e) => updateItem(index, 'medicine_id', e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20">
+                      <option value="">Select medicine...</option>
+                      {medicines.map((medicine) => (
+                        <option key={medicine.id} value={medicine.id}>{medicine.name}</option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={() => removeItem(index)} disabled={editForm.items.length === 1} className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-2 text-rose-500 border border-slate-200 hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <input required value={item.dosage} onChange={(e) => updateItem(index, 'dosage', e.target.value)} placeholder="Dosage" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                    <input required value={item.frequency} onChange={(e) => updateItem(index, 'frequency', e.target.value)} placeholder="Frequency" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                    <input value={item.duration} onChange={(e) => updateItem(index, 'duration', e.target.value)} placeholder="Duration" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                  </div>
+                  <textarea value={item.instructions} onChange={(e) => updateItem(index, 'instructions', e.target.value)} rows={2} placeholder="Instructions" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none" />
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 flex justify-end gap-3">
+              <button type="button" onClick={() => setEditModal(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-emerald-500 text-white font-semibold hover:bg-emerald-600 rounded-xl flex items-center gap-2 shadow-md shadow-emerald-200">
+                <Save size={16} /> Submit Update
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }
