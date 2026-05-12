@@ -89,7 +89,7 @@ export default function TeleconsultationRoom() {
   const streamRef = useRef(null);
   const audioContextRef = useRef(null);
   const noiseGateFrameRef = useRef(null);
-  const chatEndRef = useRef(null);
+  const chatListRef = useRef(null);
   const signatureCanvasRef = useRef(null);
   const signatureDrawingRef = useRef(false);
   const signatureStrokesRef = useRef([]);
@@ -230,7 +230,9 @@ export default function TeleconsultationRoom() {
   }, [fetchChatMessages]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const chatList = chatListRef.current;
+    if (!chatList) return;
+    chatList.scrollTop = chatList.scrollHeight;
   }, [chatMessages]);
 
   useEffect(() => {
@@ -405,7 +407,7 @@ export default function TeleconsultationRoom() {
       })
       .join('');
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${viewBoxWidth.toFixed(1)} ${viewBoxHeight.toFixed(1)}" width="180" height="34" preserveAspectRatio="xMidYMid meet">${paths}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${viewBoxWidth.toFixed(1)} ${viewBoxHeight.toFixed(1)}" width="36" height="10" preserveAspectRatio="xMidYMid meet">${paths}</svg>`;
   };
 
   const completeConsultation = async (e) => {
@@ -551,7 +553,7 @@ export default function TeleconsultationRoom() {
          {/* Session Chat */}
          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><MessageCircle size={18} className="text-teal-500"/> Session Chat</h3>
-            <div className="h-56 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-3 custom-scrollbar">
+            <div ref={chatListRef} className="h-56 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-3 custom-scrollbar">
               {chatMessages.length === 0 ? (
                 <p className="text-xs text-slate-400 text-center py-16">No messages yet.</p>
               ) : chatMessages.map((message) => {
@@ -570,7 +572,6 @@ export default function TeleconsultationRoom() {
                   </div>
                 );
               })}
-              <div ref={chatEndRef} />
             </div>
             <form onSubmit={sendChatMessage} className="mt-3 flex gap-2">
               <input

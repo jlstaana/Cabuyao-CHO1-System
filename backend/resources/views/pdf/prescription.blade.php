@@ -37,15 +37,15 @@
             vertical-align: middle;
         }
         .logo-cell {
-            width: 96px;
+            width: 108px;
             text-align: center;
         }
         .heading-cell {
             text-align: center;
         }
         .header-logo {
-            width: 60px;
-            height: 60px;
+            width: 74px;
+            height: 74px;
             object-fit: contain;
         }
         .seal-fallback {
@@ -72,9 +72,16 @@
         .header h1 {
             color: #075985;
             margin: 0;
-            font-size: 21px;
+            font-size: 19px;
             text-transform: uppercase;
             letter-spacing: 0.7px;
+        }
+        .header h1.office-title {
+            color: #0f172a;
+            margin-top: 4px;
+            font-size: 15px;
+            text-transform: none;
+            letter-spacing: 0.2px;
         }
         .header h2 {
             color: #0f172a;
@@ -237,23 +244,34 @@
             letter-spacing: 0.4px;
             margin: 0 0 3px 0;
         }
-        .signature-space {
-            width: 220px;
-            height: 34px;
-            margin: 0 auto 5px auto;
-            border-bottom: 1px solid #000;
+        .signature-table {
+            width: 1.75in;
+            margin-left: auto;
+            margin-right: auto;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .signature-table td {
             text-align: center;
+            vertical-align: bottom;
+            padding: 0;
+        }
+        .signature-space {
+            height: 0.2in;
+            line-height: 0.2in;
         }
         .signature-image {
-            width: 160px;
-            height: 30px;
-            margin: 2px auto 0 auto;
-            display: block;
+            width: 0.62in;
+            height: 0.12in;
+            display: inline;
+            vertical-align: bottom;
         }
         .doctor-name {
             font-weight: bold;
             color: #0f172a;
-            margin: 0 0 2px 0;
+            margin: 0;
+            padding-top: 3px;
+            border-top: 1px solid #000;
             text-transform: uppercase;
         }
         .doctor-license {
@@ -311,9 +329,9 @@
                     </td>
                     <td class="heading-cell">
                         <p class="republic">Republic of the Philippines</p>
+                        <h1>CITY OF CABUYAO</h1>
                         <p class="republic">Province of Laguna</p>
-                        <h1>City Government of Cabuyao</h1>
-                        <h2>City Health Office I</h2>
+                        <h1 class="office-title">Office of the City Health Doctor</h1>
                         <p>Brgy. Poblacion, City of Cabuyao, Laguna</p>
                         <p>Tel. No.: (049) 534-1234 | Email: cho@cabuyao.gov.ph</p>
                     </td>
@@ -418,12 +436,20 @@
             </div>
             <div class="signature-box">
                 <div class="signature-heading">Doctor E-Signature</div>
-                <div class="signature-space">
-                    @if(!empty($doctorSignatureSrc))
-                        <img class="signature-image" src="{{ $doctorSignatureSrc }}" alt="Doctor e-signature">
-                    @endif
-                </div>
-                <p class="doctor-name">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
+                <table class="signature-table">
+                    <tr>
+                        <td class="signature-space">
+                            @if(!empty($doctorSignatureSrc))
+                                <img class="signature-image" src="{{ $doctorSignatureSrc }}" alt="Doctor e-signature">
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p class="doctor-name">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
+                        </td>
+                    </tr>
+                </table>
                 <p class="doctor-license">PRC Lic. No.: {{ optional($doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}</p>
                 <p class="doctor-license">{{ optional($doctor)->specialization ?? 'General Practice' }}</p>
                 <p class="doctor-license">PTR No.: ____________ &nbsp; S2 No.: ____________</p>
