@@ -147,7 +147,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
 }
 
 // ─── DOCTOR VIEW ──────────────────────────────────────────────────────────────
-function DoctorView({ consultations, loading, onReschedule, onCancel }) {
+function DoctorView({ consultations, loading, onAccept, onReschedule, onCancel, availabilityStatus }) {
   const [tab, setTab] = useState('Pending');
   const pending   = consultations.filter(c => c.status === 'Pending');
   const scheduled = consultations.filter(c => c.status === 'Scheduled');
@@ -158,6 +158,17 @@ function DoctorView({ consultations, loading, onReschedule, onCancel }) {
 
   return (
     <div className="space-y-6">
+      {/* Summary strip */}
+      {availabilityStatus && (
+        <div className={`rounded-2xl border px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${availabilityStatus.is_available_now ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
+          <div className="flex items-center gap-2 font-semibold">
+            <span className={`h-2.5 w-2.5 rounded-full ${availabilityStatus.is_available_now ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+            {availabilityStatus.is_available_now ? 'Active and on schedule now' : 'Active but outside scheduled hours'}
+          </div>
+          <p className="text-xs font-medium opacity-80">{availabilityStatus.scheduleLabel || 'No fixed schedule set'}</p>
+        </div>
+      )}
+
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-4">
         {[
@@ -221,9 +232,14 @@ function DoctorView({ consultations, loading, onReschedule, onCancel }) {
                 {/* Actions */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {c.status === 'Pending' && (
-                    <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg font-medium">
-                      Awaiting schedule
-                    </span>
+                    <>
+                      <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg font-medium">
+                        Awaiting doctor
+                      </span>
+                      <button onClick={() => onAccept(c)} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
+                        <CheckCircle size={15} /> Accept
+                      </button>
+                    </>
                   )}
                   {c.status === 'Scheduled' && (
                     <>
@@ -254,8 +270,8 @@ function DoctorView({ consultations, loading, onReschedule, onCancel }) {
 }
 
 // ─── ADMIN / STAFF VIEW ───────────────────────────────────────────────────────
-function AdminView({ consultations, loading, onApprove, onReschedule, onCancel }) {
-  const [tab, setTab] = useState('Pending');
+function AdminView({ consultations, loading, onReschedule, onCancel }) {
+  const [tab, setTab] = useState('Scheduled');
   const filtered = consultations.filter(c => c.status === tab);
 
   return (
@@ -326,9 +342,7 @@ function AdminView({ consultations, loading, onApprove, onReschedule, onCancel }
                     <td className="px-5 py-3"><StatusPill status={c.status} /></td>
                     <td className="px-5 py-3 text-right">
                       {c.status === 'Pending' && (
-                        <button onClick={() => onApprove(c)} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 transition-colors ml-auto">
-                          <CheckCircle size={13} /> Approve
-                        </button>
+                        <span className="text-xs text-slate-400 italic">Doctor-managed</span>
                       )}
                       {c.status === 'Scheduled' && (
                         <div className="flex justify-end gap-2">
@@ -361,13 +375,12 @@ export default function Consultations() {
   const [loading, setLoading]     = useState(true);
   const [consultations, setConsultations] = useState([]);
   const [doctors, setDoctors]     = useState([]);
-  const [approveModal, setApproveModal] = useState(false);
   const [rescheduleModal, setRescheduleModal] = useState(false);
   const [requestModal, setRequestModal] = useState(false);
   const [selected, setSelected]   = useState(null);
-  const [approveForm, setApproveForm] = useState({ doctor_id: '', scheduled_at: '' });
   const [rescheduleForm, setRescheduleForm] = useState({ doctor_id: '', scheduled_at: '' });
   const [specializations, setSpecializations] = useState([]);
+  const [availableDoctors, setAvailableDoctors] = useState([]);
   const [requestForm, setRequestForm] = useState({ requested_specialization: '', scheduled_at: '' });
 
   const fetchConsultations = async () => {
@@ -410,6 +423,13 @@ export default function Consultations() {
           if (isActive) setSpecializations(DEFAULT_SPECIALIZATIONS);
         });
     }
+    if (user?.role === 'Patient' || user?.role === 'Doctor') {
+      api.get('/doctors/available')
+        .then(res => {
+          if (isActive) setAvailableDoctors(res.data || []);
+        })
+        .catch(console.error);
+    }
     return () => { isActive = false; };
   }, [user]);
 
@@ -421,13 +441,11 @@ export default function Consultations() {
     e.preventDefault();
     try {
       const response = await api.post('/consultations/request', requestForm);
-      toast.success(response.data?.doctor_id ? 'Consultation scheduled with a matching doctor!' : 'Request submitted for CHO scheduling.');
+      toast.success(response.data?.doctor_id ? 'Consultation scheduled with an available doctor!' : 'Request submitted for an available doctor to accept.');
       setRequestModal(false);
       fetchConsultations();
     } catch { toast.error('Failed to request consultation'); }
   };
-
-  const handleApprove = (c) => { setSelected(c); setApproveModal(true); };
 
   const handleReschedule = (c) => {
     setSelected(c);
@@ -436,6 +454,19 @@ export default function Consultations() {
       scheduled_at: c.scheduled_at ? new Date(c.scheduled_at).toISOString().slice(0, 16) : '',
     });
     setRescheduleModal(true);
+  };
+
+  const handleAccept = async (c) => {
+    try {
+      await api.post(`/consultations/${c.id}/status`, {
+        status: 'Scheduled',
+        scheduled_at: c.scheduled_at || new Date().toISOString().slice(0, 16),
+      });
+      toast.success('Consultation accepted and scheduled.');
+      fetchConsultations();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to accept consultation');
+    }
   };
 
   const handleCancel = async (c) => {
@@ -447,16 +478,6 @@ export default function Consultations() {
     } catch {
       toast.error('Failed to cancel consultation');
     }
-  };
-
-  const handleApproveSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post(`/consultations/${selected.id}/status`, { status: 'Scheduled', ...approveForm });
-      toast.success('Consultation scheduled!');
-      setApproveModal(false);
-      fetchConsultations();
-    } catch { toast.error('Failed to schedule consultation'); }
   };
 
   const handleRescheduleSubmit = async (e) => {
@@ -478,10 +499,18 @@ export default function Consultations() {
   const titles = {
     Patient: { h1: 'My Consultations', sub: 'Track your requests and join your scheduled teleconsultation.' },
     Doctor:  { h1: 'Consultation Queue', sub: 'Review incoming requests and manage your patient sessions.' },
-    Admin:   { h1: 'All Consultations', sub: 'Approve requests, assign doctors, and monitor sessions.' },
-    Staff:   { h1: 'All Consultations', sub: 'Approve requests, assign doctors, and monitor sessions.' },
+    Admin:   { h1: 'All Consultations', sub: 'Monitor doctor-managed schedules and consultation sessions.' },
+    Staff:   { h1: 'All Consultations', sub: 'Monitor doctor-managed schedules and consultation sessions.' },
   };
   const title = titles[user?.role] || titles.Patient;
+  const currentDoctorStatus = availableDoctors.find((doctor) => doctor.user_id === user?.id);
+  const currentDoctorAvailability = currentDoctorStatus ? {
+    ...currentDoctorStatus,
+    scheduleLabel: currentDoctorStatus.availability?.length
+      ? currentDoctorStatus.availability.map((slot) => `${slot.day_of_week.slice(0, 3)} ${slot.start_time}-${slot.end_time}`).join(', ')
+      : 'Available without fixed schedule',
+  } : null;
+  const matchingAvailableDoctors = availableDoctors.filter((doctor) => doctor.specialization === requestForm.requested_specialization);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
@@ -492,53 +521,16 @@ export default function Consultations() {
       </header>
 
       {user?.role === 'Patient' && <PatientView consultations={consultations} loading={loading} onRequest={handleRequest} onReschedule={handleReschedule} onCancel={handleCancel} />}
-      {user?.role === 'Doctor'  && <DoctorView  consultations={consultations} loading={loading} onReschedule={handleReschedule} onCancel={handleCancel} />}
+      {user?.role === 'Doctor'  && <DoctorView consultations={consultations} loading={loading} onAccept={handleAccept} onReschedule={handleReschedule} onCancel={handleCancel} availabilityStatus={currentDoctorAvailability} />}
       {(user?.role === 'Admin' || user?.role === 'Staff') && (
-        <AdminView consultations={consultations} loading={loading} onApprove={handleApprove} onReschedule={handleReschedule} onCancel={handleCancel} />
+        <AdminView consultations={consultations} loading={loading} onReschedule={handleReschedule} onCancel={handleCancel} />
       )}
-
-      {/* Approve & Schedule Modal */}
-      <Modal isOpen={approveModal} onClose={() => setApproveModal(false)} title="Approve & Schedule Consultation">
-        {selected && (
-          <form onSubmit={handleApproveSubmit} className="space-y-4">
-            <div className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3 mb-2">
-              <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                {(selected.patient?.user?.name || 'P').charAt(0)}
-              </div>
-              <div>
-                <p className="font-semibold text-slate-800 text-sm">{selected.patient?.user?.name || 'Patient'}</p>
-                <p className="text-xs text-slate-400">Requested {new Date(selected.created_at).toLocaleDateString()}</p>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Assign Doctor</label>
-              <select required value={approveForm.doctor_id} onChange={e => setApproveForm({ ...approveForm, doctor_id: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20 outline-none">
-                <option value="">Select a doctor...</option>
-                {doctors.map(d => <option key={d.doctor?.id} value={d.doctor?.id}>Dr. {d.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Date &amp; Time</label>
-              <input required type="datetime-local" value={approveForm.scheduled_at}
-                onChange={e => setApproveForm({ ...approveForm, scheduled_at: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" />
-            </div>
-            <div className="pt-2 flex justify-end gap-3">
-              <button type="button" onClick={() => setApproveModal(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
-              <button type="submit" className="px-5 py-2.5 bg-emerald-500 text-white font-semibold hover:bg-emerald-600 rounded-xl flex items-center gap-2 shadow-md shadow-emerald-200">
-                <CheckCircle size={16} /> Confirm Schedule
-              </button>
-            </div>
-          </form>
-        )}
-      </Modal>
 
       {/* Patient Request Modal */}
       <Modal isOpen={requestModal} onClose={() => setRequestModal(false)} title="Request Teleconsultation">
         <form onSubmit={handleRequestSubmit} className="space-y-4">
           <div className="rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-700">
-            Choose the care specialization and preferred schedule. The system will look for an active doctor whose specialization and availability match your request.
+            Choose the care specialization and preferred schedule. Active doctors can accept your request when they are on schedule.
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Needed Specialization</label>
@@ -553,6 +545,25 @@ export default function Consultations() {
                 <option key={specialization} value={specialization}>{specialization}</option>
               ))}
             </select>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase text-slate-400 mb-2">Doctor Availability</p>
+            <div className="space-y-2">
+              {matchingAvailableDoctors.length === 0 ? (
+                <p className="text-sm text-slate-400">No active doctors listed for this specialization.</p>
+              ) : matchingAvailableDoctors.map((doctor) => (
+                <div key={doctor.id} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 border border-slate-100">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Dr. {doctor.name}</p>
+                    <p className="text-xs text-slate-400">{doctor.specialization}</p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${doctor.is_available_now ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${doctor.is_available_now ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                    {doctor.is_available_now ? 'Available now' : 'Off schedule'}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Preferred Date &amp; Time</label>

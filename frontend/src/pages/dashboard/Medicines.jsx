@@ -18,7 +18,7 @@ export default function Medicines() {
   const [medicines, setMedicines] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [editTarget, setEditTarget] = useState(null);
-  const [formData, setFormData] = useState({ name: '', category: 'Analgesic', description: '', stock_quantity: 0 });
+  const [formData, setFormData] = useState({ name: '', category: 'Analgesic', description: '' });
 
   const fetchMedicines = async () => {
     try {
@@ -50,7 +50,7 @@ export default function Medicines() {
       await api.post('/medicines', formData);
       toast.success('Medicine added to database!');
       setIsAddModalOpen(false);
-      setFormData({ name: '', category: 'Analgesic', description: '', stock_quantity: 0 });
+      setFormData({ name: '', category: 'Analgesic', description: '' });
       fetchMedicines();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add medicine');
@@ -89,7 +89,7 @@ export default function Medicines() {
     <div className="animate-in fade-in duration-500">
       <SEO title="Medicine Database" />
       <div className="flex justify-between items-center mb-6">
-        <PageTitle icon={Pill} title="Medicine Database" description="View and manage the inventory of available medicines." iconClassName="bg-emerald-50 text-emerald-600" />
+        <PageTitle icon={Pill} title="Medicine Database" description="View and manage available medicines for e-prescriptions." iconClassName="bg-emerald-50 text-emerald-600" />
         {(user?.role === 'Admin' || user?.role === 'Staff') && (
           <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl hover:bg-emerald-600 transition-colors shadow-sm font-medium">
             <Plus size={18} /> Add Medicine
@@ -115,7 +115,6 @@ export default function Medicines() {
             <tr className="bg-slate-50 text-slate-500 text-sm border-b border-slate-100">
               <th className="p-4 font-semibold">Medicine Name</th>
               <th className="p-4 font-semibold">Category</th>
-              <th className="p-4 font-semibold">Stock Level</th>
               <th className="p-4 font-semibold">Status</th>
               {(user?.role === 'Admin' || user?.role === 'Staff') && <th className="p-4 font-semibold text-right">Actions</th>}
             </tr>
@@ -126,7 +125,6 @@ export default function Medicines() {
                 <tr key={i}>
                   <td className="p-4"><Skeleton className="h-6 w-40" /></td>
                   <td className="p-4"><Skeleton className="h-6 w-24" /></td>
-                  <td className="p-4"><Skeleton className="h-6 w-20" /></td>
                   <td className="p-4"><Skeleton className="h-6 w-16" /></td>
                   {(user?.role === 'Admin' || user?.role === 'Staff') && <td className="p-4"><Skeleton className="h-6 w-24 ml-auto" /></td>}
                 </tr>
@@ -145,11 +143,6 @@ export default function Medicines() {
                   </div>
                 </td>
                 <td className="p-4 text-slate-500">{m.category}</td>
-                <td className="p-4">
-                  <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${m.stock_quantity > 500 ? 'bg-emerald-100 text-emerald-700' : m.stock_quantity > 100 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
-                    {m.stock_quantity} Units
-                  </span>
-                </td>
                 <td className="p-4">
                   {m.status ? (
                     <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold"><CheckCircle size={14} /> Active</span>
@@ -200,10 +193,6 @@ export default function Medicines() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Description (optional)</label>
             <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Initial Stock (Units)</label>
-            <input type="number" min="0" required value={formData.stock_quantity} onChange={e => setFormData({ ...formData, stock_quantity: parseInt(e.target.value) })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500/20" />
-          </div>
           <div className="pt-4 flex justify-end gap-3">
             <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
             <button type="submit" className="px-5 py-2 bg-emerald-500 text-white font-medium rounded-xl shadow-md hover:bg-emerald-600 transition-colors">Save Medicine</button>
@@ -224,10 +213,6 @@ export default function Medicines() {
               <select value={editTarget.category} onChange={e => setEditTarget({ ...editTarget, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none bg-white">
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Stock Quantity</label>
-              <input type="number" min="0" value={editTarget.stock_quantity} onChange={e => setEditTarget({ ...editTarget, stock_quantity: parseInt(e.target.value) })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-sky-500/20" />
             </div>
             <div className="pt-4 flex justify-end gap-3">
               <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>

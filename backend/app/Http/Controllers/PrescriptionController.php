@@ -1,6 +1,6 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\{Consultation, Medicine, Prescription};
+use App\Models\{Consultation, Prescription};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -24,6 +24,7 @@ class PrescriptionController extends Controller {
             'items.*.frequency' => 'nullable|string',
             'items.*.duration' => 'nullable|string',
             'items.*.instructions' => 'nullable|string',
+            'doctor_signature_svg' => 'required|string|max:200000',
         ]);
 
         $doctor = $request->user()->doctor;
@@ -40,9 +41,6 @@ class PrescriptionController extends Controller {
             $prescription = Prescription::firstOrNew(['consultation_id' => $consultation->id]);
 
             if ($prescription->exists) {
-                foreach ($prescription->items as $oldItem) {
-                    Medicine::where('id', $oldItem->medicine_id)->increment('stock_quantity', 1);
-                }
                 $prescription->items()->delete();
             }
 
@@ -50,15 +48,11 @@ class PrescriptionController extends Controller {
                 'patient_id' => $consultation->patient_id,
                 'doctor_id' => $doctor->id,
                 'notes' => $request->notes,
+                'doctor_signature_svg' => $request->doctor_signature_svg,
             ]);
             $prescription->save();
 
             foreach ($request->items as $item) {
-                $medicine = Medicine::lockForUpdate()->findOrFail($item['medicine_id']);
-                if ($medicine->stock_quantity <= 0) {
-                    throw ValidationException::withMessages(['items' => ["{$medicine->name} is out of stock."]]);
-                }
-                $medicine->decrement('stock_quantity');
                 $prescription->items()->create($item);
             }
 
@@ -74,7 +68,11 @@ class PrescriptionController extends Controller {
     }
     public function download($id) {
         $prescription = Prescription::with(['items.medicine', 'patient.user', 'doctor.user'])->findOrFail($id);
-        $pdf = Pdf::loadView('pdf.prescription', compact('prescription'));
+        $doctorSignatureSvg = $prescription->doctor_signature_svg;
+        $doctorSignatureSrc = $doctorSignatureSvg
+            ? 'data:image/svg+xml;base64,' . base64_encode($doctorSignatureSvg)
+            : null;
+        $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'));
         return $pdf->download("prescription_{$id}.pdf");
     }
 }

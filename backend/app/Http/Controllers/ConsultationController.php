@@ -66,6 +66,23 @@ class ConsultationController extends Controller {
         });
     }
 
+    private function doctorIsAvailable(Doctor $doctor, ?string $scheduledAt): bool {
+        $doctor->loadMissing('availability');
+        if (!$scheduledAt || $doctor->availability->isEmpty()) {
+            return true;
+        }
+
+        $requested = new \DateTime($scheduledAt);
+        $day = $requested->format('l');
+        $time = $requested->format('H:i:s');
+
+        return $doctor->availability->contains(function ($slot) use ($day, $time) {
+            return $slot->day_of_week === $day
+                && $slot->start_time <= $time
+                && $slot->end_time >= $time;
+        });
+    }
+
     public function index(Request $request) {
         $user = $request->user();
         $query = Consultation::with(['patient.user', 'doctor.user', 'vitalSigns', 'medicalImages', 'form', 'prescription.items.medicine']);
@@ -206,6 +223,13 @@ class ConsultationController extends Controller {
         }
         if ($request->filled('doctor_id') && in_array($user->role, ['Admin', 'Staff'])) {
             $data['doctor_id'] = $request->doctor_id;
+        }
+        if ($user->role === 'Doctor' && $request->status === 'Scheduled') {
+            $scheduledAt = $data['scheduled_at'] ?? $c->scheduled_at?->toDateTimeString();
+            if (!$this->doctorIsAvailable($user->doctor, $scheduledAt)) {
+                return response()->json(['message' => 'You are not available for the selected schedule.'], 422);
+            }
+            $data['doctor_id'] = $user->doctor->id;
         }
         if ($request->status === 'Cancelled') {
             $data['scheduled_at'] = null;

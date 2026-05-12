@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/doctor/profile', [DoctorController::class, 'profile']);
     Route::put('/doctor/profile', [DoctorController::class, 'updateProfile']);
     Route::get('/doctors/specializations', [DoctorController::class, 'specializations']);
+    Route::get('/doctors/available', [DoctorController::class, 'availableDoctors']);
 
     // Consultations
     Route::get('/consultations', [ConsultationController::class, 'index']);

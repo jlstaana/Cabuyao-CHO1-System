@@ -250,7 +250,6 @@ function PatientOverview({ user, consultations, prescriptions }) {
 
 function StaffOverview({ user, stats, consultations, medicines }) {
   const pending = consultations.filter((c) => c.status === 'Pending').length;
-  const lowStock = medicines.filter((m) => m.status && Number(m.stock_quantity) <= 100).length;
   return (
     <>
       <SEO title="Dashboard" description="Staff dashboard overview" />
@@ -258,9 +257,9 @@ function StaffOverview({ user, stats, consultations, medicines }) {
         <PageTitle icon={Users} title="Staff Dashboard" description={`Welcome, ${user?.name}. Here's the current workload.`} iconClassName="bg-amber-50 text-amber-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Pending Approvals" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" />
+        <StatCard label="Pending Requests" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" />
         <StatCard label="Active Patients" value={formatNumber(stats.summary?.registered_patients)} icon={Users} color="text-sky-500" bg="bg-sky-100" />
-        <StatCard label="Medicine Stock Alerts" value={lowStock} icon={AlertCircle} color="text-rose-500" bg="bg-rose-100" />
+        <StatCard label="Active Medicines" value={medicines.filter((m) => m.status).length} icon={AlertCircle} color="text-emerald-500" bg="bg-emerald-100" />
         <StatCard label="Scheduled Today" value={consultations.filter((c) => c.status === 'Scheduled' && isToday(c.scheduled_at)).length} icon={Calendar} color="text-emerald-500" bg="bg-emerald-100" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

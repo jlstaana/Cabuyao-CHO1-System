@@ -126,7 +126,7 @@
             font-weight: bold;
         }
         .rx-symbol {
-            text-align: center;
+            text-align: left;
             font-size: 44px;
             font-weight: bold;
             font-family: DejaVu Serif, serif;
@@ -221,10 +221,18 @@
             text-align: center;
             width: 280px;
         }
-        .signature-line {
+        .signature-space {
+            width: 220px;
+            height: 34px;
+            margin: 0 auto 5px auto;
             border-bottom: 1px solid #000;
-            height: 24px;
-            margin-bottom: 5px;
+            text-align: center;
+        }
+        .signature-image {
+            width: 160px;
+            height: 30px;
+            margin: 2px auto 0 auto;
+            display: block;
         }
         .doctor-name {
             font-weight: bold;
@@ -270,6 +278,8 @@
         $patientAge = optional($patient)->dob ? \Carbon\Carbon::parse($patient->dob)->age : null;
         $choLogoPath = public_path('images/cho1-logo.jpg');
         $municipalLogoPath = public_path('images/municipal-logo.jpg');
+        $storedDoctorSignatureSvg = $prescription->doctor_signature_svg ?? null;
+        $doctorSignatureSrc = $doctorSignatureSrc ?? ($storedDoctorSignatureSvg ? 'data:image/svg+xml;base64,' . base64_encode($storedDoctorSignatureSvg) : null);
     @endphp
 
     <div class="container">
@@ -277,8 +287,10 @@
             <table class="header-table">
                 <tr>
                     <td class="logo-cell">
-                        @if(file_exists($choLogoPath))
-                            <img class="header-logo" src="{{ $choLogoPath }}" alt="CHO-I Logo">
+                        @if(file_exists($municipalLogoPath))
+                            <img class="header-logo" src="{{ $municipalLogoPath }}" alt="City Government of Cabuyao Logo">
+                        @else
+                            <div class="seal-fallback">City of<br>Cabuyao</div>
                         @endif
                     </td>
                     <td class="heading-cell">
@@ -290,10 +302,8 @@
                         <p>Tel. No.: (049) 534-1234 | Email: cho@cabuyao.gov.ph</p>
                     </td>
                     <td class="logo-cell">
-                        @if(file_exists($municipalLogoPath))
-                            <img class="header-logo" src="{{ $municipalLogoPath }}" alt="City Government of Cabuyao Logo">
-                        @else
-                            <div class="seal-fallback">City of<br>Cabuyao</div>
+                        @if(file_exists($choLogoPath))
+                            <img class="header-logo" src="{{ $choLogoPath }}" alt="CHO-I Logo">
                         @endif
                     </td>
                 </tr>
@@ -386,11 +396,15 @@
 
         <div class="footer clearfix">
             <div class="validity">
-                <p><strong>Reminder:</strong> Present this prescription with a valid ID when claiming medicines or purchasing from a pharmacy.</p>
+                <p><strong>Reminder:</strong> Follow the prescribed dosage and consult your physician or the City Health Office for any adverse reaction or worsening symptoms.</p>
                 <p>This electronically generated prescription is issued through the Cabuyao CHO-I Telehealth System.</p>
             </div>
             <div class="signature-box">
-                <div class="signature-line"></div>
+                <div class="signature-space">
+                    @if(!empty($doctorSignatureSrc))
+                        <img class="signature-image" src="{{ $doctorSignatureSrc }}" alt="Doctor e-signature">
+                    @endif
+                </div>
                 <p class="doctor-name">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
                 <p class="doctor-license">PRC Lic. No.: {{ optional($doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}</p>
                 <p class="doctor-license">{{ optional($doctor)->specialization ?? 'General Practice' }}</p>

@@ -99,7 +99,6 @@ return new class extends Migration {
             $table->string('name');
             $table->string('category')->nullable();
             $table->string('dosage_form')->nullable();
-            $table->string('unit')->nullable();
             $table->integer('stock_quantity')->default(0);
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
@@ -112,6 +111,7 @@ return new class extends Migration {
             $table->foreignId('patient_id')->constrained();
             $table->foreignId('doctor_id')->constrained();
             $table->text('notes')->nullable();
+            $table->longText('doctor_signature_svg')->nullable();
             $table->timestamps();
         });
 

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import SEO from '../../components/SEO';
-import { Video, Mic, MicOff, VideoOff, PhoneOff, Upload, Activity, FileText, Pill, Plus, CheckCircle, Wifi, MessageCircle, Send } from 'lucide-react';
+import { Video, Mic, MicOff, VideoOff, PhoneOff, Upload, Activity, FileText, Pill, Plus, CheckCircle, Wifi, MessageCircle, Send, PenLine, Eraser } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const VIDEO_QUALITY_PROFILES = {
@@ -83,12 +83,16 @@ export default function TeleconsultationRoom() {
   // Doctor Form State
   const [diagnosis, setDiagnosis] = useState('');
   const [symptoms, setSymptoms] = useState('');
+  const [hasSignature, setHasSignature] = useState(false);
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const audioContextRef = useRef(null);
   const noiseGateFrameRef = useRef(null);
   const chatEndRef = useRef(null);
+  const signatureCanvasRef = useRef(null);
+  const signatureDrawingRef = useRef(false);
+  const signatureStrokesRef = useRef([]);
 
   const stopAudioProcessing = useCallback(() => {
     if (noiseGateFrameRef.current) {
@@ -328,8 +332,89 @@ export default function TeleconsultationRoom() {
     }
   };
 
+  const getSignaturePoint = (event) => {
+    const canvas = signatureCanvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const source = event.touches?.[0] || event;
+    return {
+      x: (source.clientX - rect.left) * (canvas.width / rect.width),
+      y: (source.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  };
+
+  const startSignature = (event) => {
+    event.preventDefault();
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const point = getSignaturePoint(event);
+    signatureDrawingRef.current = true;
+    signatureStrokesRef.current.push([point]);
+    ctx.beginPath();
+    ctx.moveTo(point.x, point.y);
+  };
+
+  const drawSignature = (event) => {
+    if (!signatureDrawingRef.current) return;
+    event.preventDefault();
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const point = getSignaturePoint(event);
+    ctx.lineTo(point.x, point.y);
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    signatureStrokesRef.current[signatureStrokesRef.current.length - 1]?.push(point);
+    setHasSignature(true);
+  };
+
+  const stopSignature = () => {
+    signatureDrawingRef.current = false;
+  };
+
+  const clearSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    signatureStrokesRef.current = [];
+    setHasSignature(false);
+  };
+
+  const buildSignatureSvg = () => {
+    const strokes = signatureStrokesRef.current.filter((stroke) => stroke.length > 1);
+    const points = strokes.flat();
+    if (points.length === 0) return '';
+
+    const minX = Math.max(0, Math.min(...points.map((point) => point.x)) - 18);
+    const minY = Math.max(0, Math.min(...points.map((point) => point.y)) - 18);
+    const maxX = Math.min(720, Math.max(...points.map((point) => point.x)) + 18);
+    const maxY = Math.min(220, Math.max(...points.map((point) => point.y)) + 18);
+    const viewBoxWidth = Math.max(80, maxX - minX);
+    const viewBoxHeight = Math.max(34, maxY - minY);
+
+    const paths = strokes
+      .map((stroke) => {
+        const [first, ...rest] = stroke;
+        const pathData = [
+          `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`,
+          ...rest.map((point) => `L ${point.x.toFixed(1)} ${point.y.toFixed(1)}`),
+        ].join(' ');
+        return `<path d="${pathData}" fill="none" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+      })
+      .join('');
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${viewBoxWidth.toFixed(1)} ${viewBoxHeight.toFixed(1)}" width="180" height="34" preserveAspectRatio="xMidYMid meet">${paths}</svg>`;
+  };
+
   const completeConsultation = async (e) => {
     e.preventDefault();
+    if (prescriptionItems.length > 0 && !hasSignature) {
+      toast.error('Please add your e-signature before generating the e-prescription.');
+      return;
+    }
+
     try {
       // 1. Submit consultation notes
       await api.post(`/consultations/${id}/complete`, {
@@ -342,6 +427,7 @@ export default function TeleconsultationRoom() {
           consultation_id: id,
           patient_id: consultation?.patient_id,
           notes: `Diagnosis: ${diagnosis}`,
+          doctor_signature_svg: buildSignatureSvg(),
           items: prescriptionItems
         });
         toast.success('E-Prescription generated officially!');
@@ -547,7 +633,7 @@ export default function TeleconsultationRoom() {
                             >
                                <option value="">Select Medicine in Database...</option>
                                {medicines.map(m => (
-                                 <option key={m.id} value={m.id}>{m.name} ({m.stock_quantity} in stock)</option>
+                                 <option key={m.id} value={m.id}>{m.name}</option>
                                ))}
                             </select>
                             <div className="flex gap-2">
@@ -558,6 +644,33 @@ export default function TeleconsultationRoom() {
                        ))}
                      </div>
                   </div>
+
+                  {prescriptionItems.length > 0 && (
+                    <div className="border border-slate-200 rounded-xl bg-white p-4">
+                      <div className="flex items-center justify-between gap-3 mb-3">
+                        <span className="text-sm font-semibold text-slate-700 flex items-center gap-1"><PenLine size={14}/> Doctor E-Signature</span>
+                        <button type="button" onClick={clearSignature} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded hover:bg-slate-200 font-bold flex items-center gap-1">
+                          <Eraser size={12}/> Clear
+                        </button>
+                      </div>
+                      <div className="mx-auto w-full max-w-[24rem]">
+                        <canvas
+                          ref={signatureCanvasRef}
+                          width={720}
+                          height={220}
+                          onMouseDown={startSignature}
+                          onMouseMove={drawSignature}
+                          onMouseUp={stopSignature}
+                          onMouseLeave={stopSignature}
+                          onTouchStart={startSignature}
+                          onTouchMove={drawSignature}
+                          onTouchEnd={stopSignature}
+                          className="mx-auto h-32 w-full rounded-xl bg-slate-50 cursor-crosshair touch-none border border-slate-100"
+                        />
+                        <div className="mx-auto mt-2 w-2/3 border-t border-slate-300" />
+                      </div>
+                    </div>
+                  )}
 
                   <button type="submit" className="w-full bg-emerald-500 text-white font-bold py-3 rounded-xl hover:bg-emerald-600 transition-colors text-sm shadow-lg shadow-emerald-500/30 mt-4 shrink-0 flex items-center justify-center gap-2">
                      <CheckCircle size={18} /> Finalize & Generate PDF

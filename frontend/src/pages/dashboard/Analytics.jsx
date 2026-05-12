@@ -280,7 +280,7 @@ export default function Analytics() {
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} sub="All time" color="emerald" />
-            <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Available in inventory" color="sky" />
+            <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Available in database" color="sky" />
             <StatCard label="Top Medicine Entries" value={formatNumber(stats.top_medicines.length)} sub="Based on prescriptions" color="indigo" />
             <StatCard label="Completed Consults" value={formatNumber(summary.completed_consultations)} sub="Eligible for prescriptions" color="rose" />
           </div>
@@ -300,7 +300,7 @@ export default function Analytics() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Registered Patients" value={formatNumber(summary.registered_patients)} sub="Active patient records" color="indigo" />
             <StatCard label="Active Doctors" value={formatNumber(summary.active_doctors)} sub="Doctor accounts" color="sky" />
-            <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Inventory items" color="emerald" />
+            <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Medicine database" color="emerald" />
             <StatCard label="Pending Work" value={formatNumber(summary.pending_consultations)} sub="Open consultations" color="rose" />
           </div>
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">

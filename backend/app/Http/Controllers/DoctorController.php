@@ -81,6 +81,43 @@ class DoctorController extends Controller
         );
     }
 
+    public function availableDoctors()
+    {
+        $now = now();
+        $day = $now->format('l');
+        $time = $now->format('H:i:s');
+
+        $doctors = Doctor::with(['user:id,name,is_active', 'availability'])
+            ->whereHas('user', fn ($q) => $q->where('is_active', true))
+            ->where(function ($q) {
+                $q->whereNull('active_until')->orWhere('active_until', '>=', now());
+            })
+            ->get()
+            ->map(function (Doctor $doctor) use ($day, $time) {
+                $isOnSchedule = $doctor->availability->isEmpty() || $doctor->availability->contains(function ($slot) use ($day, $time) {
+                    return $slot->day_of_week === $day
+                        && $slot->start_time <= $time
+                        && $slot->end_time >= $time;
+                });
+
+                return [
+                    'id' => $doctor->id,
+                    'user_id' => $doctor->user_id,
+                    'name' => $doctor->user?->name,
+                    'specialization' => $this->canonicalSpecialization($doctor->specialization),
+                    'is_active' => (bool) $doctor->user?->is_active,
+                    'is_available_now' => $isOnSchedule,
+                    'availability' => $doctor->availability->map(fn ($slot) => [
+                        'day_of_week' => $slot->day_of_week,
+                        'start_time' => substr($slot->start_time, 0, 5),
+                        'end_time' => substr($slot->end_time, 0, 5),
+                    ])->values(),
+                ];
+            });
+
+        return response()->json($doctors);
+    }
+
     /**
      * Display a listing of the resource.
      */
