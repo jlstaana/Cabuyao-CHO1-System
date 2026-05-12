@@ -143,6 +143,14 @@
             letter-spacing: 0.7px;
             margin: 0 0 5px 0;
         }
+        .section-heading {
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin: 0 0 5px 0;
+        }
         .rx-divider {
             border: 0;
             border-top: 1px solid #94a3b8;
@@ -220,6 +228,14 @@
             float: right;
             text-align: center;
             width: 280px;
+        }
+        .signature-heading {
+            color: #0f172a;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin: 0 0 3px 0;
         }
         .signature-space {
             width: 220px;
@@ -351,13 +367,14 @@
         </div>
 
         <div class="rx-symbol">Rx</div>
-        <div class="rx-title">Electronic Prescription</div>
+        <div class="rx-title">Clinical Diagnosis &amp; E-Prescription</div>
         <hr class="rx-divider">
 
+        <div class="section-heading">Prescribe Medicines</div>
         <table class="medicines-table">
             <thead>
                 <tr>
-                    <th width="40%">Medicine</th>
+                    <th width="40%">Medicine in Database</th>
                     <th width="20%">Dosage</th>
                     <th width="40%">Frequency / Instructions</th>
                 </tr>
@@ -390,7 +407,7 @@
         </table>
 
         <div class="instructions">
-            <h3>Diagnosis / Clinical Notes</h3>
+            <h3>Official Diagnosis</h3>
             <p>{{ $prescription->notes ?: 'Please take all medications exactly as prescribed. For adverse reactions or worsening symptoms, contact the City Health Office or proceed to the nearest health facility.' }}</p>
         </div>
 
@@ -400,6 +417,7 @@
                 <p>This electronically generated prescription is issued through the Cabuyao CHO-I Telehealth System.</p>
             </div>
             <div class="signature-box">
+                <div class="signature-heading">Doctor E-Signature</div>
                 <div class="signature-space">
                     @if(!empty($doctorSignatureSrc))
                         <img class="signature-image" src="{{ $doctorSignatureSrc }}" alt="Doctor e-signature">
