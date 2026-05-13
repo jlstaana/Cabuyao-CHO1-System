@@ -68,8 +68,9 @@ class ConsultationController extends Controller {
 
     private function slotIsBooked(Doctor $doctor, \DateTime $requested, $slot, ?int $ignoreConsultationId = null): bool {
         $date = $requested->format('Y-m-d');
+        $capacity = str_contains(strtolower((string) $doctor->specialization), 'general') ? 35 : 18;
 
-        return Consultation::query()
+        $bookedCount = Consultation::query()
             ->where('doctor_id', $doctor->id)
             ->where('status', 'Scheduled')
             ->whereNotNull('scheduled_at')
@@ -77,7 +78,9 @@ class ConsultationController extends Controller {
             ->whereDate('scheduled_at', $date)
             ->whereTime('scheduled_at', '>=', $slot->start_time)
             ->whereTime('scheduled_at', '<=', $slot->end_time)
-            ->exists();
+            ->count();
+
+        return $bookedCount >= $capacity;
     }
 
     private function doctorIsAvailable(Doctor $doctor, ?string $scheduledAt, ?int $ignoreConsultationId = null): bool {

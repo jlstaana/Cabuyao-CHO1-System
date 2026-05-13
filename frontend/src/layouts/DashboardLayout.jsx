@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
+import api from '../utils/api';
 import CHOLogo from '../components/CHOLogo';
 import {
   LogOut, Home, Users, FileText, Bell, Menu, X, Pill,
@@ -114,6 +115,36 @@ function buildNavGroups(role) {
   ];
 }
 
+function consultationPartyName(consultation, role) {
+  if (role === 'Patient') {
+    return consultation.doctor?.user?.name ? `Dr. ${consultation.doctor.user.name}` : 'your doctor';
+  }
+
+  return consultation.patient?.user?.name || 'your patient';
+}
+
+function notifyUpcomingConsultation(consultation, user) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') {
+    return;
+  }
+
+  const scheduledAt = new Date(consultation.scheduled_at);
+  const otherParty = consultationPartyName(consultation, user.role);
+
+  new Notification('Upcoming teleconsultation', {
+    body: `${otherParty} is scheduled at ${scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
+    tag: `teleconsult-${consultation.id}-${scheduledAt.getTime()}`,
+  });
+}
+
+async function ensureNotificationPermission() {
+  if (!('Notification' in window) || Notification.permission !== 'default') {
+    return 'Notification' in window ? Notification.permission : 'unsupported';
+  }
+
+  return Notification.requestPermission();
+}
+
 export default function DashboardLayout() {
   const { isAuthenticated, loading, fetchUser, user, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -126,6 +157,61 @@ export default function DashboardLayout() {
   useEffect(() => {
     if (isAuthenticated) fetchUser();
   }, [isAuthenticated, fetchUser]);
+
+  useEffect(() => {
+    if (!user || !['Patient', 'Doctor'].includes(user.role)) return undefined;
+
+    let stopped = false;
+    const notifiedKey = `teleconsult-reminders:${user.id}`;
+    const getNotified = () => {
+      try {
+        return JSON.parse(localStorage.getItem(notifiedKey) || '{}');
+      } catch {
+        return {};
+      }
+    };
+    const saveNotified = (value) => localStorage.setItem(notifiedKey, JSON.stringify(value));
+
+    const checkUpcoming = async () => {
+      try {
+        const { data } = await api.get('/consultations');
+        if (stopped) return;
+
+        const now = Date.now();
+        const notified = getNotified();
+        const upcoming = (data || []).filter((consultation) => (
+          consultation.status === 'Scheduled'
+          && consultation.scheduled_at
+          && new Date(consultation.scheduled_at).getTime() > now
+          && new Date(consultation.scheduled_at).getTime() - now <= 30 * 60 * 1000
+        ));
+
+        if (upcoming.length && 'Notification' in window && Notification.permission === 'default') {
+          await ensureNotificationPermission();
+        }
+
+        upcoming.forEach((consultation) => {
+          const scheduledAt = new Date(consultation.scheduled_at).getTime();
+          const reminderId = `${consultation.id}:${scheduledAt}`;
+          if (notified[reminderId]) return;
+
+          notifyUpcomingConsultation(consultation, user);
+          notified[reminderId] = true;
+        });
+
+        saveNotified(notified);
+      } catch {
+        // Notification checks should never interrupt dashboard use.
+      }
+    };
+
+    checkUpcoming();
+    const interval = window.setInterval(checkUpcoming, 60 * 1000);
+    return () => {
+      stopped = true;
+      window.clearInterval(interval);
+    };
+  }, [user]);
 
   if (!isAuthenticated && !loading) return <Navigate to="/login" replace />;
   if (loading || !user) {

@@ -150,13 +150,24 @@ function dateKey(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-function isDoctorSlotBooked(doctor, date, slot) {
-  return (doctor.booked_slots || []).some((booked) => (
+function doctorSlotStatus(doctor, date, slot) {
+  const booked = (doctor.booked_slots || []).find((booked) => (
     booked.date === dateKey(date)
     && booked.day_of_week === slot.day_of_week
     && String(booked.start_time).slice(0, 5) === String(slot.start_time).slice(0, 5)
     && String(booked.end_time).slice(0, 5) === String(slot.end_time).slice(0, 5)
   ));
+
+  const capacity = booked?.capacity || doctor.slot_capacity || 18;
+  const bookedCount = booked?.booked_count || 0;
+  const remaining = Math.max((booked?.remaining ?? (capacity - bookedCount)), 0);
+
+  return {
+    capacity,
+    bookedCount,
+    remaining,
+    isFull: Boolean(booked?.is_full) || remaining <= 0,
+  };
 }
 
 // ─── PATIENT VIEW ─────────────────────────────────────────────────────────────
@@ -1070,7 +1081,7 @@ export default function Consultations() {
                     <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-sm font-bold text-slate-800">Dr. {doctor.name}</p>
-                        <p className="text-xs text-slate-400">{doctor.doctor_type || 'Resident'} · {doctor.specialization}</p>
+                        <p className="text-xs text-slate-400">{doctor.doctor_type || 'Resident'} · {doctor.specialization} · {doctor.slot_capacity || 18} slots per block</p>
                       </div>
                       <p className="text-xs font-medium text-slate-500">{availabilityLabel(doctor.availability)}</p>
                     </div>
@@ -1100,7 +1111,8 @@ export default function Consultations() {
                                 <div className="space-y-1.5">
                                   {slots.map((slot) => {
                                     const slotStart = String(slot.start_time).slice(0, 5);
-                                    const isFull = isDoctorSlotBooked(doctor, date, slot);
+                                    const slotStatus = doctorSlotStatus(doctor, date, slot);
+                                    const isFull = slotStatus.isFull;
                                     const isSelectedSlot = isSelectedDate && requestSelectedTime === slotStart;
 
                                     return (
@@ -1117,7 +1129,7 @@ export default function Consultations() {
                                               : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                                         }`}
                                       >
-                                        {timeRangeLabel(slot)} · {isFull ? 'Full' : 'Open'}
+                                        {timeRangeLabel(slot)} · {isFull ? 'Full' : `${slotStatus.remaining} left`}
                                       </button>
                                     );
                                   })}
@@ -1223,19 +1235,24 @@ export default function Consultations() {
                           <div className="space-y-1.5">
                             {slots.map((slot) => {
                               const slotStart = String(slot.start_time).slice(0, 5);
+                              const slotStatus = doctorSlotStatus(rescheduleDoctor, date, slot);
+                              const isFull = slotStatus.isFull;
                               const isSelectedSlot = isSelectedDate && selectedTime === slotStart;
                               return (
                                 <button
                                   key={`${slot.day_of_week}-${slot.start_time}-${slot.end_time}`}
                                   type="button"
+                                  disabled={isFull}
                                   onClick={() => setRescheduleForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart) }))}
-                                  className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors ${
-                                    isSelectedSlot
+                                  className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
+                                    isFull
+                                      ? 'bg-rose-50 text-rose-400 line-through'
+                                      : isSelectedSlot
                                       ? 'bg-sky-600 text-white shadow-sm'
                                       : 'bg-white text-slate-600 hover:bg-sky-100 hover:text-sky-700'
                                   }`}
                                 >
-                                  {timeRangeLabel(slot)}
+                                  {timeRangeLabel(slot)} · {isFull ? 'Full' : `${slotStatus.remaining} left`}
                                 </button>
                               );
                             })}

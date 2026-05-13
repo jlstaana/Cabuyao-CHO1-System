@@ -92,34 +92,56 @@ class DoctorController extends Controller
         return false;
     }
 
+    private function slotCapacityForDoctor(Doctor $doctor): int
+    {
+        return str_contains(strtolower((string) $doctor->specialization), 'general') ? 35 : 18;
+    }
+
     private function bookedSlotsForDoctor(Doctor $doctor)
     {
-        return Consultation::query()
+        $capacity = $this->slotCapacityForDoctor($doctor);
+        $bookings = [];
+
+        Consultation::query()
             ->where('doctor_id', $doctor->id)
             ->where('status', 'Scheduled')
             ->whereNotNull('scheduled_at')
             ->where('scheduled_at', '>=', now()->startOfDay())
             ->orderBy('scheduled_at')
             ->get(['scheduled_at'])
-            ->flatMap(function (Consultation $consultation) use ($doctor) {
+            ->each(function (Consultation $consultation) use ($doctor, &$bookings) {
                 $scheduledAt = $consultation->scheduled_at;
                 $day = $scheduledAt->format('l');
                 $time = $scheduledAt->format('H:i:s');
 
-                return $doctor->availability
-                    ->filter(function ($slot) use ($day, $time) {
-                        return $slot->day_of_week === $day
-                            && $slot->start_time <= $time
-                            && $slot->end_time >= $time;
-                    })
-                    ->map(fn ($slot) => [
-                        'date' => $scheduledAt->toDateString(),
-                        'day_of_week' => $slot->day_of_week,
-                        'start_time' => substr($slot->start_time, 0, 5),
-                        'end_time' => substr($slot->end_time, 0, 5),
-                    ]);
+                $slot = $doctor->availability->first(function ($slot) use ($day, $time) {
+                    return $slot->day_of_week === $day
+                        && $slot->start_time <= $time
+                        && $slot->end_time >= $time;
+                });
+
+                if (!$slot) {
+                    return;
+                }
+
+                $key = implode('|', [$scheduledAt->toDateString(), $slot->day_of_week, substr($slot->start_time, 0, 5), substr($slot->end_time, 0, 5)]);
+                $bookings[$key] ??= [
+                    'date' => $scheduledAt->toDateString(),
+                    'day_of_week' => $slot->day_of_week,
+                    'start_time' => substr($slot->start_time, 0, 5),
+                    'end_time' => substr($slot->end_time, 0, 5),
+                    'booked_count' => 0,
+                    'capacity' => $capacity,
+                ];
+                $bookings[$key]['booked_count']++;
+            });
+
+        return collect($bookings)
+            ->map(function ($slot) {
+                $slot['remaining'] = max($slot['capacity'] - $slot['booked_count'], 0);
+                $slot['is_full'] = $slot['remaining'] <= 0;
+                return $slot;
             })
-            ->unique(fn ($slot) => implode('|', $slot))
             ->values();
     }
 
@@ -235,6 +257,7 @@ class DoctorController extends Controller
                     'doctor_type' => $doctor->doctor_type ?: 'Resident',
                     'is_active' => (bool) $doctor->user?->is_active,
                     'is_available_now' => $isOnSchedule,
+                    'slot_capacity' => $this->slotCapacityForDoctor($doctor),
                     'availability' => $doctor->availability->map(fn ($slot) => [
                         'day_of_week' => $slot->day_of_week,
                         'start_time' => substr($slot->start_time, 0, 5),
