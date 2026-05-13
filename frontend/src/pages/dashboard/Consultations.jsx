@@ -96,6 +96,69 @@ function fileName(file) {
   return file.original_name || file.file_path?.split('/').pop() || `Medical file #${file.id}`;
 }
 
+function dateFromInput(value) {
+  const date = value ? new Date(value) : new Date();
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+function startOfWeek(value) {
+  const date = dateFromInput(value);
+  const dayOffset = (date.getDay() + 6) % 7;
+  date.setDate(date.getDate() - dayOffset);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function dateTimeLocalValue(date, time = '08:00') {
+  const next = new Date(date);
+  const [hours, minutes] = String(time).slice(0, 5).split(':').map(Number);
+  next.setHours(hours || 0, minutes || 0, 0, 0);
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}T${pad(next.getHours())}:${pad(next.getMinutes())}`;
+}
+
+function dayName(date) {
+  return date.toLocaleDateString(undefined, { weekday: 'long' });
+}
+
+function shortDayLabel(date) {
+  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function timeRangeLabel(slot) {
+  return `${String(slot.start_time).slice(0, 5)}-${String(slot.end_time).slice(0, 5)}`;
+}
+
+function availabilityLabel(availability = []) {
+  if (!availability.length) {
+    return 'Available without fixed weekly schedule';
+  }
+
+  return availability
+    .map((slot) => `${String(slot.day_of_week).slice(0, 3)} ${timeRangeLabel(slot)}`)
+    .join(', ');
+}
+
+function dateKey(date) {
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function isDoctorSlotBooked(doctor, date, slot) {
+  return (doctor.booked_slots || []).some((booked) => (
+    booked.date === dateKey(date)
+    && booked.day_of_week === slot.day_of_week
+    && String(booked.start_time).slice(0, 5) === String(slot.start_time).slice(0, 5)
+    && String(booked.end_time).slice(0, 5) === String(slot.end_time).slice(0, 5)
+  ));
+}
+
 // ─── PATIENT VIEW ─────────────────────────────────────────────────────────────
 function PatientView({ consultations, loading, onRequest, onReschedule, onCancel }) {
   const tabs = ['All', 'Pending', 'Scheduled', 'Completed'];
@@ -494,7 +557,7 @@ export default function Consultations() {
           if (isActive) setSpecializations(DEFAULT_SPECIALIZATIONS);
         });
     }
-    if (user?.role === 'Patient' || user?.role === 'Doctor') {
+    if (user?.role === 'Patient' || user?.role === 'Doctor' || user?.role === 'Admin' || user?.role === 'Staff') {
       api.get('/doctors/available')
         .then(res => {
           if (isActive) setAvailableDoctors(res.data || []);
@@ -583,8 +646,8 @@ export default function Consultations() {
       setRescheduleModal(false);
       setReviewModal(false);
       fetchConsultations();
-    } catch {
-      toast.error('Failed to reschedule consultation');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reschedule consultation');
     }
   };
 
@@ -671,6 +734,26 @@ export default function Consultations() {
       : 'Available without fixed schedule',
   } : null;
   const matchingAvailableDoctors = availableDoctors.filter((doctor) => doctor.specialization === requestForm.requested_specialization);
+  const requestWeekStart = startOfWeek(requestForm.scheduled_at);
+  const requestWeekDays = Array.from({ length: 7 }, (_, index) => addDays(requestWeekStart, index));
+  const requestSelectedDate = requestForm.scheduled_at ? new Date(requestForm.scheduled_at) : null;
+  const requestSelectedDateKey = requestSelectedDate && !Number.isNaN(requestSelectedDate.getTime()) ? requestSelectedDate.toDateString() : '';
+  const requestSelectedTime = requestForm.scheduled_at ? requestForm.scheduled_at.slice(11, 16) : '';
+  const rescheduleDoctorId = rescheduleForm.doctor_id || selected?.doctor_id || selected?.doctor?.id;
+  const rescheduleDoctor = availableDoctors.find((doctor) => String(doctor.id) === String(rescheduleDoctorId));
+  const rescheduleWeekStart = startOfWeek(rescheduleForm.scheduled_at);
+  const rescheduleWeekDays = Array.from({ length: 7 }, (_, index) => addDays(rescheduleWeekStart, index));
+  const selectedDateTime = rescheduleForm.scheduled_at ? new Date(rescheduleForm.scheduled_at) : null;
+  const selectedDateKey = selectedDateTime && !Number.isNaN(selectedDateTime.getTime()) ? selectedDateTime.toDateString() : '';
+  const selectedTime = rescheduleForm.scheduled_at ? rescheduleForm.scheduled_at.slice(11, 16) : '';
+  const rescheduleAvailability = rescheduleDoctor?.availability || [];
+  const rescheduleDoctorName = rescheduleDoctor?.name || selected?.doctor?.user?.name;
+  const rescheduleWeekSchedule = rescheduleWeekDays.map((date) => ({
+    date,
+    slots: rescheduleAvailability
+      .filter((slot) => slot.day_of_week === dayName(date))
+      .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time))),
+  }));
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
@@ -940,11 +1023,14 @@ export default function Consultations() {
                 <p className="text-sm text-slate-400">No active doctors listed for this specialization.</p>
               ) : matchingAvailableDoctors.map((doctor) => (
                 <div key={doctor.id} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 border border-slate-100">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-800">Dr. {doctor.name}</p>
                     <p className="text-xs text-slate-400">{doctor.specialization}</p>
+                    <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500">
+                      {availabilityLabel(doctor.availability)}
+                    </p>
                   </div>
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${doctor.is_available_now ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  <span className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${doctor.is_available_now ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${doctor.is_available_now ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                     {doctor.is_available_now ? 'Available now' : 'Off schedule'}
                   </span>
@@ -961,6 +1047,95 @@ export default function Consultations() {
               onChange={e => setRequestForm({ ...requestForm, scheduled_at: e.target.value })}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none"
             />
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-white p-4">
+            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">Available Appointment Slots</p>
+                <p className="text-xs text-slate-400">Week of {requestWeekStart.toLocaleDateString()}</p>
+              </div>
+              <span className="inline-flex w-fit items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                Open slots can be selected
+              </span>
+            </div>
+
+            {matchingAvailableDoctors.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
+                Select a specialization with active doctors to see appointment slots.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {matchingAvailableDoctors.map((doctor) => (
+                  <div key={`request-slots-${doctor.id}`} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                    <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">Dr. {doctor.name}</p>
+                        <p className="text-xs text-slate-400">{doctor.doctor_type || 'Resident'} · {doctor.specialization}</p>
+                      </div>
+                      <p className="text-xs font-medium text-slate-500">{availabilityLabel(doctor.availability)}</p>
+                    </div>
+                    {doctor.availability?.length ? (
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
+                        {requestWeekDays.map((date) => {
+                          const slots = doctor.availability
+                            .filter((slot) => slot.day_of_week === dayName(date))
+                            .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
+                          const isSelectedDate = requestSelectedDateKey === date.toDateString();
+
+                          return (
+                            <div
+                              key={`${doctor.id}-${date.toISOString()}`}
+                              className={`min-h-28 rounded-lg border p-2 ${
+                                isSelectedDate ? 'border-sky-300 bg-sky-50' : 'border-slate-100 bg-white'
+                              }`}
+                            >
+                              <p className={`mb-2 text-xs font-bold ${isSelectedDate ? 'text-sky-700' : 'text-slate-600'}`}>
+                                {shortDayLabel(date)}
+                              </p>
+                              {slots.length === 0 ? (
+                                <p className="rounded-md bg-slate-50 px-2 py-2 text-center text-[11px] font-medium text-slate-400">
+                                  No slots
+                                </p>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  {slots.map((slot) => {
+                                    const slotStart = String(slot.start_time).slice(0, 5);
+                                    const isFull = isDoctorSlotBooked(doctor, date, slot);
+                                    const isSelectedSlot = isSelectedDate && requestSelectedTime === slotStart;
+
+                                    return (
+                                      <button
+                                        key={`${doctor.id}-${dateKey(date)}-${slot.start_time}-${slot.end_time}`}
+                                        type="button"
+                                        disabled={isFull}
+                                        onClick={() => setRequestForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart) }))}
+                                        className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
+                                          isFull
+                                            ? 'bg-rose-50 text-rose-400 line-through'
+                                            : isSelectedSlot
+                                              ? 'bg-sky-600 text-white shadow-sm'
+                                              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                        }`}
+                                      >
+                                        {timeRangeLabel(slot)} · {isFull ? 'Full' : 'Open'}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                        This doctor has no fixed weekly schedule, so the preferred date and time can be typed manually.
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="pt-2 flex justify-end gap-3">
             <button type="button" onClick={() => setRequestModal(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
@@ -998,9 +1173,80 @@ export default function Consultations() {
             )}
             {user?.role === 'Patient' && (
               <div className="rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-700">
-                Your requested schedule will update this consultation. CHO staff or your assigned doctor may still confirm final availability.
+                {rescheduleDoctorName
+                  ? `Choose from Dr. ${rescheduleDoctorName}'s weekly available slots below.`
+                  : 'Choose from your assigned doctor\'s weekly available slots below.'}
               </div>
             )}
+            <div className="rounded-xl border border-slate-100 bg-white p-4">
+              <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Doctor Weekly Availability</p>
+                  <p className="text-xs text-slate-400">
+                    Week of {rescheduleWeekStart.toLocaleDateString()} {rescheduleDoctorName ? `for Dr. ${rescheduleDoctorName}` : ''}
+                  </p>
+                </div>
+                {rescheduleDoctor?.doctor_type && (
+                  <span className="inline-flex w-fit items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
+                    {rescheduleDoctor.doctor_type}
+                  </span>
+                )}
+              </div>
+
+              {!rescheduleDoctor ? (
+                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
+                  Select a doctor to see available days and time slots.
+                </div>
+              ) : rescheduleAvailability.length === 0 ? (
+                <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  This doctor has no fixed weekly schedule, so any valid date and time can be selected.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
+                  {rescheduleWeekSchedule.map(({ date, slots }) => {
+                    const isSelectedDate = selectedDateKey === date.toDateString();
+                    return (
+                      <div
+                        key={date.toISOString()}
+                        className={`min-h-28 rounded-lg border p-2 transition-colors ${
+                          isSelectedDate ? 'border-sky-300 bg-sky-50' : 'border-slate-100 bg-slate-50'
+                        }`}
+                      >
+                        <p className={`mb-2 text-xs font-bold ${isSelectedDate ? 'text-sky-700' : 'text-slate-600'}`}>
+                          {shortDayLabel(date)}
+                        </p>
+                        {slots.length === 0 ? (
+                          <p className="rounded-md bg-white px-2 py-2 text-center text-[11px] font-medium text-slate-400">
+                            No slots
+                          </p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {slots.map((slot) => {
+                              const slotStart = String(slot.start_time).slice(0, 5);
+                              const isSelectedSlot = isSelectedDate && selectedTime === slotStart;
+                              return (
+                                <button
+                                  key={`${slot.day_of_week}-${slot.start_time}-${slot.end_time}`}
+                                  type="button"
+                                  onClick={() => setRescheduleForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart) }))}
+                                  className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors ${
+                                    isSelectedSlot
+                                      ? 'bg-sky-600 text-white shadow-sm'
+                                      : 'bg-white text-slate-600 hover:bg-sky-100 hover:text-sky-700'
+                                  }`}
+                                >
+                                  {timeRangeLabel(slot)}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">New Date &amp; Time</label>
               <input required type="datetime-local" value={rescheduleForm.scheduled_at}

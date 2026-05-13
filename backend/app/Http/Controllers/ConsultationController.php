@@ -50,37 +50,55 @@ class ConsultationController extends Controller {
             return $doctors->first();
         }
 
-        $requested = new \DateTime($scheduledAt);
-        $day = $requested->format('l');
-        $time = $requested->format('H:i:s');
-
-        return $doctors->first(function ($doctor) use ($day, $time) {
-            if ($doctor->availability->isEmpty()) {
-                return true;
-            }
-            return $doctor->availability->contains(function ($slot) use ($day, $time) {
-                return $slot->day_of_week === $day
-                    && $slot->start_time <= $time
-                    && $slot->end_time >= $time;
-            });
+        return $doctors->first(function ($doctor) use ($scheduledAt) {
+            return $this->doctorIsAvailable($doctor, $scheduledAt);
         });
     }
 
-    private function doctorIsAvailable(Doctor $doctor, ?string $scheduledAt): bool {
+    private function availabilitySlotFor(Doctor $doctor, \DateTime $requested) {
+        $day = $requested->format('l');
+        $time = $requested->format('H:i:s');
+
+        return $doctor->availability->first(function ($slot) use ($day, $time) {
+            return $slot->day_of_week === $day
+                && $slot->start_time <= $time
+                && $slot->end_time >= $time;
+        });
+    }
+
+    private function slotIsBooked(Doctor $doctor, \DateTime $requested, $slot, ?int $ignoreConsultationId = null): bool {
+        $date = $requested->format('Y-m-d');
+
+        return Consultation::query()
+            ->where('doctor_id', $doctor->id)
+            ->where('status', 'Scheduled')
+            ->whereNotNull('scheduled_at')
+            ->when($ignoreConsultationId, fn ($query) => $query->where('id', '!=', $ignoreConsultationId))
+            ->whereDate('scheduled_at', $date)
+            ->whereTime('scheduled_at', '>=', $slot->start_time)
+            ->whereTime('scheduled_at', '<=', $slot->end_time)
+            ->exists();
+    }
+
+    private function doctorIsAvailable(Doctor $doctor, ?string $scheduledAt, ?int $ignoreConsultationId = null): bool {
         $doctor->loadMissing('availability');
         if (!$scheduledAt || $doctor->availability->isEmpty()) {
             return true;
         }
 
         $requested = new \DateTime($scheduledAt);
-        $day = $requested->format('l');
-        $time = $requested->format('H:i:s');
+        $slot = $this->availabilitySlotFor($doctor, $requested);
 
-        return $doctor->availability->contains(function ($slot) use ($day, $time) {
-            return $slot->day_of_week === $day
-                && $slot->start_time <= $time
-                && $slot->end_time >= $time;
-        });
+        return $slot && !$this->slotIsBooked($doctor, $requested, $slot, $ignoreConsultationId);
+    }
+
+    private function selectedDoctorForSchedule($user, Consultation $consultation, array $data): ?Doctor {
+        if ($user->role === 'Doctor') {
+            return $user->doctor;
+        }
+
+        $doctorId = $data['doctor_id'] ?? $consultation->doctor_id;
+        return $doctorId ? Doctor::with('availability')->find($doctorId) : null;
     }
 
     public function index(Request $request) {
@@ -267,12 +285,20 @@ class ConsultationController extends Controller {
         if ($request->filled('doctor_id') && in_array($user->role, ['Admin', 'Staff'])) {
             $data['doctor_id'] = $request->doctor_id;
         }
-        if ($user->role === 'Doctor' && $request->status === 'Scheduled') {
+        if ($request->status === 'Scheduled') {
             $scheduledAt = $data['scheduled_at'] ?? $c->scheduled_at?->toDateTimeString();
-            if (!$this->doctorIsAvailable($user->doctor, $scheduledAt)) {
-                return response()->json(['message' => 'You are not available for the selected schedule.'], 422);
+            $scheduledDoctor = $this->selectedDoctorForSchedule($user, $c, $data);
+
+            if ($scheduledDoctor && !$this->doctorIsAvailable($scheduledDoctor, $scheduledAt, $c->id)) {
+                $message = $user->role === 'Doctor'
+                    ? 'You are not available or the selected slot is already full.'
+                    : 'The selected doctor is not available or the selected slot is already full.';
+                return response()->json(['message' => $message], 422);
             }
-            $data['doctor_id'] = $user->doctor->id;
+
+            if ($user->role === 'Doctor') {
+                $data['doctor_id'] = $user->doctor->id;
+            }
         }
         if ($request->status === 'Cancelled') {
             $data['scheduled_at'] = null;

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{AuditLog, Doctor};
+use App\Models\{AuditLog, Consultation, Doctor};
 use Illuminate\Http\Request;
 
 class DoctorController extends Controller
@@ -90,6 +90,37 @@ class DoctorController extends Controller
         }
 
         return false;
+    }
+
+    private function bookedSlotsForDoctor(Doctor $doctor)
+    {
+        return Consultation::query()
+            ->where('doctor_id', $doctor->id)
+            ->where('status', 'Scheduled')
+            ->whereNotNull('scheduled_at')
+            ->where('scheduled_at', '>=', now()->startOfDay())
+            ->orderBy('scheduled_at')
+            ->get(['scheduled_at'])
+            ->flatMap(function (Consultation $consultation) use ($doctor) {
+                $scheduledAt = $consultation->scheduled_at;
+                $day = $scheduledAt->format('l');
+                $time = $scheduledAt->format('H:i:s');
+
+                return $doctor->availability
+                    ->filter(function ($slot) use ($day, $time) {
+                        return $slot->day_of_week === $day
+                            && $slot->start_time <= $time
+                            && $slot->end_time >= $time;
+                    })
+                    ->map(fn ($slot) => [
+                        'date' => $scheduledAt->toDateString(),
+                        'day_of_week' => $slot->day_of_week,
+                        'start_time' => substr($slot->start_time, 0, 5),
+                        'end_time' => substr($slot->end_time, 0, 5),
+                    ]);
+            })
+            ->unique(fn ($slot) => implode('|', $slot))
+            ->values();
     }
 
     public function updateAvailability(Request $request)
@@ -209,6 +240,7 @@ class DoctorController extends Controller
                         'start_time' => substr($slot->start_time, 0, 5),
                         'end_time' => substr($slot->end_time, 0, 5),
                     ])->values(),
+                    'booked_slots' => $this->bookedSlotsForDoctor($doctor),
                 ];
             });
 
