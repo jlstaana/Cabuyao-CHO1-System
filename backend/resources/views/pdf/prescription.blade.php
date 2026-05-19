@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>E-Prescription</title>
@@ -7,6 +8,7 @@
         @page {
             margin: 14px 18px;
         }
+
         body {
             font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
             color: #111827;
@@ -15,6 +17,7 @@
             padding: 0;
             background-color: #ffffff;
         }
+
         .container {
             width: 100%;
             margin: 0 auto;
@@ -22,32 +25,39 @@
             box-sizing: border-box;
             border: 1px solid #cbd5e1;
         }
+
         .header {
             border-bottom: 3px solid #0369a1;
             padding-bottom: 8px;
             margin-bottom: 10px;
             text-align: center;
         }
+
         .header-table {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
         }
+
         .header-table td {
             vertical-align: middle;
         }
+
         .logo-cell {
-            width: 108px;
+            width: 96px;
             text-align: center;
         }
+
         .heading-cell {
             text-align: center;
         }
+
         .header-logo {
-            width: 74px;
-            height: 74px;
+            width: 60px;
+            height: 60px;
             object-fit: contain;
         }
+
         .seal-fallback {
             width: 58px;
             height: 58px;
@@ -62,6 +72,7 @@
             text-align: center;
             text-transform: uppercase;
         }
+
         .header .republic {
             color: #475569;
             font-size: 11px;
@@ -69,55 +80,57 @@
             text-transform: uppercase;
             letter-spacing: 0.8px;
         }
+
         .header h1 {
             color: #075985;
             margin: 0;
-            font-size: 19px;
+            font-size: 21px;
             text-transform: uppercase;
             letter-spacing: 0.7px;
         }
-        .header h1.office-title {
-            color: #0f172a;
-            margin-top: 4px;
-            font-size: 15px;
-            text-transform: none;
-            letter-spacing: 0.2px;
-        }
+
         .header h2 {
             color: #0f172a;
             margin: 1px 0 2px 0;
             font-size: 13px;
             text-transform: uppercase;
         }
+
         .header p {
             margin: 1px 0;
             color: #475569;
             font-size: 10px;
         }
+
         .meta-bar {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 8px;
             font-size: 12px;
         }
+
         .meta-bar td {
             padding: 2px 0;
             vertical-align: top;
         }
+
         .patient-box {
             border: 1px solid #cbd5e1;
             padding: 7px 9px;
             margin-bottom: 8px;
         }
+
         .patient-grid {
             width: 100%;
             border-collapse: collapse;
             font-size: 12px;
         }
+
         .patient-grid td {
             padding: 3px 5px;
             vertical-align: bottom;
         }
+
         .label {
             color: #475569;
             font-size: 10px;
@@ -125,6 +138,7 @@
             letter-spacing: 0.4px;
             font-weight: bold;
         }
+
         .line-value {
             border-bottom: 1px solid #94a3b8;
             min-height: 15px;
@@ -132,6 +146,7 @@
             font-size: 12px;
             font-weight: bold;
         }
+
         .rx-symbol {
             text-align: left;
             font-size: 44px;
@@ -141,6 +156,7 @@
             margin: 4px 0 0 0;
             line-height: 1;
         }
+
         .rx-title {
             text-align: center;
             color: #0f172a;
@@ -150,19 +166,13 @@
             letter-spacing: 0.7px;
             margin: 0 0 5px 0;
         }
-        .section-heading {
-            color: #0f172a;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            margin: 0 0 5px 0;
-        }
+
         .rx-divider {
             border: 0;
             border-top: 1px solid #94a3b8;
             margin: 0 0 8px 0;
         }
+
         .medicines-table {
             width: 100%;
             border-collapse: collapse;
@@ -170,6 +180,7 @@
             margin-bottom: 10px;
             font-size: 12px;
         }
+
         .medicines-table th {
             background-color: #e0f2fe;
             color: #0c4a6e;
@@ -181,32 +192,38 @@
             font-size: 10px;
             letter-spacing: 0.4px;
         }
+
         .medicines-table td {
             padding: 7px 8px;
             border: 1px solid #e2e8f0;
             vertical-align: top;
         }
+
         .medicines-table tr,
         .instructions,
         .footer {
             page-break-inside: avoid;
         }
+
         .medicine-name {
             font-weight: bold;
             color: #0f172a;
             font-size: 13px;
             margin-bottom: 2px;
         }
+
         .medicine-desc {
             font-size: 11px;
             color: #64748b;
         }
+
         .instructions {
             border: 1px solid #cbd5e1;
             padding: 8px 10px;
             margin-bottom: 12px;
             min-height: 34px;
         }
+
         .instructions h3 {
             margin-top: 0;
             margin-bottom: 5px;
@@ -215,70 +232,60 @@
             text-transform: uppercase;
             letter-spacing: 0.4px;
         }
+
         .instructions p {
             margin: 0;
             color: #475569;
             font-size: 12px;
         }
+
         .footer {
             margin-top: 12px;
             padding-top: 10px;
             border-top: 2px solid #cbd5e1;
         }
+
         .validity {
             float: left;
             width: 45%;
             font-size: 10px;
             color: #475569;
         }
+
         .signature-box {
             float: right;
             text-align: center;
             width: 280px;
         }
-        .signature-heading {
-            color: #0f172a;
-            font-size: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            margin: 0 0 3px 0;
-        }
-        .signature-table {
-            width: 1.75in;
-            margin-left: auto;
-            margin-right: auto;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        .signature-table td {
-            text-align: center;
-            vertical-align: bottom;
-            padding: 0;
-        }
+
         .signature-space {
-            height: 0.2in;
-            line-height: 0.2in;
+            width: 220px;
+            height: 34px;
+            margin: 0 auto 5px auto;
+            border-bottom: 1px solid #000;
+            text-align: center;
         }
+
         .signature-image {
-            width: 0.62in;
-            height: 0.12in;
-            display: inline;
-            vertical-align: bottom;
+            width: 160px;
+            height: 30px;
+            margin: 2px auto 0 auto;
+            display: block;
         }
+
         .doctor-name {
             font-weight: bold;
             color: #0f172a;
-            margin: 0;
-            padding-top: 3px;
-            border-top: 1px solid #000;
+            margin: 0 0 2px 0;
             text-transform: uppercase;
         }
+
         .doctor-license {
             font-size: 12px;
             color: #64748b;
             margin: 0 0 1px 0;
         }
+
         .stamp {
             color: #b91c1c;
             font-size: 10px;
@@ -290,12 +297,14 @@
             opacity: 0.75;
             margin-top: 6px;
         }
+
         .small-note {
             color: #64748b;
             font-size: 9px;
             margin-top: 9px;
             text-align: center;
         }
+
         .clearfix::after {
             content: "";
             clear: both;
@@ -303,6 +312,7 @@
         }
     </style>
 </head>
+
 <body>
     @php
         $patient = $prescription->patient;
@@ -312,8 +322,6 @@
         $patientAge = optional($patient)->dob ? \Carbon\Carbon::parse($patient->dob)->age : null;
         $choLogoPath = public_path('images/cho1-logo.jpg');
         $municipalLogoPath = public_path('images/municipal-logo.jpg');
-        $storedDoctorSignatureSvg = $prescription->doctor_signature_svg ?? null;
-        $doctorSignatureSrc = $doctorSignatureSrc ?? ($storedDoctorSignatureSvg ? 'data:image/svg+xml;base64,' . base64_encode($storedDoctorSignatureSvg) : null);
     @endphp
 
     <div class="container">
@@ -331,9 +339,9 @@
                         <p class="republic">Republic of the Philippines</p>
                         <h1>CITY OF CABUYAO</h1>
                         <p class="republic">Province of Laguna</p>
-                        <h1 class="office-title">Office of the City Health Doctor</h1>
-                        <p>Brgy. Poblacion, City of Cabuyao, Laguna</p>
-                        <p>Tel. No.: (049) 534-1234 | Email: cho@cabuyao.gov.ph</p>
+
+                        <h1>Office of the City Health Doctor</h1>
+
                     </td>
                     <td class="logo-cell">
                         @if(file_exists($choLogoPath))
@@ -347,11 +355,13 @@
         <table class="meta-bar">
             <tr>
                 <td><strong>Prescription No.:</strong> RX-{{ str_pad($prescription->id, 6, '0', STR_PAD_LEFT) }}</td>
-                <td style="text-align: right;"><strong>Date:</strong> {{ $prescription->created_at->format('F d, Y') }}</td>
+                <td style="text-align: right;"><strong>Date:</strong> {{ $prescription->created_at->format('F d, Y') }}
+                </td>
             </tr>
             <tr>
                 <td><strong>Patient ID:</strong> PT-{{ str_pad($prescription->patient_id, 5, '0', STR_PAD_LEFT) }}</td>
-                <td style="text-align: right;"><strong>Consultation ID:</strong> CN-{{ str_pad($prescription->consultation_id, 6, '0', STR_PAD_LEFT) }}</td>
+                <td style="text-align: right;"><strong>Consultation ID:</strong>
+                    CN-{{ str_pad($prescription->consultation_id, 6, '0', STR_PAD_LEFT) }}</td>
             </tr>
         </table>
 
@@ -385,72 +395,66 @@
         </div>
 
         <div class="rx-symbol">Rx</div>
-        <div class="rx-title">Clinical Diagnosis &amp; E-Prescription</div>
+        <div class="rx-title">Electronic Prescription</div>
         <hr class="rx-divider">
 
-        <div class="section-heading">Prescribe Medicines</div>
         <table class="medicines-table">
             <thead>
                 <tr>
-                    <th width="40%">Medicine in Database</th>
+                    <th width="40%">Medicine</th>
                     <th width="20%">Dosage</th>
                     <th width="40%">Frequency / Instructions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($prescription->items as $item)
-                <tr>
-                    <td>
-                        <div class="medicine-name">{{ optional($item->medicine)->name ?? 'Medicine unavailable' }}</div>
-                        <div class="medicine-desc">
-                            {{ optional($item->medicine)->category ?? 'General Medicine' }}
-                            @if(optional($item->medicine)->dosage_form)
-                                | {{ optional($item->medicine)->dosage_form }}
+                    <tr>
+                        <td>
+                            <div class="medicine-name">{{ optional($item->medicine)->name ?? 'Medicine unavailable' }}</div>
+                            <div class="medicine-desc">
+                                {{ optional($item->medicine)->category ?? 'General Medicine' }}
+                                @if(optional($item->medicine)->dosage_form)
+                                    | {{ optional($item->medicine)->dosage_form }}
+                                @endif
+                            </div>
+                        </td>
+                        <td><strong>{{ $item->dosage ?: 'As directed' }}</strong></td>
+                        <td>
+                            {{ $item->frequency ?: 'As directed by physician' }}
+                            @if($item->duration)
+                                <br><strong>Duration:</strong> {{ $item->duration }}
                             @endif
-                        </div>
-                    </td>
-                    <td><strong>{{ $item->dosage ?: 'As directed' }}</strong></td>
-                    <td>
-                        {{ $item->frequency ?: 'As directed by physician' }}
-                        @if($item->duration)
-                            <br><strong>Duration:</strong> {{ $item->duration }}
-                        @endif
-                        @if($item->instructions)
-                            <br>{{ $item->instructions }}
-                        @endif
-                    </td>
-                </tr>
+                            @if($item->instructions)
+                                <br>{{ $item->instructions }}
+                            @endif
+                        </td>
+                    </tr>
                 @endforeach
             </tbody>
         </table>
 
         <div class="instructions">
-            <h3>Official Diagnosis</h3>
-            <p>{{ $prescription->notes ?: 'Please take all medications exactly as prescribed. For adverse reactions or worsening symptoms, contact the City Health Office or proceed to the nearest health facility.' }}</p>
+            <h3>Diagnosis / Clinical Notes</h3>
+            <p>{{ $prescription->notes ?: 'Please take all medications exactly as prescribed. For adverse reactions or worsening symptoms, contact the City Health Office or proceed to the nearest health facility.' }}
+            </p>
         </div>
 
         <div class="footer clearfix">
             <div class="validity">
-                <p><strong>Reminder:</strong> Follow the prescribed dosage and consult your physician or the City Health Office for any adverse reaction or worsening symptoms.</p>
+                <p><strong>Reminder:</strong> Follow the prescribed dosage and consult your physician or the City Health
+                    Office for any adverse reaction or worsening symptoms.</p>
                 <p>This electronically generated prescription is issued through the Cabuyao CHO-I Telehealth System.</p>
             </div>
             <div class="signature-box">
-                <div class="signature-heading">Doctor E-Signature</div>
-                <table class="signature-table">
-                    <tr>
-                        <td class="signature-space">
-                            @if(!empty($doctorSignatureSrc))
-                                <img class="signature-image" src="{{ $doctorSignatureSrc }}" alt="Doctor e-signature">
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <p class="doctor-name">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
-                        </td>
-                    </tr>
-                </table>
-                <p class="doctor-license">PRC Lic. No.: {{ optional($doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}</p>
+                <div class="signature-space">
+                    @if(!empty($doctorSignatureSrc))
+                        <img class="signature-image" src="{{ $doctorSignatureSrc }}" alt="Doctor e-signature">
+                    @endif
+                </div>
+                <p class="doctor-name">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
+                <p class="doctor-license">PRC Lic. No.:
+                    {{ optional($doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}
+                </p>
                 <p class="doctor-license">{{ optional($doctor)->specialization ?? 'General Practice' }}</p>
                 <p class="doctor-license">PTR No.: ____________ &nbsp; S2 No.: ____________</p>
                 <div class="stamp">E-SIGNED</div>
@@ -458,8 +462,10 @@
         </div>
 
         <div class="small-note">
-            This document was generated electronically and is valid without a wet signature when verified through Cabuyao CHO-I records.
+            This document was generated electronically and is valid without a wet signature when verified through
+            Cabuyao CHO-I records.
         </div>
     </div>
 </body>
+
 </html>

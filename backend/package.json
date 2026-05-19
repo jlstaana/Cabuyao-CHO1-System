@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "ngrok": "ngrok http --domain=morphing-pebble-grandkid.ngrok-free.dev 8000"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
