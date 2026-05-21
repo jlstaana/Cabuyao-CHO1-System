@@ -117,7 +117,7 @@ function buildNavGroups(role) {
 
 function consultationPartyName(consultation, role) {
   if (role === 'Patient') {
-    return consultation.doctor?.user?.name ? `Dr. ${consultation.doctor.user.name}` : 'your doctor';
+    return consultation.doctor?.user?.name ? `Dr. ${(consultation.doctor.user.name || '').replace(/^Dr\.\s*/i, '')}` : 'your doctor';
   }
 
   return consultation.patient?.user?.name || 'your patient';

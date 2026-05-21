@@ -222,7 +222,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <p className="font-semibold text-slate-900">
-                    {c.doctor?.user?.name ? `Dr. ${c.doctor.user.name}` : 'Doctor to be assigned'}
+                    {c.doctor?.user?.name ? `Dr. ${(c.doctor.user.name || '').replace(/^Dr\.\s*/i, '')}` : 'Doctor to be assigned'}
                   </p>
                   <StatusPill status={c.status} />
                 </div>
@@ -475,7 +475,7 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
                       </div>
                     </td>
                     <td className="px-5 py-3 text-slate-500">
-                      {c.doctor?.user?.name ? `Dr. ${c.doctor.user.name}` : <span className="text-slate-300 italic">Unassigned</span>}
+                      {c.doctor?.user?.name ? `Dr. ${(c.doctor.user.name || '').replace(/^Dr\.\s*/i, '')}` : <span className="text-slate-300 italic">Unassigned</span>}
                     </td>
                     <td className="px-5 py-3 text-slate-400">{new Date(c.created_at).toLocaleDateString()}</td>
                     <td className="px-5 py-3 text-slate-400">{c.scheduled_at ? new Date(c.scheduled_at).toLocaleString() : '—'}</td>
@@ -1051,7 +1051,7 @@ export default function Consultations() {
               ) : matchingAvailableDoctors.map((doctor) => (
                 <div key={doctor.id} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 border border-slate-100">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">Dr. {doctor.name}</p>
+                    <p className="text-sm font-semibold text-slate-800">Dr. {(doctor.name || '').replace(/^Dr\.\s*/i, '')}</p>
                     <p className="text-xs text-slate-400">{doctor.specialization}</p>
                     <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500">
                       {availabilityLabel(doctor.availability)}
@@ -1096,7 +1096,7 @@ export default function Consultations() {
                   <div key={`request-slots-${doctor.id}`} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
                     <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-sm font-bold text-slate-800">Dr. {doctor.name}</p>
+                        <p className="text-sm font-bold text-slate-800">Dr. {(doctor.name || '').replace(/^Dr\.\s*/i, '')}</p>
                         <p className="text-xs text-slate-400">{doctor.doctor_type || 'Resident'} · {doctor.specialization} · {doctor.slot_capacity || 18} slots per block</p>
                       </div>
                       <p className="text-xs font-medium text-slate-500">{availabilityLabel(doctor.availability)}</p>
@@ -1195,14 +1195,14 @@ export default function Consultations() {
                 <select required value={rescheduleForm.doctor_id} onChange={e => setRescheduleForm({ ...rescheduleForm, doctor_id: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20 outline-none">
                   <option value="">Select a doctor...</option>
-                  {doctors.map(d => <option key={d.doctor?.id} value={d.doctor?.id}>Dr. {d.name}</option>)}
+                  {doctors.map(d => <option key={d.doctor?.id} value={d.doctor?.id}>Dr. {(d.name || '').replace(/^Dr\.\s*/i, '')}</option>)}
                 </select>
               </div>
             )}
             {user?.role === 'Patient' && (
               <div className="rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-700">
                 {rescheduleDoctorName
-                  ? `Choose from Dr. ${rescheduleDoctorName}'s weekly available slots below.`
+                  ? `Choose from Dr. ${(rescheduleDoctorName || '').replace(/^Dr\.\s*/i, '')}'s weekly available slots below.`
                   : 'Choose from your assigned doctor\'s weekly available slots below.'}
               </div>
             )}
@@ -1211,7 +1211,7 @@ export default function Consultations() {
                 <div>
                   <p className="text-sm font-semibold text-slate-800">Doctor Weekly Availability</p>
                   <p className="text-xs text-slate-400">
-                    Week of {rescheduleWeekStart.toLocaleDateString()} {rescheduleDoctorName ? `for Dr. ${rescheduleDoctorName}` : ''}
+                    Week of {rescheduleWeekStart.toLocaleDateString()} {rescheduleDoctorName ? `for Dr. ${(rescheduleDoctorName || '').replace(/^Dr\.\s*/i, '')}` : ''}
                   </p>
                 </div>
                 {rescheduleDoctor?.doctor_type && (

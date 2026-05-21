@@ -179,7 +179,7 @@ function DoctorOverview({ user, consultations, prescriptions }) {
     <>
       <SEO title="Dashboard" description="Doctor overview and consultation queue" />
       <header className="mb-8">
-        <PageTitle icon={Stethoscope} title={`Good day, Dr. ${user?.name?.split(' ')[0]}!`} description="Here's your consultation overview." iconClassName="bg-emerald-50 text-emerald-600" />
+        <PageTitle icon={Stethoscope} title={`Good day, Dr. ${(user?.name?.split(' ')[0] || '').replace(/^Dr\.\s*/i, '')}!`} description="Here's your consultation overview." iconClassName="bg-emerald-50 text-emerald-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Pending Requests" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" />

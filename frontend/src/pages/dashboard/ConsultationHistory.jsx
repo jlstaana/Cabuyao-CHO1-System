@@ -22,7 +22,7 @@ function toHistoryItem(c) {
   const when = c.scheduled_at || c.created_at;
   return {
     id: c.id,
-    doctor: c.doctor?.user?.name ? `Dr. ${c.doctor.user.name}` : 'Doctor to be assigned',
+    doctor: c.doctor?.user?.name ? `Dr. ${(c.doctor.user.name || '').replace(/^Dr\.\s*/i, '')}` : 'Doctor to be assigned',
     specialization: c.doctor?.specialization || 'General Practice',
     date: when ? new Date(when).toLocaleDateString() : 'N/A',
     time: when ? new Date(when).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',

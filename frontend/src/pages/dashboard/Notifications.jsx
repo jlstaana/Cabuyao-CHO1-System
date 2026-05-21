@@ -57,7 +57,7 @@ function buildConsultationNotifications(consultations, role, readIds = []) {
           ? 'Consultation Queued'
           : 'Consultation Update';
     const message = consultation.status === 'Scheduled'
-      ? `${isPatient ? `Dr. ${otherPerson}` : `Patient ${otherPerson}`} is scheduled${consultation.scheduled_at ? ` for ${new Date(consultation.scheduled_at).toLocaleString()}` : ''}.`
+      ? `${isPatient ? `Dr. ${(otherPerson || '').replace(/^Dr\.\s*/i, '')}` : `Patient ${otherPerson}`} is scheduled${consultation.scheduled_at ? ` for ${new Date(consultation.scheduled_at).toLocaleString()}` : ''}.`
       : consultation.status === 'Pending'
         ? `${isPatient ? 'Your request' : `Patient ${otherPerson}`} is queued until a doctor confirms availability${consultation.scheduled_at ? ` for ${new Date(consultation.scheduled_at).toLocaleString()}` : ''}.`
         : `${isPatient ? otherPerson : `Patient ${otherPerson}`} - ${consultation.status}`;
@@ -104,8 +104,8 @@ function buildPrescriptionNotifications(prescriptions, role, readIds = []) {
       category: wasUpdated ? 'info' : 'success',
       title: wasUpdated ? 'Prescription Updated' : 'Prescription Available',
       message: wasUpdated
-        ? `${isPatient ? `Dr. ${otherPerson}` : `Prescription for ${otherPerson}`} updated an e-prescription.`
-        : `${isPatient ? `Dr. ${otherPerson}` : `Prescription for ${otherPerson}`} created an e-prescription.`,
+        ? `${isPatient ? `Dr. ${(otherPerson || '').replace(/^Dr\.\s*/i, '')}` : `Prescription for ${otherPerson}`} updated an e-prescription.`
+        : `${isPatient ? `Dr. ${(otherPerson || '').replace(/^Dr\.\s*/i, '')}` : `Prescription for ${otherPerson}`} created an e-prescription.`,
       time: prescription.updated_at ? new Date(prescription.updated_at).toLocaleString() : 'N/A',
       read: readSet.has(`prescription-${prescription.id}`),
       iconBg: 'bg-emerald-100',
