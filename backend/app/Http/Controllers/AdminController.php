@@ -91,4 +91,19 @@ class AdminController extends Controller {
 
         return response()->json(['message' => 'Account archived', 'user' => $user->load(['doctor', 'staff', 'patient'])]);
     }
+
+    public function reactivateUser(Request $request, User $user) {
+        $user->update(['is_active' => true]);
+        if ($user->patient) {
+            $user->patient->update(['archived' => false]);
+        }
+
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => "Reactivated User $user->email",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json(['message' => 'Account reactivated', 'user' => $user->load(['doctor', 'staff', 'patient'])]);
+    }
 }

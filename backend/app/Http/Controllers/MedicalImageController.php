@@ -4,62 +4,55 @@ namespace App\Http\Controllers;
 
 use App\Models\MedicalImage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class MedicalImageController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $user = $request->user();
+        if ($user->role !== 'Patient' || !$user->patient) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $images = MedicalImage::where('patient_id', $user->patient->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($images);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        $user = $request->user();
+        if ($user->role !== 'Patient' || !$user->patient) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(MedicalImage $medicalImage)
-    {
-        //
-    }
+        $request->validate([
+            'image' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'document_type' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:1000'
+        ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(MedicalImage $medicalImage)
-    {
-        //
-    }
+        $file = $request->file('image');
+        $path = $file->store('medical_images', 'public');
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, MedicalImage $medicalImage)
-    {
-        //
-    }
+        $medicalImage = MedicalImage::create([
+            'patient_id' => $user->patient->id,
+            'consultation_id' => null, // No longer required
+            'file_path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'file_type' => $file->getClientOriginalExtension(),
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+            'document_type' => $request->document_type ?? 'Other',
+            'notes' => $request->notes
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(MedicalImage $medicalImage)
-    {
-        //
+        return response()->json([
+            'message' => 'File uploaded successfully',
+            'image' => $medicalImage
+        ], 201);
     }
 }

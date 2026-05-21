@@ -46,6 +46,7 @@ const EMPTY_AVAILABILITY_SLOT = {
 
 const EMPTY_REQUEST_FORM = {
   requested_specialization: '',
+  doctor_id: null,
   scheduled_at: '',
   symptoms: '',
   notes: '',
@@ -995,6 +996,21 @@ export default function Consultations() {
               ))}
             </select>
           </div>
+          {requestForm.doctor_id && (
+            <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-3 flex items-center justify-between">
+              <div className="text-sm">
+                <span className="font-semibold text-sky-800">Selected Doctor: </span>
+                <span className="text-sky-700">Dr. {matchingAvailableDoctors.find(d => d.id === requestForm.doctor_id)?.name}</span>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setRequestForm({ ...requestForm, doctor_id: null, scheduled_at: '' })}
+                className="text-xs font-bold text-rose-600 hover:text-rose-700"
+              >
+                Clear Selection
+              </button>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Consultation Details</label>
             <textarea
@@ -1120,7 +1136,7 @@ export default function Consultations() {
                                         key={`${doctor.id}-${dateKey(date)}-${slot.start_time}-${slot.end_time}`}
                                         type="button"
                                         disabled={isFull}
-                                        onClick={() => setRequestForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart) }))}
+                                        onClick={() => setRequestForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart), doctor_id: doctor.id }))}
                                         className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
                                           isFull
                                             ? 'bg-rose-50 text-rose-400 line-through'

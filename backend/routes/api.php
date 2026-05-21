@@ -34,6 +34,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/consultations/{id}/vitals', [ConsultationController::class, 'recordVitals']);
     Route::get('/consultations/{id}/messages', [ConsultationController::class, 'messages']);
     Route::post('/consultations/{id}/messages', [ConsultationController::class, 'sendMessage']);
+    
+    // Patient Vitals
+    Route::get('/vitals', [App\Http\Controllers\VitalSignController::class, 'index']);
+    Route::post('/vitals', [App\Http\Controllers\VitalSignController::class, 'store']);
+    
+    // Medical Images (Patient Global Gallery)
+    Route::get('/medical-images', [App\Http\Controllers\MedicalImageController::class, 'index']);
+    Route::post('/medical-images', [App\Http\Controllers\MedicalImageController::class, 'store']);
+    
+    // Legacy routes
     Route::post('/consultations/{id}/images', [ConsultationController::class, 'uploadImage']);
     Route::get('/medical-images/{image}/download', [ConsultationController::class, 'downloadMedicalFile']);
     Route::put('/consultations/{id}/status', [ConsultationController::class, 'updateStatus']);
@@ -54,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin Users
     Route::get('/admin/users', [AdminController::class, 'getUsers'])->middleware('role:Admin,Staff');
     Route::patch('/admin/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->middleware('role:Admin,Staff');
+    Route::patch('/admin/users/{user}/reactivate', [AdminController::class, 'reactivateUser'])->middleware('role:Admin,Staff');
     Route::post('/admin/doctors', [AdminController::class, 'createDoctor'])->middleware('role:Admin');
     Route::post('/admin/staff', [AdminController::class, 'createStaff'])->middleware('role:Admin');
 

@@ -151,11 +151,7 @@ export default function Login() {
               required
             />
           </div>
-          {devResetCode && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Development code: <span className="font-bold tracking-widest">{devResetCode}</span>
-            </div>
-          )}
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
             <input

@@ -19,13 +19,13 @@ function buildNavGroups(role) {
         links: [
           { path: '/dashboard',            label: 'Overview',            icon: Home },
           { path: '/vitals',               label: 'Record Vital Signs',  icon: HeartPulse },
+          { path: '/medical-images',       label: 'Medical Images',      icon: ImagePlus },
         ],
       },
       {
         label: 'Consultations',
         links: [
           { path: '/consultations',        label: 'Request Teleconsult',   icon: Stethoscope },
-          { path: '/medical-images',       label: 'Upload Medical Image',  icon: ImagePlus },
           { path: '/consultation-history', label: 'Consultation History',  icon: Clock },
         ],
       },
@@ -151,8 +151,7 @@ export default function DashboardLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // Placeholder unread count — replace with real API data when available
-  const unreadNotifications = 3;
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     if (isAuthenticated) fetchUser();
@@ -210,6 +209,47 @@ export default function DashboardLayout() {
     return () => {
       stopped = true;
       window.clearInterval(interval);
+    };
+  }, [user]);
+
+  // Fetch unread notifications count for ALL roles
+  useEffect(() => {
+    if (!user) return undefined;
+    
+    let isNotifActive = true;
+    const fetchUnreadCount = async () => {
+      try {
+        const [consultationRes, prescriptionRes] = await Promise.all([
+          api.get('/consultations'),
+          api.get('/prescriptions')
+        ]);
+        if (!isNotifActive) return;
+
+        const readIds = JSON.parse(localStorage.getItem(`cho1-read-notifications-${user.id || 'guest'}`) || '[]');
+        const readSet = new Set(readIds);
+        
+        let count = 0;
+        const processItems = (items, prefix) => {
+          (items || []).slice(0, 20).forEach(item => {
+            if (!readSet.has(`${prefix}-${item.id}`)) count++;
+          });
+        };
+        
+        processItems(consultationRes.data, 'consultation');
+        processItems(prescriptionRes.data, 'prescription');
+        
+        setUnreadNotifications(count);
+      } catch (error) {
+        // Silently fail for background check
+      }
+    };
+    
+    fetchUnreadCount();
+    const notifInterval = window.setInterval(fetchUnreadCount, 30 * 1000);
+
+    return () => {
+      isNotifActive = false;
+      window.clearInterval(notifInterval);
     };
   }, [user]);
 

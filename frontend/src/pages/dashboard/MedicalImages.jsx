@@ -44,22 +44,18 @@ function fileLabel(file) {
   return file.document_type || file.file_type?.toUpperCase() || 'Medical File';
 }
 
-function flattenUploads(consultations) {
-  return consultations.flatMap((consultation) => {
-    const images = consultation.medical_images || consultation.medicalImages || [];
-    return images.map((image) => ({
-      id: image.id,
-      consultation_id: consultation.id,
-      name: image.original_name || image.file_path?.split('/').pop() || `Medical file #${image.id}`,
-      type: fileLabel(image),
-      mimeType: image.mime_type || '',
-      fileType: image.file_type || '',
-      notes: image.notes || `Consultation #${consultation.id}`,
-      date: image.created_at ? new Date(image.created_at).toLocaleDateString() : 'N/A',
-      size: formatSize(image.file_size),
-      status: 'Uploaded',
-    }));
-  });
+function formatUploads(images) {
+  return images.map((image) => ({
+    id: image.id,
+    name: image.original_name || image.file_path?.split('/').pop() || `Medical file #${image.id}`,
+    type: fileLabel(image),
+    mimeType: image.mime_type || '',
+    fileType: image.file_type || '',
+    notes: image.notes || 'Patient Upload',
+    date: image.created_at ? new Date(image.created_at).toLocaleDateString() : 'N/A',
+    size: formatSize(image.file_size),
+    status: 'Uploaded',
+  }));
 }
 
 export default function MedicalImages() {
@@ -78,12 +74,10 @@ export default function MedicalImages() {
   useEffect(() => {
     if (user?.role !== 'Patient') return;
     let isActive = true;
-    api.get('/consultations')
+    api.get('/medical-images')
       .then((res) => {
-        const rows = res.data || [];
         if (isActive) {
-          setConsultations(rows);
-          setUploads(flattenUploads(rows));
+          setUploads(formatUploads(res.data || []));
         }
       })
       .catch(() => {
@@ -144,30 +138,24 @@ export default function MedicalImages() {
     if (!previews.length) { toast.error('Please select at least one image.'); return; }
     setUploading(true);
     try {
-      const target = consultations.find((c) => ['Scheduled', 'Pending', 'Approved'].includes(c.status)) || consultations[0];
-      if (!target) {
-        toast.error('Please request a consultation before uploading medical images.');
-        return;
-      }
       const saved = [];
       for (const preview of previews) {
         const fd = new FormData();
         fd.append('image', preview.file);
         fd.append('document_type', imageType);
         if (notes) fd.append('notes', notes);
-        const { data } = await api.post(`/consultations/${target.id}/images`, fd, {
+        const { data } = await api.post(`/medical-images`, fd, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        saved.push(data);
+        saved.push(data.image);
       }
       const newEntries = previews.map((p, i) => ({
         id: saved[i]?.id || Date.now() + i,
-        consultation_id: target.id,
         name: p.name,
         type: saved[i]?.document_type || imageType,
         mimeType: saved[i]?.mime_type || p.type,
         fileType: saved[i]?.file_type || p.extension,
-        notes: notes || `Consultation #${target.id}`,
+        notes: notes || 'Patient Upload',
         date: new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }),
         size: p.size,
         status: 'Uploaded',
@@ -308,7 +296,7 @@ export default function MedicalImages() {
 
         <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-3 flex gap-3 text-sm text-sky-700">
           <Info size={16} className="shrink-0 mt-0.5" />
-          <span>Uploaded images are only visible to you and the doctor assigned to your consultation.</span>
+          <span>Uploaded images are securely stored in your personal medical gallery and visible to your doctors during consultations.</span>
         </div>
 
         <div className="flex justify-end">

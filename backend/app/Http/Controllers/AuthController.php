@@ -11,9 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller {
-    private function shouldExposeAuthCodes(): bool {
-        return app()->environment('local') || filter_var(env('AUTH_EXPOSE_CODES', false), FILTER_VALIDATE_BOOL);
-    }
+
 
     private function createVerificationCode(User $user): string {
         $code = (string) random_int(100000, 999999);
@@ -26,7 +24,11 @@ class AuthController extends Controller {
 
     private function sendVerificationCode(User $user, string $code): void {
         try {
-            Mail::raw("Your Cabuyao CHO verification code is: {$code}\n\nThis code expires in 15 minutes.", function ($message) use ($user) {
+            Mail::send('emails.auth-code', [
+                'title' => 'Verify your email',
+                'subtitle' => 'Use the verification code below to complete your Cabuyao CHO account registration.',
+                'code' => $code
+            ], function ($message) use ($user) {
                 $message->to($user->email)->subject('Cabuyao CHO Account Verification');
             });
         } catch (\Throwable $e) {
@@ -40,7 +42,11 @@ class AuthController extends Controller {
 
     private function sendPasswordResetCode(User $user, string $code): void {
         try {
-            Mail::raw("Your Cabuyao CHO password reset code is: {$code}\n\nThis code expires in 15 minutes.", function ($message) use ($user) {
+            Mail::send('emails.auth-code', [
+                'title' => 'Reset your password',
+                'subtitle' => 'We received a request to reset your password. Enter the code below to continue.',
+                'code' => $code
+            ], function ($message) use ($user) {
                 $message->to($user->email)->subject('Cabuyao CHO Password Reset');
             });
         } catch (\Throwable $e) {
@@ -57,14 +63,16 @@ class AuthController extends Controller {
         $request->validate(['name' => 'required', 'email' => 'required|email', 'password' => 'required|min:8', 'dob' => 'required|date', 'contact_no' => 'required']);
         $existingUser = User::where('email', $request->email)->first();
         if ($existingUser) {
-            if ($existingUser->role === 'Patient' && !$existingUser->is_active) {
+            if ($existingUser->role === 'Patient' && !$existingUser->is_active && is_null($existingUser->email_verified_at)) {
                 $code = $this->createVerificationCode($existingUser);
                 $this->sendVerificationCode($existingUser, $code);
                 return response()->json([
                     'message' => 'This email already has a pending registration. A new verification code was sent.',
                     'email' => $existingUser->email,
-                    'verification_code' => $this->shouldExposeAuthCodes() ? $code : null,
                 ], 202);
+            }
+            if (!$existingUser->is_active && !is_null($existingUser->email_verified_at)) {
+                throw ValidationException::withMessages(['email' => ['This account has been deactivated by an administrator. Please contact support.']]);
             }
             throw ValidationException::withMessages(['email' => ['Email is already registered.']]);
         }
@@ -76,7 +84,6 @@ class AuthController extends Controller {
         return response()->json([
             'message' => 'Registration submitted. Please enter the verification code sent to your email.',
             'email' => $user->email,
-            'verification_code' => $this->shouldExposeAuthCodes() ? $code : null,
         ], 201);
     }
     public function verifyRegistration(Request $request) {
@@ -118,7 +125,6 @@ class AuthController extends Controller {
         $this->sendVerificationCode($user, $code);
         return response()->json([
             'message' => 'A new verification code was sent.',
-            'verification_code' => $this->shouldExposeAuthCodes() ? $code : null,
         ]);
     }
     public function login(Request $request) {
@@ -145,7 +151,6 @@ class AuthController extends Controller {
         $this->sendPasswordResetCode($user, $code);
         return response()->json([
             'message' => 'Password reset code sent.',
-            'reset_code' => $this->shouldExposeAuthCodes() ? $code : null,
         ]);
     }
     public function resetPassword(Request $request) {

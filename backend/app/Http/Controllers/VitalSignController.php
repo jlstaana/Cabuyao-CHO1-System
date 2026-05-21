@@ -3,63 +3,53 @@
 namespace App\Http\Controllers;
 
 use App\Models\VitalSign;
+use App\Models\Patient;
 use Illuminate\Http\Request;
 
 class VitalSignController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Get all vital signs for the authenticated patient.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $user = $request->user();
+        if ($user->role !== 'Patient' || !$user->patient) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $vitals = VitalSign::where('patient_id', $user->patient->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($vitals);
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * Store a newly created vital sign for the authenticated patient.
      */
     public function store(Request $request)
     {
-        //
-    }
+        $user = $request->user();
+        if ($user->role !== 'Patient' || !$user->patient) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(VitalSign $vitalSign)
-    {
-        //
-    }
+        $data = $request->validate([
+            'height' => 'nullable|string|max:50',
+            'weight' => 'nullable|string|max:50',
+            'blood_pressure' => 'nullable|string|max:50',
+            'heart_rate' => 'nullable|string|max:50',
+            'temperature' => 'nullable|string|max:50',
+            'respiratory' => 'nullable|string|max:50',
+            'oxygen' => 'nullable|string|max:50',
+        ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(VitalSign $vitalSign)
-    {
-        //
-    }
+        $vital = VitalSign::create(array_merge($data, [
+            'patient_id' => $user->patient->id,
+            // consultation_id can remain null because it's optional now
+        ]));
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, VitalSign $vitalSign)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(VitalSign $vitalSign)
-    {
-        //
+        return response()->json(['message' => 'Vital signs recorded successfully', 'data' => $vital], 201);
     }
 }

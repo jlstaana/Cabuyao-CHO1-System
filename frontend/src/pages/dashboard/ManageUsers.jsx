@@ -38,6 +38,10 @@ export default function ManageUsers() {
   const [users, setUsers]             = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [generatedCreds, setGeneratedCreds] = useState(null);
+  
+  // Confirmation Modal State
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState({ type: '', user: null });
   const [formData, setFormData] = useState({
     name: '', email: '', role: 'Doctor',
     specialization: 'General Medicine', department: 'Outpatient',
@@ -49,6 +53,7 @@ export default function ManageUsers() {
   });
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const response = await api.get('/admin/users');
       setUsers(response.data);
@@ -92,14 +97,26 @@ export default function ManageUsers() {
   };
 
   // ── Deactivate / archive user ─────────────────────────────────────────────
-  const handleDeactivate = async (u) => {
-    if (!window.confirm(`Archive account for "${u.name}"? They will lose system access.`)) return;
+  const openConfirmModal = (type, u) => {
+    setConfirmAction({ type, user: u });
+    setIsConfirmOpen(true);
+  };
+
+  const executeConfirmAction = async () => {
+    const { type, user: u } = confirmAction;
+    setIsConfirmOpen(false);
+
     try {
-      await api.patch(`/admin/users/${u.id}/deactivate`);
-      toast.success(`${u.name}'s account archived.`);
+      if (type === 'archive') {
+        await api.patch(`/admin/users/${u.id}/deactivate`);
+        toast.success(`${u.name}'s account archived.`);
+      } else if (type === 'reactivate') {
+        await api.patch(`/admin/users/${u.id}/reactivate`);
+        toast.success(`${u.name}'s account reactivated.`);
+      }
       fetchUsers();
     } catch {
-      toast.error('Failed to archive account');
+      toast.error(`Failed to ${type} account`);
     }
   };
 
@@ -182,9 +199,17 @@ export default function ManageUsers() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={i}>
-                    <td className="px-6 py-4"><Skeleton className="h-10 w-48" /></td>
+                Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-10 h-10 rounded-full" />
+                        <div>
+                          <Skeleton className="h-5 w-32 mb-1" />
+                          <Skeleton className="h-3 w-48" />
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-6 py-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-6 w-24" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-6 w-24" /></td>
@@ -232,12 +257,19 @@ export default function ManageUsers() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {u.is_active && (
+                      {u.is_active ? (
                         <button
-                          onClick={() => handleDeactivate(u)}
+                          onClick={() => openConfirmModal('archive', u)}
                           className="text-rose-500 hover:text-rose-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors flex items-center gap-1 ml-auto"
                         >
                           <Archive size={14} /> Archive
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => openConfirmModal('reactivate', u)}
+                          className="text-emerald-500 hover:text-emerald-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-1 ml-auto"
+                        >
+                          <CheckCircle size={14} /> Reactivate
                         </button>
                       )}
                     </td>
@@ -390,6 +422,32 @@ export default function ManageUsers() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* ── Confirmation Modal ─────────────────────────────────────────────── */}
+      <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} title={confirmAction.type === 'archive' ? 'Archive Account' : 'Reactivate Account'}>
+        <div className="space-y-4">
+          <p className="text-slate-600">
+            {confirmAction.type === 'archive' ? (
+              <>Are you sure you want to archive the account for <strong>{confirmAction.user?.name}</strong>? They will be immediately logged out and lose access to the system until reactivated.</>
+            ) : (
+              <>Are you sure you want to reactivate the account for <strong>{confirmAction.user?.name}</strong>? They will regain access to their account.</>
+            )}
+          </p>
+          <div className="pt-4 flex justify-end gap-3">
+            <button onClick={() => setIsConfirmOpen(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+            <button
+              onClick={executeConfirmAction}
+              className={`px-5 py-2.5 font-medium rounded-xl text-white transition-colors shadow-md ${
+                confirmAction.type === 'archive'
+                  ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
+                  : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200'
+              }`}
+            >
+              {confirmAction.type === 'archive' ? 'Yes, Archive Account' : 'Yes, Reactivate Account'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

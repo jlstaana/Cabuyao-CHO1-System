@@ -130,6 +130,7 @@ class ConsultationController extends Controller {
         $data = $request->validate([
             'requested_specialization' => 'required|string|max:255',
             'scheduled_at' => 'required|date',
+            'doctor_id' => 'nullable|integer|exists:doctors,id',
             'symptoms' => 'required|string|max:2000',
             'notes' => 'nullable|string|max:2000',
             'vitals' => 'required|array',
@@ -142,7 +143,12 @@ class ConsultationController extends Controller {
             'vitals.oxygen' => 'nullable|string|max:50',
         ]);
 
-        $doctor = $this->matchingDoctor($data['requested_specialization'], $data['scheduled_at']);
+        if (!empty($data['doctor_id'])) {
+            $doctor = Doctor::find($data['doctor_id']);
+        } else {
+            $doctor = $this->matchingDoctor($data['requested_specialization'], $data['scheduled_at']);
+        }
+        
         $status = $doctor ? 'Scheduled' : 'Pending';
 
         $c = Consultation::create([

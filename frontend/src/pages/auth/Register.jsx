@@ -97,11 +97,7 @@ export default function Register() {
               required
             />
           </div>
-          {devCode && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Development code: <span className="font-bold tracking-widest">{devCode}</span>
-            </div>
-          )}
+
           <button
             disabled={verifying || code.length !== 6}
             className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg shadow-sky-200 disabled:opacity-70"

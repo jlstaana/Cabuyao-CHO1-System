@@ -24,42 +24,33 @@ const COLOR_MAP = {
   purple:  { bg: 'bg-purple-50',  icon: 'text-purple-500',  border: 'border-purple-200',  badge: 'bg-purple-100 text-purple-700' },
 };
 
-function mapVitalHistory(consultations) {
-  return consultations
-    .filter((c) => c.vital_signs || c.vitalSigns)
-    .map((c) => {
-      const vitals = c.vital_signs || c.vitalSigns;
-      return {
-        id: vitals.id || c.id,
-        consultation_id: c.id,
-        date: new Date(vitals.updated_at || vitals.created_at || c.updated_at).toLocaleString(),
-        blood_pressure: vitals.blood_pressure || '',
-        heart_rate: vitals.heart_rate || '',
-        temperature: vitals.temperature || '',
-        respiratory: vitals.respiratory || '',
-        oxygen: vitals.oxygen || '',
-        weight: vitals.weight || '',
-      };
-    });
+function mapVitalHistory(vitals) {
+  return vitals.map((v) => ({
+    id: v.id,
+    date: new Date(v.created_at).toLocaleString(),
+    blood_pressure: v.blood_pressure || '',
+    heart_rate: v.heart_rate || '',
+    temperature: v.temperature || '',
+    respiratory: v.respiratory || '',
+    oxygen: v.oxygen || '',
+    weight: v.weight || '',
+  }));
 }
 
 export default function VitalSigns() {
   const { user } = useAuthStore();
   const [form, setForm] = useState({ blood_pressure: '', heart_rate: '', temperature: '', respiratory: '', oxygen: '', weight: '' });
   const [history, setHistory] = useState([]);
-  const [consultations, setConsultations] = useState([]);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     if (user?.role !== 'Patient') return;
     let isActive = true;
-    api.get('/consultations')
+    api.get('/vitals')
       .then((res) => {
-        const rows = res.data || [];
         if (isActive) {
-          setConsultations(rows);
-          setHistory(mapVitalHistory(rows));
+          setHistory(mapVitalHistory(res.data || []));
         }
       })
       .catch(() => {
@@ -86,14 +77,10 @@ export default function VitalSigns() {
     }
     setSaving(true);
     try {
-      const target = consultations.find((c) => ['Scheduled', 'Pending', 'Approved'].includes(c.status)) || consultations[0];
-      if (!target) {
-        toast.error('Please request a consultation before recording vital signs.');
-        return;
-      }
-      await api.post(`/consultations/${target.id}/vitals`, form);
-      const now = new Date().toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-      setHistory((prev) => [{ id: Date.now(), consultation_id: target.id, date: now, ...form }, ...prev]);
+      const response = await api.post('/vitals', form);
+      const newVital = response.data.data;
+      const now = new Date(newVital.created_at || Date.now()).toLocaleString();
+      setHistory((prev) => [{ id: newVital.id, date: now, ...form }, ...prev]);
       toast.success('Vital signs recorded successfully!');
       setForm({ blood_pressure: '', heart_rate: '', temperature: '', respiratory: '', oxygen: '', weight: '' });
       setShowForm(false);
