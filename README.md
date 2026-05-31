@@ -72,8 +72,6 @@ A comprehensive, web-based teleconsultation and health information management sy
 3. Configure the environment variables (e.g., API URL) in `.env`.
 4. Start the development server: `npm run dev`
 
-### 🚂 Railway Deployment
-A `railway.toml` configuration is included in the `backend` directory. Railway will automatically detect the Dockerfile and configure itself to build and deploy the Laravel application natively using Docker. Ensure to set your database and environmental variables on the Railway dashboard.
 
 ---
 
