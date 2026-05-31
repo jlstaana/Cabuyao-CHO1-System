@@ -24,7 +24,7 @@ export default function Footer({ className = '' }) {
               <div className="absolute bottom-4 left-4 right-4">
                 <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-sky-100 backdrop-blur">
                   <HeartPulse size={14} />
-                  CHO-I Cabuyao
+                  CHO-1 Cabuyao
                 </div>
                 <h2 className="text-xl font-bold text-white">Cabuyao City Health Office</h2>
                 <p className="mt-1 text-sm text-slate-200">Telehealth services, patient records, and digital care coordination.</p>
@@ -38,22 +38,22 @@ export default function Footer({ className = '' }) {
 
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-white">Office Details</h3>
-          <div className="mt-4 space-y-3 text-sm">
-            <div className="flex gap-3">
+          <div className="mt-4 space-y-4 text-sm">
+            <div className="flex items-start gap-3">
               <MapPin size={18} className="mt-0.5 shrink-0 text-sky-400" />
               <div>
                 <p className="font-semibold text-slate-100">City Health Office-1</p>
-                <p className="mt-1 leading-6 text-slate-400">Cho-I, F.B. Bailon St, Cabuyao City, 4025 Laguna, Philippines</p>
+                <p className="mt-1 leading-relaxed text-slate-400">F.B. Bailon St., Brgy. Sala, Cabuyao City, 4025 Laguna, Philippines</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex items-start gap-3">
               <Phone size={18} className="mt-0.5 shrink-0 text-sky-400" />
               <div>
                 <p className="font-semibold text-slate-100">Contact Numbers</p>
-                <p className="mt-1 text-slate-400">(049) 832 2809 / 049-531-1153</p>
+                <p className="mt-1 text-slate-400">(049) 531-1153</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex items-start gap-3">
               <Clock size={18} className="mt-0.5 shrink-0 text-sky-400" />
               <div>
                 <p className="font-semibold text-slate-100">Service Access</p>
@@ -93,7 +93,7 @@ export default function Footer({ className = '' }) {
             rel="noreferrer"
             className="inline-flex items-center gap-1 font-medium text-slate-400 transition-colors hover:text-sky-300"
           >
-            View CHO-I Cabuyao on Map
+            View CHO-1 Cabuyao on Map
             <ExternalLink size={13} />
           </a>
         </div>
