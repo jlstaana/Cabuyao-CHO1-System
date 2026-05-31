@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://morphing-pebble-grandkid.ngrok-free.dev/api';
+export const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://banked-darkened-outrage.ngrok-free.dev/api';
 const isNgrokApi = /ngrok(-free)?\.(app|dev)|ngrok\.io/i.test(apiBaseUrl);
 
 const api = axios.create({
