@@ -1,15 +1,53 @@
 import { Helmet } from 'react-helmet-async';
 
+const titleToEmoji = {
+  'dashboard': '📊',
+  'consultation': '🩺',
+  'patient record': '📋',
+  'manage user': '👥',
+  'user': '👥',
+  'prescription': '💊',
+  'medicine': '📦',
+  'inventory': '📦',
+  'setting': '⚙️',
+  'profile': '👤',
+  'notification': '🔔',
+  'medical record': '📂',
+  'add record': '📝',
+  'walk-in': '🏥',
+  'onboarding': '👋',
+  'telehealth': '💻'
+};
+
 export default function SEO({ title, description, name, type }) {
   const siteName = "Cabuyao CHO-I Telehealth";
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
   const defaultDesc = "Access teleconsultations, digital prescriptions, and secure health records seamlessly through the Cabuyao City Health Office Portal.";
+
+  // Dynamically find a matching emoji based on the title string
+  let emojiIcon = null;
+  if (title) {
+    const lowerTitle = title.toLowerCase();
+    const matchedKey = Object.keys(titleToEmoji).find(key => lowerTitle.includes(key));
+    if (matchedKey) {
+      emojiIcon = titleToEmoji[matchedKey];
+    }
+  }
+
+  // Create an SVG data URI if an emoji was found, otherwise use the default logo
+  const faviconHref = emojiIcon 
+    ? `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${emojiIcon}</text></svg>`
+    : '/favicon.svg';
 
   return (
     <Helmet>
       { /* Standard metadata tags */ }
       <title>{fullTitle}</title>
       <meta name='description' content={description || defaultDesc} />
+      
+      { /* Dynamic Favicon */ }
+      <link rel="icon" href={faviconHref} />
+      
       { /* End standard metadata tags */ }
       
       { /* OpenGraph tags */ }
