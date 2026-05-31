@@ -207,7 +207,7 @@ export default function MedicalImages() {
       </header>
 
       {/* Upload form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
+      <form data-tour="page-form" onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
         <h2 className="font-semibold text-slate-900 flex items-center gap-2">
           <ImagePlus size={18} className="text-sky-500" /> Upload New Image
         </h2>
@@ -312,7 +312,7 @@ export default function MedicalImages() {
       </form>
 
       {/* Uploaded images list */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div data-tour="page-list" className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="p-5 border-b border-slate-100">
           <h2 className="font-semibold text-slate-900 flex items-center gap-2">
             <FileImage size={16} className="text-indigo-500" /> My Uploaded Images

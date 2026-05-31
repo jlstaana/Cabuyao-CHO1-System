@@ -266,7 +266,7 @@ export default function PatientRecords() {
       </div>
 
       {/* Search */}
-      <div className="relative">
+      <div data-tour="page-search" className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input
           type="text"
@@ -278,7 +278,7 @@ export default function PatientRecords() {
       </div>
 
       {/* Patient list */}
-      <div className="space-y-4">
+      <div data-tour="page-list" className="space-y-4">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 animate-pulse">
@@ -548,7 +548,7 @@ export default function PatientRecords() {
 
       <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Update Patient Record">
         {selected && (
-          <form onSubmit={handleUpdateRecord} className="space-y-4">
+          <form data-tour="page-form" onSubmit={handleUpdateRecord} className="space-y-4">
             <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
               Edit permitted patient information. Invalid changes are rejected and the previous record is kept.
             </div>

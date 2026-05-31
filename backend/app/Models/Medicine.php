@@ -3,6 +3,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Medicine extends Model {
-    protected $fillable = ['name', 'category', 'dosage_form', 'stock_quantity', 'description', 'status'];
+    protected $fillable = ['name', 'category', 'dosage_form', 'description', 'status'];
     protected $casts = ['status' => 'boolean'];
 }

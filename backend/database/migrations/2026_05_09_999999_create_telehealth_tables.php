@@ -99,7 +99,6 @@ return new class extends Migration {
             $table->string('name');
             $table->string('category')->nullable();
             $table->string('dosage_form')->nullable();
-            $table->integer('stock_quantity')->default(0);
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();

@@ -191,7 +191,7 @@ export default function Notifications() {
     Admin: { title: 'Admin Notifications', sub: 'System alerts, account activity, and administrative updates.' },
     Doctor: { title: 'My Notifications', sub: 'Consultation requests, patient updates, and prescription activity.' },
     Patient: { title: 'My Notifications', sub: 'Updates on your consultations, prescriptions, and health reminders.' },
-    Staff: { title: 'Staff Notifications', sub: 'Pending approvals, stock alerts, and patient registration updates.' },
+    Staff: { title: 'Staff Notifications', sub: 'Pending approvals, consultation updates, and patient registration activity.' },
   };
   const meta = PAGE_META[role] || PAGE_META.Patient;
 
@@ -222,7 +222,7 @@ export default function Notifications() {
         </div>
       </header>
 
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+      <div data-tour="page-filters" className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
         <Filter size={16} className="text-slate-400 shrink-0" />
         {filters.map((f) => (
           <button
@@ -254,7 +254,7 @@ export default function Notifications() {
         </div>
       )}
 
-      <div className="space-y-3">
+      <div data-tour="page-list" className="space-y-3">
         {filtered.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-16 text-center">
             <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">

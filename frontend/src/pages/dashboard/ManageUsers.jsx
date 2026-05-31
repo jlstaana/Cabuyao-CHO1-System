@@ -155,7 +155,7 @@ export default function ManageUsers() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <PageTitle icon={UserPlus} title="Account Management" description="Create doctor & staff accounts, assign visiting doctor access, and manage credentials." iconClassName="bg-sky-50 text-sky-600" />
-        <div className="flex gap-2 flex-wrap">
+        <div data-tour="page-primary-action" className="flex gap-2 flex-wrap">
           <button
             onClick={() => { setFormData(f => ({ ...f, role: 'Doctor', access_type: 'visiting' })); setIsCreateOpen(true); }}
             className="flex items-center gap-2 bg-purple-500 text-white px-4 py-2.5 rounded-xl hover:bg-purple-600 transition-all shadow-md shadow-purple-200 font-medium active:scale-95 text-sm"
@@ -174,7 +174,7 @@ export default function ManageUsers() {
       {/* Table card */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="p-4 border-b border-slate-100 bg-white flex flex-col md:flex-row gap-4">
-           <div className="relative flex-1">
+           <div data-tour="page-search" className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type="text"
@@ -187,7 +187,7 @@ export default function ManageUsers() {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse whitespace-nowrap">
+          <table data-tour="page-list" className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50/50 text-slate-500 text-sm border-b border-slate-100">
                 <th className="px-6 py-4 font-semibold tracking-wide">User Profile</th>
@@ -283,7 +283,7 @@ export default function ManageUsers() {
 
       {/* ── Create Account Modal ─────────────────────────────────────────────── */}
       <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title={formData.access_type === 'visiting' ? 'Assign Visiting Doctor Access' : 'Create New Account'}>
-        <form onSubmit={handleCreate} className="space-y-4">
+        <form data-tour="page-form" onSubmit={handleCreate} className="space-y-4">
           {/* Access type toggle */}
           <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-2">
             {['permanent','visiting'].map((t) => (

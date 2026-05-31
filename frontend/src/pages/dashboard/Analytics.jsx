@@ -218,6 +218,7 @@ export default function Analytics() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports and monitor system activity logs." iconClassName="bg-indigo-50 text-indigo-600" />
         <button
+          data-tour="page-primary-action"
           onClick={handleExportFullReport}
           disabled={exporting || loading}
           className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm font-medium text-sm disabled:opacity-70"
@@ -226,7 +227,7 @@ export default function Analytics() {
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div data-tour="page-filters" className="flex gap-2 overflow-x-auto pb-1">
         {REPORT_TABS.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.key;
@@ -248,7 +249,7 @@ export default function Analytics() {
       </div>
 
       {activeTab === 'consultations' && (
-        <div className="space-y-6">
+        <div data-tour="page-stats" className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} sub="All records" color="sky" />
             <StatCard label="Completed" value={formatNumber(getStatusTotal(stats, 'Completed'))} sub={`${summary.completion_rate || 0}% completion`} color="emerald" />

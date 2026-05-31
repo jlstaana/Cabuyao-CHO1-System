@@ -15,6 +15,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/auth/onboarding-complete', [AuthController::class, 'completeOnboarding']);
     
     // Patient Profile & History
     Route::get('/patients/profile', [PatientController::class, 'profile']);

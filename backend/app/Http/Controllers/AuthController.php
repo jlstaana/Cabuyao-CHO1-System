@@ -76,7 +76,7 @@ class AuthController extends Controller {
             }
             throw ValidationException::withMessages(['email' => ['Email is already registered.']]);
         }
-        $user = User::create(['name' => $request->name, 'email' => $request->email, 'password' => Hash::make($request->password), 'role' => 'Patient', 'first_login' => false, 'is_active' => false]);
+        $user = User::create(['name' => $request->name, 'email' => $request->email, 'password' => Hash::make($request->password), 'role' => 'Patient', 'first_login' => true, 'is_active' => false]);
         Patient::create(['user_id' => $user->id, 'dob' => $request->dob, 'contact_no' => $request->contact_no, 'address' => $request->address ?? '']);
         $code = $this->createVerificationCode($user);
         $this->sendVerificationCode($user, $code);
@@ -184,5 +184,12 @@ class AuthController extends Controller {
         $user->update(['password' => Hash::make($request->new_password), 'first_login' => false]);
         AuditLog::create(['user_id' => $user->id, 'action' => 'Change Password', 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Password changed successfully']);
+    }
+
+    public function completeOnboarding(Request $request) {
+        $user = $request->user();
+        $user->update(['first_login' => false]);
+        AuditLog::create(['user_id' => $user->id, 'action' => 'Complete Onboarding Tutorial', 'ip_address' => $request->ip()]);
+        return response()->json(['message' => 'Onboarding completed', 'user' => $user->fresh()]);
     }
 }

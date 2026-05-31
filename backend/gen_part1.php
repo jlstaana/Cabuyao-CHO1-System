@@ -181,7 +181,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Medicine extends Model {
-    protected $fillable = ['name', 'category', 'dosage_form', 'unit', 'stock_quantity', 'description', 'status'];
+    protected $fillable = ['name', 'category', 'dosage_form', 'unit', 'description', 'status'];
     protected $casts = ['status' => 'boolean'];
 }
 EOF
@@ -315,8 +315,7 @@ return new class extends Migration {
             $table->string('category')->nullable();
             $table->string('dosage_form')->nullable();
             $table->string('unit')->nullable();
-            $table->integer('stock_quantity')->default(0);
-            $table->text('description')->nullable();
+            $table            $table->text('description')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
         });
@@ -374,3 +373,4 @@ EOF
 );
 
 echo "Models and Migrations generated.\n";
+

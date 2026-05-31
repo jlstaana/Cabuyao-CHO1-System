@@ -18,7 +18,7 @@ class MedicineController extends Controller {
             'description' => 'nullable|string',
             'dosage_form' => 'nullable|string',
         ]);
-        $m = Medicine::create(array_merge($data, ['stock_quantity' => 0, 'status' => true]));
+        $m = Medicine::create(array_merge($data, ['status' => true]));
         return response()->json($m, 201);
     }
     public function update(Request $request, $id) {

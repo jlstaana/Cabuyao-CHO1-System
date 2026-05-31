@@ -120,7 +120,7 @@ export default function Prescriptions() {
         <PageTitle icon={FileText} title="E-Prescriptions" description="Access and manage digitally signed medical prescriptions." iconClassName="bg-emerald-50 text-emerald-600" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div data-tour="page-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
            Array.from({ length: 3 }).map((_, i) => (
              <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
@@ -175,7 +175,7 @@ export default function Prescriptions() {
 
       <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Update E-Prescription">
         {selected && (
-          <form onSubmit={handleUpdate} className="space-y-4">
+          <form data-tour="page-form" onSubmit={handleUpdate} className="space-y-4">
             <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
               Modify the medicine, dosage, frequency, duration, or instructions. Invalid updates keep the previous prescription unchanged.
             </div>

@@ -187,6 +187,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
           <p className="text-sky-100 text-sm mt-0.5">Submit a teleconsultation request and a doctor will be assigned to you.</p>
         </div>
         <button
+          data-tour="page-primary-action"
           onClick={onRequest}
           className="flex items-center gap-2 bg-white text-sky-700 px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-50 transition-colors shadow-sm flex-shrink-0 active:scale-95"
         >
@@ -284,6 +285,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <p className="text-xs font-medium opacity-80">{availabilityStatus.scheduleLabel || 'No fixed schedule set'}</p>
             <button
+              data-tour="page-primary-action"
               onClick={onOpenAvailability}
               className="inline-flex items-center gap-1.5 rounded-lg bg-white/80 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-white transition-colors"
             >
@@ -298,6 +300,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
             <p className="text-xs text-slate-400 mt-0.5">Set your doctor type, available days, and time slots.</p>
           </div>
           <button
+            data-tour="page-primary-action"
             onClick={onOpenAvailability}
             className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-50 px-4 py-2 text-sm font-bold text-sky-700 hover:bg-sky-100 transition-colors"
           >
@@ -307,7 +310,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       )}
 
       {/* Summary strip */}
-      <div className="grid grid-cols-3 gap-4">
+      <div data-tour="page-stats" className="grid grid-cols-3 gap-4">
         {[
           { label: 'Pending',   value: pending.length,   color: 'bg-amber-50 border-amber-200 text-amber-700' },
           { label: 'Scheduled', value: scheduled.length, color: 'bg-sky-50 border-sky-200 text-sky-700' },
@@ -338,7 +341,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       </div>
 
       {/* Queue list */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div data-tour="page-list" className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-6 space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
         ) : filtered.length === 0 ? (
@@ -417,7 +420,7 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div data-tour="page-stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {['Pending','Scheduled','Completed','Cancelled'].map(s => {
           const cfg = STATUS[s];
           return (
@@ -452,7 +455,7 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left whitespace-nowrap">
+            <table data-tour="page-list" className="w-full text-sm text-left whitespace-nowrap">
               <thead>
                 <tr className="bg-slate-50 text-slate-500 text-xs border-b border-slate-100">
                   <th className="px-5 py-3 font-semibold">Patient</th>
@@ -888,7 +891,7 @@ export default function Consultations() {
 
       {/* Doctor Availability Settings Modal */}
       <Modal isOpen={availabilityModal} onClose={() => setAvailabilityModal(false)} title="Availability Settings">
-        <form onSubmit={handleAvailabilitySubmit} className="space-y-4">
+        <form data-tour="page-form" onSubmit={handleAvailabilitySubmit} className="space-y-4">
           <div className="rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-700">
             Select your doctor type and set available days and time slots. Conflicts keep your previous schedule unchanged.
           </div>
@@ -978,7 +981,7 @@ export default function Consultations() {
 
       {/* Patient Request Modal */}
       <Modal isOpen={requestModal} onClose={() => setRequestModal(false)} title="Request Teleconsultation">
-        <form onSubmit={handleRequestSubmit} className="space-y-4">
+        <form data-tour="page-form" onSubmit={handleRequestSubmit} className="space-y-4">
           <div className="rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-700">
             Enter your consultation details, vital signs, and preferred schedule. The system will schedule an available doctor or queue the request for coordination.
           </div>
@@ -1091,7 +1094,7 @@ export default function Consultations() {
                 Select a specialization with active doctors to see appointment slots.
               </div>
             ) : (
-              <div className="space-y-4">
+      <div data-tour="page-list" className="space-y-4">
                 {matchingAvailableDoctors.map((doctor) => (
                   <div key={`request-slots-${doctor.id}`} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
                     <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">

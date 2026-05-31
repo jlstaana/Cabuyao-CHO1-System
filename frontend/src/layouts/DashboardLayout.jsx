@@ -3,10 +3,11 @@ import { Navigate, Outlet, Link, useNavigate, useLocation } from 'react-router-d
 import useAuthStore from '../store/useAuthStore';
 import api from '../utils/api';
 import CHOLogo from '../components/CHOLogo';
+import OnboardingTutorial from '../components/OnboardingTutorial';
 import {
   LogOut, Home, Users, FileText, Bell, Menu, X, Pill,
   BarChart2, ClipboardList, Stethoscope, ShieldCheck,
-  HeartPulse, ImagePlus, Clock, UserCircle,
+  HeartPulse, ImagePlus, Clock, UserCircle, HelpCircle,
 } from 'lucide-react';
 
 // ─── Nav link groups by role ──────────────────────────────────────────────────
@@ -146,16 +147,32 @@ async function ensureNotificationPermission() {
 }
 
 export default function DashboardLayout() {
-  const { isAuthenticated, loading, fetchUser, user, logout } = useAuthStore();
+  const { isAuthenticated, loading, fetchUser, user, logout, completeOnboarding } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [tutorialReplay, setTutorialReplay] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) fetchUser();
   }, [isAuthenticated, fetchUser]);
+
+  useEffect(() => {
+    if (user?.first_login) {
+      setTutorialOpen(true);
+      setTutorialReplay(false);
+    }
+  }, [user?.first_login]);
+
+  useEffect(() => {
+    if (tutorialOpen) {
+      setSidebarCollapsed(false);
+      setMobileMenuOpen(true);
+    }
+  }, [tutorialOpen]);
 
   useEffect(() => {
     if (!user || !['Patient', 'Doctor'].includes(user.role)) return undefined;
@@ -267,6 +284,24 @@ export default function DashboardLayout() {
     navigate('/login');
   };
 
+  const handleOpenTutorial = () => {
+    setTutorialReplay(true);
+    setTutorialOpen(true);
+  };
+
+  const handleCloseTutorial = () => {
+    setTutorialOpen(false);
+    setTutorialReplay(false);
+    setMobileMenuOpen(false);
+  };
+
+  const handleCompleteTutorial = async () => {
+    if (user.first_login) {
+      await completeOnboarding();
+    }
+    handleCloseTutorial();
+  };
+
   const navGroups = buildNavGroups(user.role);
 
   // Role badge config
@@ -282,11 +317,12 @@ export default function DashboardLayout() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 overflow-hidden">
       
       {/* Top Navbar */}
-      <header className="bg-sky-600 text-white shadow-md px-4 py-3 flex justify-between items-center z-30 relative">
+      <header data-tour="topbar" className="bg-sky-600 text-white shadow-md px-4 py-3 flex justify-between items-center z-30 relative">
          <div className="flex items-center gap-4">
             <CHOLogo light to="/dashboard" />
             {/* Desktop Sidebar Toggle */}
             <button 
+              data-tour="sidebar-toggle"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
               className="hidden md:flex p-2 hover:bg-sky-500 rounded-xl transition-colors"
             >
@@ -294,6 +330,7 @@ export default function DashboardLayout() {
             </button>
             {/* Mobile Sidebar Toggle */}
             <button 
+              data-tour="sidebar-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
               className="md:hidden p-2 hover:bg-sky-500 rounded-xl transition-colors"
             >
@@ -302,8 +339,18 @@ export default function DashboardLayout() {
          </div>
 
          <div className="flex items-center gap-4">
+            <button
+              data-tour="help"
+              type="button"
+              onClick={handleOpenTutorial}
+              className="relative p-2 text-sky-100 hover:text-white hover:bg-sky-500 rounded-full transition-colors"
+              title="Open tutorial"
+              aria-label="Open tutorial"
+            >
+              <HelpCircle size={20} />
+            </button>
             {/* Bell → Notifications page */}
-            <Link to="/notifications" className="relative p-2 text-sky-100 hover:text-white hover:bg-sky-500 rounded-full transition-colors">
+            <Link data-tour="notifications" to="/notifications" className="relative p-2 text-sky-100 hover:text-white hover:bg-sky-500 rounded-full transition-colors">
               <Bell size={20} />
               {unreadNotifications > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 text-[10px] font-bold bg-rose-500 text-white rounded-full border-2 border-sky-600 flex items-center justify-center">
@@ -315,7 +362,7 @@ export default function DashboardLayout() {
                <p className="text-sm font-semibold leading-tight">{user.name}</p>
                <p className="text-xs text-sky-200 leading-tight">{user.role}</p>
             </div>
-            <Link to="/profile" className="w-10 h-10 bg-sky-500 hover:bg-sky-400 text-white rounded-full flex items-center justify-center font-bold shadow-inner transition-colors cursor-pointer border-2 border-sky-400">
+            <Link data-tour="profile" to="/profile" className="w-10 h-10 bg-sky-500 hover:bg-sky-400 text-white rounded-full flex items-center justify-center font-bold shadow-inner transition-colors cursor-pointer border-2 border-sky-400">
                {user.name.charAt(0)}
             </Link>
          </div>
@@ -329,13 +376,14 @@ export default function DashboardLayout() {
 
         {/* Sidebar */}
         <aside 
+          data-tour="sidebar"
           className={`absolute md:relative z-20 flex flex-col bg-white border-r border-slate-200 h-full shadow-2xl md:shadow-none transition-all duration-300 ease-in-out ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           } ${sidebarCollapsed ? 'w-20' : 'w-64'}`}
         >
           {/* Role badge */}
           {!sidebarCollapsed && badge && (
-            <div className={`mx-4 mt-4 mb-1 flex items-center gap-2 border rounded-xl px-3 py-2 ${badge.color}`}>
+            <div data-tour="role-badge" className={`mx-4 mt-4 mb-1 flex items-center gap-2 border rounded-xl px-3 py-2 ${badge.color}`}>
               <badge.icon size={15} className="shrink-0" />
               <span className="text-xs font-semibold truncate">{badge.label}</span>
             </div>
@@ -352,6 +400,7 @@ export default function DashboardLayout() {
                   const isActive = location.pathname === link.path;
                   return (
                     <Link
+                      data-tour={`nav-${link.path === '/dashboard' ? 'dashboard' : link.path.replace('/', '')}`}
                       key={`${group.label}-${link.path}-${idx}`}
                       to={link.path}
                       onClick={() => setMobileMenuOpen(false)}
@@ -373,6 +422,7 @@ export default function DashboardLayout() {
           
           <div className="p-4 border-t border-slate-100">
             <button 
+              data-tour="logout"
               onClick={handleLogout} 
               className={`flex items-center gap-3 py-3 w-full rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors font-medium ${sidebarCollapsed ? 'justify-center px-0' : 'px-4'}`}
               title={sidebarCollapsed ? 'Sign Out' : ''}
@@ -384,10 +434,20 @@ export default function DashboardLayout() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 relative p-4 md:p-8">
+        <main data-tour="main-content" className="flex-1 overflow-y-auto bg-slate-50 relative p-4 md:p-8">
           <Outlet />
         </main>
       </div>
+
+      <OnboardingTutorial
+        user={user}
+        pathname={location.pathname}
+        navigate={navigate}
+        open={tutorialOpen}
+        forced={Boolean(user.first_login && !tutorialReplay)}
+        onClose={handleCloseTutorial}
+        onComplete={handleCompleteTutorial}
+      />
     </div>
   );
 }

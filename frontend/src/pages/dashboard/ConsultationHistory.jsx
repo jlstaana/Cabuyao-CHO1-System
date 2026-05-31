@@ -104,7 +104,7 @@ export default function ConsultationHistory() {
       </div>
 
       {/* Search + Filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div data-tour="page-search" className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
@@ -134,7 +134,7 @@ export default function ConsultationHistory() {
       </div>
 
       {/* History list */}
-      <div className="space-y-3">
+      <div data-tour="page-list" className="space-y-3">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 animate-pulse">

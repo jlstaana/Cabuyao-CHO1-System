@@ -105,6 +105,7 @@ export default function Profile() {
           </div>
 
           <button
+            data-tour="page-primary-action"
             onClick={() => setShowPwdModal(true)}
             className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl hover:bg-slate-50 hover:border-sky-300 transition-all font-medium shadow-sm"
           >
@@ -118,7 +119,7 @@ export default function Profile() {
             <div className="p-6 border-b border-slate-100">
               <h3 className="font-semibold text-lg flex items-center gap-2"><User size={20} className="text-sky-500" /> Personal Details</h3>
             </div>
-            <form onSubmit={handleSave} className="p-6 space-y-4">
+            <form data-tour="page-form" onSubmit={handleSave} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>

@@ -115,7 +115,7 @@ export default function VitalSigns() {
           <h2 className="font-semibold text-slate-900 mb-5 flex items-center gap-2">
             <HeartPulse size={18} className="text-rose-500" /> Enter Today's Readings
           </h2>
-          <form onSubmit={handleSubmit}>
+          <form data-tour="page-form" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {VITAL_FIELDS.map((field) => {
                 const Icon = field.icon;
@@ -187,7 +187,7 @@ export default function VitalSigns() {
           </h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left whitespace-nowrap">
+          <table data-tour="page-list" className="w-full text-sm text-left whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50 text-slate-500 text-xs border-b border-slate-100">
                 <th className="px-5 py-3 font-semibold">Date &amp; Time</th>

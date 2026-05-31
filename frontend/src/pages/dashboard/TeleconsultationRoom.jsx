@@ -468,7 +468,7 @@ export default function TeleconsultationRoom() {
       <SEO title="Live Teleconsultation" />
       
       {/* Video Call Area */}
-      <div className="flex-1 bg-slate-900 rounded-3xl overflow-hidden relative shadow-2xl flex flex-col border border-slate-800">
+      <div data-tour="page-video" className="flex-1 bg-slate-900 rounded-3xl overflow-hidden relative shadow-2xl flex flex-col border border-slate-800">
         <div className="absolute top-4 left-4 z-10 flex gap-2">
             <span className="bg-rose-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse flex items-center gap-2">
                <span className="w-2 h-2 bg-white rounded-full"></span> LIVE
@@ -490,7 +490,7 @@ export default function TeleconsultationRoom() {
         
         <div className="flex-1 flex items-center justify-center bg-slate-800 relative overflow-hidden">
            {!callActive ? (
-             <button onClick={toggleCall} className="bg-emerald-500 text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all hover:scale-105 flex items-center gap-3">
+             <button data-tour="page-primary-action" onClick={toggleCall} className="bg-emerald-500 text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all hover:scale-105 flex items-center gap-3">
                 <Video size={24} /> Start / Join Camera
              </button>
            ) : (
@@ -513,7 +513,7 @@ export default function TeleconsultationRoom() {
         </div>
 
         {/* Call Controls */}
-        <div className="h-20 bg-slate-950 flex items-center justify-center gap-4 px-6 z-10 relative">
+        <div data-tour="page-actions" className="h-20 bg-slate-950 flex items-center justify-center gap-4 px-6 z-10 relative">
            <button onClick={toggleMic} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${micActive ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-rose-500/20 text-rose-500 hover:bg-rose-500/30'}`}>
              {micActive ? <Mic size={20} /> : <MicOff size={20} />}
            </button>
@@ -528,7 +528,7 @@ export default function TeleconsultationRoom() {
       <div className="w-full md:w-[28rem] flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
          
          {/* Patient Context & Vitals */}
-         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
+         <div data-tour="page-form" className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><Activity size={18} className="text-sky-500"/> Vital Signs</h3>
             {user.role === 'Patient' ? (
                <form className="space-y-3" onSubmit={saveVitals}>
@@ -551,7 +551,7 @@ export default function TeleconsultationRoom() {
          </div>
 
          {/* Session Chat */}
-         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
+         <div data-tour="page-chat" className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><MessageCircle size={18} className="text-teal-500"/> Session Chat</h3>
             <div ref={chatListRef} className="h-56 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-3 custom-scrollbar">
               {chatMessages.length === 0 ? (
@@ -588,7 +588,7 @@ export default function TeleconsultationRoom() {
          </div>
 
          {/* Medical Images */}
-         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
+         <div data-tour="page-list" className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><Upload size={18} className="text-indigo-500"/> Medical Images</h3>
             {user.role === 'Patient' && (
                <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition-colors cursor-pointer mb-4" onClick={() => navigate('/medical-images')}>
@@ -603,7 +603,7 @@ export default function TeleconsultationRoom() {
 
          {/* Doctor's Consultation & E-Prescription Form */}
          {user.role === 'Doctor' && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex-1 flex flex-col">
+            <div data-tour="page-prescription" className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex-1 flex flex-col">
                <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><FileText size={18} className="text-emerald-500"/> Clinical Diagnosis & E-Prescription</h3>
                
                <form className="space-y-4 flex-1 flex flex-col" onSubmit={completeConsultation}>

@@ -1,6 +1,6 @@
 export default function PageTitle({ icon: Icon, title, description, iconClassName = 'bg-sky-50 text-sky-600' }) {
   return (
-    <div className="flex items-start gap-3">
+    <div data-tour="page-title" className="flex items-start gap-3">
       <div className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconClassName}`}>
         <Icon size={22} />
       </div>

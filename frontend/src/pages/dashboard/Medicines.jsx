@@ -91,7 +91,7 @@ export default function Medicines() {
       <div className="flex justify-between items-center mb-6">
         <PageTitle icon={Pill} title="Medicine Database" description="View and manage available medicines for e-prescriptions." iconClassName="bg-emerald-50 text-emerald-600" />
         {(user?.role === 'Admin' || user?.role === 'Staff') && (
-          <button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl hover:bg-emerald-600 transition-colors shadow-sm font-medium">
+          <button data-tour="page-primary-action" onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl hover:bg-emerald-600 transition-colors shadow-sm font-medium">
             <Plus size={18} /> Add Medicine
           </button>
         )}
@@ -99,7 +99,7 @@ export default function Medicines() {
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex gap-4">
-          <div className="relative flex-1">
+          <div data-tour="page-search" className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
@@ -110,7 +110,7 @@ export default function Medicines() {
             />
           </div>
         </div>
-        <table className="w-full text-left border-collapse">
+        <table data-tour="page-list" className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 text-slate-500 text-sm border-b border-slate-100">
               <th className="p-4 font-semibold">Medicine Name</th>
@@ -130,7 +130,7 @@ export default function Medicines() {
                 </tr>
               ))
             ) : filtered.length === 0 ? (
-              <tr><td colSpan="5" className="p-8 text-center text-slate-400">No medicines found.</td></tr>
+              <tr><td colSpan={user?.role === 'Admin' || user?.role === 'Staff' ? 4 : 3} className="p-8 text-center text-slate-400">No medicines found.</td></tr>
             ) : filtered.map(m => (
               <tr key={m.id} className="hover:bg-slate-50/50 transition-colors group">
                 <td className="p-4">
@@ -178,7 +178,7 @@ export default function Medicines() {
 
       {/* Add Medicine Modal */}
       <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Medicine">
-        <form onSubmit={handleAdd} className="space-y-4">
+        <form data-tour="page-form" onSubmit={handleAdd} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Generic / Brand Name</label>
             <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500/20" />

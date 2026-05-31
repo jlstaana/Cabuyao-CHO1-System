@@ -26,7 +26,7 @@ function isToday(value) {
 
 function StatCard({ label, value, icon: Icon, color, bg }) {
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-start gap-4 hover:shadow-md transition-shadow">
+    <div data-tour="page-stats" className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-start gap-4 hover:shadow-md transition-shadow">
       <div className={`p-3 rounded-xl ${bg} ${color}`}><Icon size={24} /></div>
       <div>
         <p className="text-sm font-medium text-slate-500">{label}</p>
@@ -108,7 +108,7 @@ function RecentActivity({ stats }) {
 function ConsultationQueue({ consultations }) {
   const rows = consultations.filter((c) => ['Pending', 'Scheduled'].includes(c.status)).slice(0, 5);
   return (
-    <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <div data-tour="page-list" className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
       <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><Stethoscope size={16} className="text-sky-500" /> Consultation Queue</h3>
       <div className="space-y-3">
         {rows.length === 0 ? <p className="text-sm text-slate-400">No pending or scheduled consultations.</p> : rows.map((c) => (
@@ -157,7 +157,7 @@ function AdminOverview({ user, stats }) {
 
 function QuickActions({ admin = false, patient = false }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <div data-tour="page-actions" className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
       <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><ShieldCheck size={16} className="text-sky-500" /> Quick Actions</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {admin && <QuickLink to="/users" icon={Users} label="Manage Users" color="text-sky-700" bg="bg-sky-50" />}

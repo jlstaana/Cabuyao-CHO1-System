@@ -31,6 +31,12 @@ const useAuthStore = create((set) => ({
       localStorage.removeItem('token');
       set({ user: null, token: null, isAuthenticated: false, loading: false });
     }
+  },
+
+  completeOnboarding: async () => {
+    const response = await api.post('/auth/onboarding-complete');
+    set({ user: response.data.user });
+    return response.data.user;
   }
 }));
 
