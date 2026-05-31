@@ -73,11 +73,11 @@ class UserSeeder extends Seeder
         ]);
         // 5. Create 25 Specialists (5 for each: Cardio, Pulmo, Endo, Neuro, Pedia)
         $specializations = [
-            'Cardiology' => ['Dr. Juan Dela Cruz', 'Dr. Maria Santos', 'Dr. Pedro Reyes', 'Dr. Ana Garcia', 'Dr. Luis Ocampo'],
-            'Pulmonology' => ['Dr. Andres Bonifacio', 'Dr. Emilio Aguinaldo', 'Dr. Apolinario Mabini', 'Dr. Marcelo Del Pilar', 'Dr. Antonio Luna'],
-            'Endocrinology' => ['Dr. Gabriela Silang', 'Dr. Melchora Aquino', 'Dr. Teresa Magbanua', 'Dr. Josefa Llanes', 'Dr. Trinidad Tecson'],
-            'Neurology' => ['Dr. Gregorio Del Pilar', 'Dr. Miguel Malvar', 'Dr. Artemio Ricarte', 'Dr. Vicente Lim', 'Dr. Tomas Claudio'],
-            'Pediatrics' => ['Dr. Ramon Magsaysay', 'Dr. Carlos Garcia', 'Dr. Diosdado Macapagal', 'Dr. Corazon Aquino', 'Dr. Fidel Ramos']
+            'Cardiology' => ['Dr. Mark Reyes', 'Dr. Carlo Mendoza', 'Dr. Dennis Cruz', 'Dr. Rowena Santos', 'Dr. Liza Bautista'],
+            'Pulmonology' => ['Dr. Paolo Garcia', 'Dr. Albert Villanueva', 'Dr. Sarah Fernandez', 'Dr. Joel Gonzales', 'Dr. Anna Torres'],
+            'Endocrinology' => ['Dr. Maria Lopez', 'Dr. Grace Ramos', 'Dr. Katrina Flores', 'Dr. Ryan Rivera', 'Dr. Michael Perez'],
+            'Neurology' => ['Dr. Richard Castillo', 'Dr. Joseph Gomez', 'Dr. Elena Diaz', 'Dr. Karen Morales', 'Dr. Patricia Castro'],
+            'Pediatrics' => ['Dr. Michelle Ocampo', 'Dr. Jessica De Leon', 'Dr. Kevin Aguilar', 'Dr. Angela Pascual', 'Dr. Bryan Navarro']
         ];
 
         foreach ($specializations as $spec => $doctors) {
