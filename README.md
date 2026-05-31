@@ -26,6 +26,9 @@ A comprehensive, web-based teleconsultation and health information management sy
 - **Admin Analytics:** Comprehensive reporting on consultation volume, user demographics, and system usage.
 - **Real-Time Notifications:** Dynamic, real-time alert system to keep doctors and patients updated on consultation statuses and new messages.
 
+### 🧭 User Experience & Onboarding
+- **Comprehensive Guided Tutorial:** A step-by-step interactive walkthrough that automatically navigates new accounts from the Dashboard through all major features (Teleconsultations, Records, Vital Signs) and non-functional settings (Profile, Notifications) based on their specific role.
+
 ---
 
 ## 🛠️ Technology Stack
@@ -68,6 +71,9 @@ A comprehensive, web-based teleconsultation and health information management sy
 2. Install dependencies: `npm install`
 3. Configure the environment variables (e.g., API URL) in `.env`.
 4. Start the development server: `npm run dev`
+
+### 🚂 Railway Deployment
+A `railway.toml` configuration is included in the `backend` directory. Railway will automatically detect the Dockerfile and configure itself to build and deploy the Laravel application natively using Docker. Ensure to set your database and environmental variables on the Railway dashboard.
 
 ---
 
