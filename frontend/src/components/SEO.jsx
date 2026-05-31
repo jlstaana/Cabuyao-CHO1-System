@@ -2,21 +2,27 @@ import { Helmet } from 'react-helmet-async';
 
 const titleToEmoji = {
   'dashboard': '📊',
+  'analytics': '📈',
+  'report': '📈',
   'consultation': '🩺',
+  'telehealth': '💻',
   'patient record': '📋',
+  'medical record': '📂',
   'manage user': '👥',
   'user': '👥',
   'prescription': '💊',
   'medicine': '📦',
   'inventory': '📦',
+  'vital sign': '❤️',
+  'vital': '❤️',
+  'medical image': '🖼️',
+  'image': '🖼️',
   'setting': '⚙️',
   'profile': '👤',
   'notification': '🔔',
-  'medical record': '📂',
   'add record': '📝',
   'walk-in': '🏥',
-  'onboarding': '👋',
-  'telehealth': '💻'
+  'onboarding': '👋'
 };
 
 export default function SEO({ title, description, name, type }) {
