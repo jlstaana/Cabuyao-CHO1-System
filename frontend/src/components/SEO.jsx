@@ -40,10 +40,11 @@ export default function SEO({ title, description, name, type }) {
     }
   }
 
-  // Create an SVG data URI if an emoji was found, otherwise use the default logo
+  // Create a fully encoded SVG data URI if an emoji was found, otherwise use the default logo
+  const svgString = emojiIcon ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">${emojiIcon}</text></svg>` : '';
   const faviconHref = emojiIcon 
-    ? `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${emojiIcon}</text></svg>`
-    : '/favicon.svg';
+    ? `data:image/svg+xml,${encodeURIComponent(svgString)}`
+    : '/cho1-logo.png';
 
   return (
     <Helmet>
@@ -52,7 +53,7 @@ export default function SEO({ title, description, name, type }) {
       <meta name='description' content={description || defaultDesc} />
       
       { /* Dynamic Favicon */ }
-      <link rel="icon" href={faviconHref} />
+      <link rel="icon" type={emojiIcon ? "image/svg+xml" : "image/png"} href={faviconHref} />
       
       { /* End standard metadata tags */ }
       
