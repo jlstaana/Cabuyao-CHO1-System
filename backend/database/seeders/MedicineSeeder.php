@@ -97,6 +97,17 @@ class MedicineSeeder extends Seeder {
             ['name' => 'Fluoxetine 20mg', 'category' => 'Psychiatry / SSRI', 'dosage_form' => 'Capsule', 'description' => 'For depression, OCD, or panic disorder. Common reference: 20mg once daily in the morning.', 'status' => true],
             ['name' => 'Quetiapine 25mg', 'category' => 'Psychiatry / Atypical Antipsychotic', 'dosage_form' => 'Tablet', 'description' => 'For mood stabilization or sleep support in selected cases. Common reference: 25mg nightly.', 'status' => true],
             ['name' => 'Clonazepam 2mg', 'category' => 'Psychiatry / Benzodiazepine', 'dosage_form' => 'Tablet', 'description' => 'For severe acute anxiety or seizure disorder. strictly prescription only.', 'status' => true],
+            
+            // PhilHealth YAKAP / GAMOT Essential Medicines
+            ['name' => 'Cotrimoxazole 800mg/160mg', 'category' => 'PhilHealth YAKAP / Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For urinary tract and respiratory infections.', 'status' => true],
+            ['name' => 'Nitrofurantoin 100mg', 'category' => 'PhilHealth YAKAP / Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'PhilHealth YAKAP Essential Medicine. For uncomplicated urinary tract infections.', 'status' => true],
+            ['name' => 'Clarithromycin 500mg', 'category' => 'PhilHealth YAKAP / Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For respiratory and skin infections.', 'status' => true],
+            ['name' => 'Prednisone 5mg', 'category' => 'PhilHealth YAKAP / Corticosteroid', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For inflammation and severe allergies.', 'status' => true],
+            ['name' => 'Chlorphenamine 4mg', 'category' => 'PhilHealth YAKAP / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For allergic reactions and rhinitis.', 'status' => true],
+            ['name' => 'Clopidogrel 75mg', 'category' => 'PhilHealth GAMOT / Antiplatelet', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth GAMOT package. For heart conditions and stroke prevention.', 'status' => true],
+            ['name' => 'Dapagliflozin 10mg', 'category' => 'PhilHealth GAMOT / Antidiabetic', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth GAMOT package. For type 2 diabetes management.', 'status' => true],
+            ['name' => 'Budesonide + Formoterol 160mcg/4.5mcg', 'category' => 'PhilHealth GAMOT / Pulmonology', 'dosage_form' => 'Inhaler', 'description' => 'PhilHealth GAMOT package. For asthma and COPD maintenance.', 'status' => true],
+            ['name' => 'Cefixime 200mg', 'category' => 'PhilHealth GAMOT / Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'PhilHealth GAMOT package. For susceptible bacterial infections.', 'status' => true],
         ];
 
         foreach ($medicines as $medicine) {
