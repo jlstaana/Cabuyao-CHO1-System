@@ -28,10 +28,16 @@ export default function Login() {
     try {
       await submitLogin(data.email, data.password);
     } catch (error) {
-      const message = error.response?.data?.errors?.email?.[0]
-        || error.response?.data?.message
-        || 'Invalid credentials';
+      let message = 'Invalid credentials';
+      if (!error.response) {
+        message = 'Network Error: Cannot connect to server';
+      } else {
+        message = error.response.data?.errors?.email?.[0]
+          || error.response.data?.message
+          || 'Invalid credentials';
+      }
       toast.error(message);
+      console.error(error);
     } finally {
       setLoading(false);
     }
