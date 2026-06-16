@@ -15,7 +15,7 @@ A comprehensive, web-based teleconsultation and health information management sy
 
 ### 💊 E-Prescription Management
 - **Digital Prescriptions:** Doctors can seamlessly generate E-Prescriptions with digital signatures post-consultation.
-- **Medicine Database:** Centralized inventory/database of available medicines integrated into the prescription workflow.
+- **Medicine Database:** Centralized inventory of available medicines, pre-populated with **PhilHealth YAKAP** and **GAMOT** program essential medicines.
 
 ### 🔐 Security & Access Control
 - **Role-Based Access Control (RBAC):** Distinct dashboards and permissions for **Admin**, **Staff**, **Doctor**, and **Patient** roles.
@@ -43,7 +43,7 @@ A comprehensive, web-based teleconsultation and health information management sy
 
 **Backend:**
 - Laravel (PHP Framework)
-- MySQL (Database)
+- SQLite / MySQL (Database)
 - Laravel Sanctum (API Authentication & Token Management)
 - RESTful API Architecture
 
@@ -55,16 +55,20 @@ A comprehensive, web-based teleconsultation and health information management sy
 - Node.js (v18+)
 - PHP (v8.2+)
 - Composer
-- MySQL
 
 ### Backend Setup
 1. Navigate to the `backend` directory: `cd backend`
 2. Install dependencies: `composer install`
 3. Copy the environment file: `cp .env.example .env`
 4. Generate application key: `php artisan key:generate`
-5. Configure your database and mail (SMTP) settings in `.env`.
+5. Configure your database (defaults to SQLite) and mail (SMTP) settings in `.env`.
 6. Run database migrations and seeders: `php artisan migrate:fresh --seed`
 7. Start the local server: `php artisan serve`
+
+### Default Credentials
+After running the database seeders, you can access the system using the permanent default admin account:
+- **Email:** `admin@cabuyao.gov.ph`
+- **Password:** `password123`
 
 ### Frontend Setup
 1. Navigate to the `frontend` directory: `cd frontend`
