@@ -74,6 +74,10 @@ class AdminController extends Controller {
             return response()->json(['message' => 'You cannot archive your own account.'], 422);
         }
 
+        if ($user->email === 'admin@cabuyao.gov.ph') {
+            return response()->json(['message' => 'The default system admin account cannot be archived.'], 422);
+        }
+
         if ($user->role === 'Admin' && User::where('role', 'Admin')->where('is_active', true)->count() <= 1) {
             return response()->json(['message' => 'At least one active admin account is required.'], 422);
         }

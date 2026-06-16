@@ -4,7 +4,7 @@ import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
-import api, { apiBaseUrl } from '../../utils/api';
+import api from '../../utils/api';
 import { KeyRound, LockKeyhole, LogIn } from 'lucide-react';
 
 export default function Login() {
@@ -31,20 +31,6 @@ export default function Login() {
       const message = error.response?.data?.errors?.email?.[0]
         || error.response?.data?.message
         || 'Invalid credentials';
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setLoading(true);
-    try {
-      await submitLogin('admin@cabuyao.gov.ph', 'password123');
-    } catch (error) {
-      const message = error.response?.data?.errors?.email?.[0]
-        || error.response?.data?.message
-        || 'Demo login failed';
       toast.error(message);
     } finally {
       setLoading(false);
@@ -232,17 +218,6 @@ export default function Login() {
       </form>
       <p className="text-center mt-6 text-sm text-slate-600">
         Don't have an account? <Link to="/register" className="text-sky-600 font-semibold hover:underline">Register here</Link>
-      </p>
-      <button
-        type="button"
-        onClick={handleDemoLogin}
-        disabled={loading}
-        className="mt-4 w-full rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-700 transition-colors hover:bg-sky-100 disabled:opacity-70"
-      >
-        Use demo admin account
-      </button>
-      <p className="mt-3 break-all text-center text-[11px] text-slate-400">
-        API: {apiBaseUrl}
       </p>
     </div>
   );

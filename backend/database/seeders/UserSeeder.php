@@ -71,6 +71,40 @@ class UserSeeder extends Seeder
             'address' => null,
             'contact_no' => null,
         ]);
+
+        // Requested Admin Account
+        User::updateOrCreate(['email' => 'e.gamundoy@gmail.com'], [
+            'name' => 'E. Gamundoy',
+            'password' => Hash::make('password123'),
+            'role' => 'Admin',
+            'first_login' => false,
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        // Requested Patient Accounts
+        $extraPatients = [
+            ['email' => 'staanajulianalouise44@gmail.com', 'name' => 'Juliana Louise Sta Ana'],
+            ['email' => 'lazadobrenda@gmail.com', 'name' => 'Brenda Lazado'],
+            ['email' => 'johnpeterpro13@gmail.com', 'name' => 'John Peter']
+        ];
+
+        foreach ($extraPatients as $ep) {
+            $epUser = User::updateOrCreate(['email' => $ep['email']], [
+                'name' => $ep['name'],
+                'password' => Hash::make('password123'),
+                'role' => 'Patient',
+                'first_login' => false,
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
+            Patient::updateOrCreate(['user_id' => $epUser->id], [
+                'dob' => null,
+                'address' => null,
+                'contact_no' => null,
+            ]);
+        }
+
         // 5. Create 25 Specialists (5 for each: General Medicine, Cardiology, Pulmonology, Psychiatry, Endocrinology)
         $specializations = [
             'General Medicine' => ['Dr. Mark Reyes', 'Dr. Carlo Mendoza', 'Dr. Dennis Cruz', 'Dr. Rowena Santos', 'Dr. Liza Bautista'],
