@@ -14,15 +14,15 @@ export default function Register() {
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [showRecovery, setShowRecovery] = useState(false);
   const [code, setCode] = useState('');
-  const [devCode, setDevCode] = useState('');
+
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await api.post('/auth/register', data);
-      setPendingEmail(response.data.email || data.email);
-      setDevCode(response.data.verification_code || '');
+      await api.post('/auth/register', data);
+      setPendingEmail(data.email);
+
       toast.success('Verification code sent. Please check your email.');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed. Email might be in use.');
@@ -48,8 +48,8 @@ export default function Register() {
   const handleResend = async () => {
     setResending(true);
     try {
-      const response = await api.post('/auth/register/resend-code', { email: pendingEmail });
-      setDevCode(response.data.verification_code || '');
+      await api.post('/auth/register/resend-code', { email: pendingEmail });
+
       toast.success('A new verification code was sent.');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Unable to resend verification code.');
@@ -62,9 +62,9 @@ export default function Register() {
     event.preventDefault();
     setResending(true);
     try {
-      const response = await api.post('/auth/register/resend-code', { email: recoveryEmail });
+      await api.post('/auth/register/resend-code', { email: recoveryEmail });
       setPendingEmail(recoveryEmail);
-      setDevCode(response.data.verification_code || '');
+
       setShowRecovery(false);
       toast.success('Verification code sent. Please check your email.');
     } catch (error) {

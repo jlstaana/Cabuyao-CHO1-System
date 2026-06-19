@@ -63,7 +63,7 @@ export default function MedicalImages() {
   const fileInputRef = useRef(null);
 
   const [uploads, setUploads] = useState([]);
-  const [consultations, setConsultations] = useState([]);
+
   const [previews, setPreviews] = useState([]); // files staged for upload
   const [imageType, setImageType] = useState('X-Ray');
   const [notes, setNotes] = useState('');

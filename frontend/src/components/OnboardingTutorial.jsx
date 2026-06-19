@@ -447,9 +447,11 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
     };
   }, [activeStep, open]);
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (!open) setStepIndex(0);
-  }, [open]);
+  }
 
   useEffect(() => {
     if (open && activeStep?.path && activeStep.path !== normalizePath(pathname)) {

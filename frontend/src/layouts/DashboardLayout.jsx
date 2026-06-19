@@ -160,19 +160,23 @@ export default function DashboardLayout() {
     if (isAuthenticated) fetchUser();
   }, [isAuthenticated, fetchUser]);
 
-  useEffect(() => {
+  const [prevFirstLogin, setPrevFirstLogin] = useState(user?.first_login);
+  if (user?.first_login !== prevFirstLogin) {
+    setPrevFirstLogin(user?.first_login);
     if (user?.first_login) {
       setTutorialOpen(true);
       setTutorialReplay(false);
     }
-  }, [user?.first_login]);
+  }
 
-  useEffect(() => {
+  const [prevTutorialOpen, setPrevTutorialOpen] = useState(tutorialOpen);
+  if (tutorialOpen !== prevTutorialOpen) {
+    setPrevTutorialOpen(tutorialOpen);
     if (tutorialOpen) {
       setSidebarCollapsed(false);
       setMobileMenuOpen(true);
     }
-  }, [tutorialOpen]);
+  }
 
   useEffect(() => {
     if (!user || !['Patient', 'Doctor'].includes(user.role)) return undefined;
@@ -256,7 +260,7 @@ export default function DashboardLayout() {
         processItems(prescriptionRes.data, 'prescription');
         
         setUnreadNotifications(count);
-      } catch (error) {
+      } catch {
         // Silently fail for background check
       }
     };

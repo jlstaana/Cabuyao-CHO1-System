@@ -214,20 +214,23 @@ export default function TeleconsultationRoom() {
     };
   }, [id, stopAudioProcessing, user]);
 
-  const fetchChatMessages = useCallback(async () => {
-    try {
-      const res = await api.get(`/consultations/${id}/messages`);
-      setChatMessages(res.data || []);
-    } catch {
-      // Chat polling is intentionally quiet so the room is not interrupted.
-    }
-  }, [id]);
-
   useEffect(() => {
-    fetchChatMessages();
-    const interval = setInterval(fetchChatMessages, 4000);
-    return () => clearInterval(interval);
-  }, [fetchChatMessages]);
+    let active = true;
+    const fetchMessages = async () => {
+      try {
+        const res = await api.get(`/consultations/${id}/messages`);
+        if (active) setChatMessages(res.data || []);
+      } catch {
+        // Chat polling is intentionally quiet so the room is not interrupted.
+      }
+    };
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 4000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [id]);
 
   useEffect(() => {
     const chatList = chatListRef.current;

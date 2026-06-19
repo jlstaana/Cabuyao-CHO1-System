@@ -16,7 +16,7 @@ export default function Login() {
   const [resetCode, setResetCode] = useState('');
   const [resetPassword, setResetPassword] = useState('');
   const [resetPasswordConfirmation, setResetPasswordConfirmation] = useState('');
-  const [devResetCode, setDevResetCode] = useState('');
+
 
   const submitLogin = async (email, password) => {
     await login(email.trim().toLowerCase(), password);
@@ -28,7 +28,7 @@ export default function Login() {
     try {
       await submitLogin(data.email, data.password);
     } catch (error) {
-      let message = 'Invalid credentials';
+      let message;
       if (!error.response) {
         message = 'Network Error: Cannot connect to server';
       } else {
@@ -47,8 +47,8 @@ export default function Login() {
     event.preventDefault();
     setLoading(true);
     try {
-      const response = await api.post('/auth/forgot-password', { email: resetEmail });
-      setDevResetCode(response.data.reset_code || '');
+      await api.post('/auth/forgot-password', { email: resetEmail });
+
       setMode('reset');
       toast.success('Password reset code sent. Please check your email.');
     } catch (error) {
@@ -77,7 +77,7 @@ export default function Login() {
       setResetCode('');
       setResetPassword('');
       setResetPasswordConfirmation('');
-      setDevResetCode('');
+
     } catch (error) {
       toast.error(error.response?.data?.message || 'Invalid or expired reset code.');
     } finally {

@@ -18,7 +18,9 @@ const useAuthStore = create((set) => ({
   logout: async () => {
     try {
       await api.post('/auth/logout');
-    } catch (e) {}
+    } catch {
+      // Ignore error on logout
+    }
     localStorage.removeItem('token');
     set({ token: null, user: null, isAuthenticated: false });
   },
@@ -27,7 +29,7 @@ const useAuthStore = create((set) => ({
     try {
       const response = await api.get('/user');
       set({ user: response.data, isAuthenticated: true, loading: false });
-    } catch (error) {
+    } catch {
       localStorage.removeItem('token');
       set({ user: null, token: null, isAuthenticated: false, loading: false });
     }
