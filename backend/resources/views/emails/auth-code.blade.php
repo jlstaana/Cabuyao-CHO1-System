@@ -91,7 +91,7 @@
     <div class="wrapper">
         <div class="container">
             <div class="header">
-                <h1>Cabuyao CHO</h1>
+                <h1>Cabuyao CHO1</h1>
             </div>
             <div class="content">
                 <h2 class="greeting">{{ $title }}</h2>
@@ -107,7 +107,7 @@
                 </p>
             </div>
             <div class="footer">
-                &copy; {{ date('Y') }} Cabuyao City Health Office. All rights reserved.
+                &copy; {{ date('Y') }} Cabuyao City Health Office 1. All rights reserved.
             </div>
         </div>
     </div>

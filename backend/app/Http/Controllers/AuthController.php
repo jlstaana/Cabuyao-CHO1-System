@@ -26,10 +26,10 @@ class AuthController extends Controller {
         try {
             Mail::send('emails.auth-code', [
                 'title' => 'Verify your email',
-                'subtitle' => 'Use the verification code below to complete your Cabuyao CHO account registration.',
+                'subtitle' => 'Use the verification code below to complete your Cabuyao CHO1 account registration.',
                 'code' => $code
             ], function ($message) use ($user) {
-                $message->to($user->email)->subject('Cabuyao CHO Account Verification');
+                $message->to($user->email)->subject('Cabuyao CHO1 Account Verification');
             });
         } catch (\Throwable $e) {
             Log::warning('Unable to send verification email.', [
@@ -50,7 +50,7 @@ class AuthController extends Controller {
                 'subtitle' => 'We received a request to reset your password. Enter the code below to continue.',
                 'code' => $code
             ], function ($message) use ($user) {
-                $message->to($user->email)->subject('Cabuyao CHO Password Reset');
+                $message->to($user->email)->subject('Cabuyao CHO1 Password Reset');
             });
         } catch (\Throwable $e) {
             Log::warning('Unable to send password reset email.', [
