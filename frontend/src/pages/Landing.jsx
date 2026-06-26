@@ -124,10 +124,6 @@ export default function Landing() {
                 <Users size={18} />
                 Get Started
               </Link>
-              <Link to="/login" className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white/80 px-8 py-3.5 font-medium text-slate-700 shadow-sm backdrop-blur transition-colors hover:border-sky-200 hover:text-sky-700">
-                <LockKeyhole size={18} />
-                Existing Patient
-              </Link>
             </div>
             <div className="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
               {portalStats.map((stat) => (
