@@ -145,7 +145,7 @@ class PrescriptionController extends Controller {
         $doctorSignatureSrc = $doctorSignatureSvg
             ? 'data:image/svg+xml;base64,' . base64_encode($doctorSignatureSvg)
             : null;
-        $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'));
+        $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))->setPaper('a5', 'portrait');
         return $pdf->download("prescription_{$id}.pdf");
     }
 }
