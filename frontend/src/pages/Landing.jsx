@@ -127,7 +127,7 @@ export default function Landing() {
             </div>
             <div className="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
               {portalStats.map((stat) => (
-                <div key={stat.label} className="rounded-lg border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur">
+                <div key={stat.label} className="rounded-lg border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur transition-colors duration-300 hover:bg-sky-50 hover:border-sky-200">
                   <p className="text-2xl font-black text-sky-600">{stat.value}</p>
                   <p className="mt-1 text-sm font-medium leading-snug text-slate-500">{stat.label}</p>
                 </div>
@@ -148,7 +148,7 @@ export default function Landing() {
             </div>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
               {services.map((service) => (
-                <article key={service.title} className="rounded-lg border border-slate-100 bg-slate-50 p-5 shadow-sm">
+                <article key={service.title} className="rounded-lg border border-slate-100 bg-slate-50 p-5 shadow-sm transition-colors duration-300 hover:bg-sky-50 hover:border-sky-200">
                   <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
                     <service.icon size={22} />
                   </div>
@@ -171,7 +171,7 @@ export default function Landing() {
             </div>
             <div className="space-y-4">
               {workflow.map((step, index) => (
-                <div key={step} className="flex gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+                <div key={step} className="flex gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 hover:bg-sky-50 hover:border-sky-200">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
                     {index + 1}
                   </div>
@@ -193,7 +193,7 @@ export default function Landing() {
             </div>
             <div className="grid gap-5 md:grid-cols-3">
               {roleHighlights.map((role) => (
-                <article key={role.title} className="rounded-lg border border-slate-100 p-6 shadow-sm">
+                <article key={role.title} className="rounded-lg border border-slate-100 p-6 shadow-sm transition-colors duration-300 hover:bg-sky-50 hover:border-sky-200">
                   <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
                     <role.icon size={22} />
                   </div>
