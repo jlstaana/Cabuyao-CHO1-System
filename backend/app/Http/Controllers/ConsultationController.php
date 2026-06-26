@@ -246,7 +246,7 @@ class ConsultationController extends Controller {
         $folder = 'medical_uploads/consultations/' . $consultation->id . '/' . now()->format('Y/m');
         $baseName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'medical-file';
         $fileName = now()->format('YmdHis') . '-' . $baseName . '-' . Str::random(6) . '.' . $extension;
-        $path = $file->storeAs($folder, $fileName, 'public');
+        $path = $file->storeAs($folder, $fileName, 'local');
 
         $img = MedicalImage::create([
             'consultation_id' => $consultation->id,
@@ -268,11 +268,11 @@ class ConsultationController extends Controller {
         if (!$canAccess) {
             return response()->json(['message' => 'Unauthorized file access'], 403);
         }
-        if (!Storage::disk('public')->exists($image->file_path)) {
+        if (!Storage::disk('local')->exists($image->file_path)) {
             return response()->json(['message' => 'File not found in storage'], 404);
         }
 
-        return Storage::disk('public')->download($image->file_path, $image->original_name ?: basename($image->file_path));
+        return Storage::disk('local')->download($image->file_path, $image->original_name ?: basename($image->file_path));
     }
     public function updateStatus(Request $request, $id) {
         $c = Consultation::findOrFail($id);

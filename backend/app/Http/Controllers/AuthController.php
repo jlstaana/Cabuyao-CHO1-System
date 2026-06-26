@@ -37,6 +37,9 @@ class AuthController extends Controller {
                 'email' => $user->email,
                 'error' => $e->getMessage(),
             ]);
+            if (config('app.debug')) {
+                throw $e;
+            }
         }
     }
 
@@ -55,6 +58,9 @@ class AuthController extends Controller {
                 'email' => $user->email,
                 'error' => $e->getMessage(),
             ]);
+            if (config('app.debug')) {
+                throw $e;
+            }
         }
     }
 

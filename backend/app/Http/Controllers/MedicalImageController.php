@@ -36,7 +36,7 @@ class MedicalImageController extends Controller
         ]);
 
         $file = $request->file('image');
-        $path = $file->store('medical_images', 'public');
+        $path = $file->store('medical_images', 'local');
 
         $medicalImage = MedicalImage::create([
             'patient_id' => $user->patient->id,
