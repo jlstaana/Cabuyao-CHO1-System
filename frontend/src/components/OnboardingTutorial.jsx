@@ -491,11 +491,11 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-slate-950/70" />
+      {!highlight && <div className="absolute inset-0 bg-slate-950/70" />}
 
       {highlight && (
         <div
-          className="pointer-events-none absolute rounded-2xl border-2 border-sky-300 bg-white/10 shadow-[0_0_0_9999px_rgba(15,23,42,0.68),0_0_0_8px_rgba(125,211,252,0.25)] transition-all duration-200"
+          className="pointer-events-none absolute rounded-2xl border-2 border-sky-300 bg-transparent shadow-[0_0_0_9999px_rgba(15,23,42,0.68),0_0_0_8px_rgba(125,211,252,0.25)] transition-all duration-200"
           style={highlight}
         />
       )}

@@ -154,33 +154,17 @@ export default function DashboardLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [tutorialOpen, setTutorialOpen] = useState(false);
-  const [tutorialReplay, setTutorialReplay] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated) fetchUser();
-  }, [isAuthenticated, fetchUser]);
-
-  const [prevFirstLogin, setPrevFirstLogin] = useState(user?.first_login);
-  if (user?.first_login !== prevFirstLogin) {
-    setPrevFirstLogin(user?.first_login);
-    if (user?.first_login) {
-      setTutorialOpen(true);
-      setTutorialReplay(false);
-    }
-  }
-
   const [prevTutorialOpen, setPrevTutorialOpen] = useState(tutorialOpen);
   if (tutorialOpen !== prevTutorialOpen) {
     setPrevTutorialOpen(tutorialOpen);
     if (tutorialOpen) {
-      setSidebarCollapsed(false);
-      setMobileMenuOpen(true);
+      setSidebarCollapsed(true);
+      setMobileMenuOpen(false);
     }
   }
 
   useEffect(() => {
     if (!user || !['Patient', 'Doctor'].includes(user.role)) return undefined;
-
     let stopped = false;
     const notifiedKey = `teleconsult-reminders:${user.id}`;
     const getNotified = () => {
