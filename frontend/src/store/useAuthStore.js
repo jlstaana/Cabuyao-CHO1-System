@@ -1,17 +1,28 @@
 import { create } from 'zustand';
 import api from '../utils/api';
 
+export const publicReviewUser = {
+  id: 'public-reviewer',
+  name: 'Public Reviewer',
+  email: 'reviewer@public.local',
+  role: 'Admin',
+  first_login: false,
+  is_public_review: true,
+};
+
+const storedToken = localStorage.getItem('token') || null;
+
 const useAuthStore = create((set) => ({
-  user: null,
-  token: localStorage.getItem('token') || null,
-  isAuthenticated: !!localStorage.getItem('token'),
-  loading: true,
+  user: storedToken ? null : publicReviewUser,
+  token: storedToken,
+  isAuthenticated: !!storedToken,
+  loading: !!storedToken,
 
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
     const { token, user } = response.data;
     localStorage.setItem('token', token);
-    set({ token, user, isAuthenticated: true });
+    set({ token, user, isAuthenticated: true, loading: false });
     return user;
   },
 
@@ -22,7 +33,7 @@ const useAuthStore = create((set) => ({
       // Ignore error on logout
     }
     localStorage.removeItem('token');
-    set({ token: null, user: null, isAuthenticated: false });
+    set({ token: null, user: publicReviewUser, isAuthenticated: false, loading: false });
   },
 
   fetchUser: async () => {
@@ -31,7 +42,7 @@ const useAuthStore = create((set) => ({
       set({ user: response.data, isAuthenticated: true, loading: false });
     } catch {
       localStorage.removeItem('token');
-      set({ user: null, token: null, isAuthenticated: false, loading: false });
+      set({ user: publicReviewUser, token: null, isAuthenticated: false, loading: false });
     }
   },
 

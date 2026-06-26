@@ -46,6 +46,7 @@ export default function Landing() {
             Access teleconsultations, digital prescriptions, and secure health records seamlessly through the Cabuyao City Health Office Portal.
           </p>
           <div className="flex gap-4">
+            <Link to="/dashboard" className="bg-sky-500 text-white px-8 py-3.5 rounded-full font-medium hover:bg-sky-600 transition-colors shadow-xl shadow-sky-200">Public Review</Link>
             <Link to="/register" className="bg-slate-900 text-white px-8 py-3.5 rounded-full font-medium hover:bg-slate-800 transition-colors shadow-xl">Get Started</Link>
           </div>
         </div>

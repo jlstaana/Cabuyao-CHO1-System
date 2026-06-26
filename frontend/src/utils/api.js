@@ -24,8 +24,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
+      const hadToken = Boolean(localStorage.getItem('token'));
       localStorage.removeItem('token');
-      if (window.location.pathname !== '/login') {
+      if (hadToken && window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     } else if (error.message === 'Network Error' || (error.response && error.response.status >= 500)) {
