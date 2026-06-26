@@ -16,10 +16,10 @@ function generateTempPassword(length = 10) {
 
 const ROLE_STYLES = {
   Admin:   'bg-fuchsia-100 text-fuchsia-700',
-  Doctor:  'bg-sky-100 text-sky-700',
-  Staff:   'bg-amber-100 text-amber-700',
+  Doctor:  'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400',
+  Staff:   'bg-amber-100 text-amber-700 dark:text-amber-400',
   Visitor: 'bg-purple-100 text-purple-700',
-  Patient: 'bg-slate-100 text-slate-700',
+  Patient: 'bg-slate-100 dark:bg-zinc-800/50 text-slate-700',
 };
 
 const SPECIALIZATION_OPTIONS = [
@@ -142,7 +142,7 @@ export default function ManageUsers() {
 
   if (user?.role !== 'Admin' && user?.role !== 'Staff') {
     return (
-      <div className="p-8 text-center text-slate-500 bg-white rounded-2xl shadow-sm border border-slate-100">
+      <div className="p-8 text-center text-slate-500 dark:text-zinc-500 bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
         You do not have permission to view this page.
       </div>
     );
@@ -154,17 +154,17 @@ export default function ManageUsers() {
 
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <PageTitle icon={UserPlus} title="Account Management" description="Create doctor & staff accounts, assign visiting doctor access, and manage credentials." iconClassName="bg-sky-50 text-sky-600" />
+        <PageTitle icon={UserPlus} title="Account Management" description="Create doctor & staff accounts, assign visiting doctor access, and manage credentials." iconClassName="bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400" />
         <div data-tour="page-primary-action" className="flex gap-2 flex-wrap">
           <button
             onClick={() => { setFormData(f => ({ ...f, role: 'Doctor', access_type: 'visiting' })); setIsCreateOpen(true); }}
-            className="flex items-center gap-2 bg-purple-500 text-white px-4 py-2.5 rounded-xl hover:bg-purple-600 transition-all shadow-md shadow-purple-200 font-medium active:scale-95 text-sm"
+            className="flex items-center gap-2 bg-purple-500 text-white px-4 py-2.5 rounded-xl hover:bg-purple-600 transition-all shadow-md dark:shadow-none shadow-purple-200 font-medium active:scale-95 text-sm"
           >
             <UserCheck size={17} /> Visiting Doctor
           </button>
           <button
             onClick={() => { setFormData(f => ({ ...f, access_type: 'permanent' })); setIsCreateOpen(true); }}
-            className="flex items-center gap-2 bg-sky-500 text-white px-4 py-2.5 rounded-xl hover:bg-sky-600 transition-all shadow-md shadow-sky-200 font-medium active:scale-95 text-sm"
+            className="flex items-center gap-2 bg-sky-500 text-white px-4 py-2.5 rounded-xl hover:bg-sky-600 transition-all shadow-md dark:shadow-none shadow-sky-200 font-medium active:scale-95 text-sm"
           >
             <UserPlus size={17} /> Create Account
           </button>
@@ -172,16 +172,16 @@ export default function ManageUsers() {
       </div>
 
       {/* Table card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-4 border-b border-slate-100 bg-white flex flex-col md:flex-row gap-4">
+      <div className="bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 overflow-hidden">
+        <div className="p-4 border-b border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-surface flex flex-col md:flex-row gap-4">
            <div data-tour="page-search" className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={18} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name or email..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-slate-50 focus:bg-white transition-all"
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-background focus:bg-surface transition-all"
               />
            </div>
         </div>
@@ -189,7 +189,7 @@ export default function ManageUsers() {
         <div className="overflow-x-auto">
           <table data-tour="page-list" className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
-              <tr className="bg-slate-50/50 text-slate-500 text-sm border-b border-slate-100">
+              <tr className="bg-background/50 text-slate-500 dark:text-zinc-500 text-sm border-b border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
                 <th className="px-6 py-4 font-semibold tracking-wide">User Profile</th>
                 <th className="px-6 py-4 font-semibold tracking-wide">Role</th>
                 <th className="px-6 py-4 font-semibold tracking-wide">Access Type</th>
@@ -218,19 +218,19 @@ export default function ManageUsers() {
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-slate-400">No users found.</td>
+                  <td colSpan="5" className="px-6 py-12 text-center text-slate-400 dark:text-zinc-500">No users found.</td>
                 </tr>
               ) : (
                 filtered.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50/80 transition-colors group">
+                  <tr key={u.id} className="hover:bg-background/80 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-inner">
+                         <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center font-bold shadow-inner dark:shadow-none">
                            {u.name.charAt(0)}
                          </div>
                          <div>
-                           <p className="font-semibold text-slate-900 group-hover:text-sky-600 transition-colors">{u.name}</p>
-                           <p className="text-sm text-slate-500">{u.email}</p>
+                           <p className="font-semibold text-text group-hover:text-sky-600 dark:text-sky-400 transition-colors">{u.name}</p>
+                           <p className="text-sm text-slate-500 dark:text-zinc-500">{u.email}</p>
                          </div>
                       </div>
                     </td>
@@ -246,28 +246,28 @@ export default function ManageUsers() {
                           {u.doctor?.active_until && <span className="text-purple-400 ml-1">· {new Date(u.doctor.active_until).toLocaleDateString()}</span>}
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-xs font-medium">{u.role === 'Doctor' ? 'Resident' : 'Permanent'}</span>
+                        <span className="text-slate-400 dark:text-zinc-500 text-xs font-medium">{u.role === 'Doctor' ? 'Resident' : 'Permanent'}</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       {u.is_active ? (
-                        <span className="flex items-center gap-1.5 text-emerald-600 text-sm font-semibold bg-emerald-50 px-2.5 py-1 rounded-md w-fit"><CheckCircle size={16} /> Active</span>
+                        <span className="flex items-center gap-1.5 text-emerald-600 text-sm font-semibold bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-md w-fit"><CheckCircle size={16} /> Active</span>
                       ) : (
-                        <span className="flex items-center gap-1.5 text-slate-500 text-sm font-semibold bg-slate-100 px-2.5 py-1 rounded-md w-fit"><Archive size={16} /> Archived</span>
+                        <span className="flex items-center gap-1.5 text-slate-500 dark:text-zinc-500 text-sm font-semibold bg-slate-100 dark:bg-zinc-800/50 px-2.5 py-1 rounded-md w-fit"><Archive size={16} /> Archived</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       {u.is_active ? (
                         <button
                           onClick={() => openConfirmModal('archive', u)}
-                          className="text-rose-500 hover:text-rose-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors flex items-center gap-1 ml-auto"
+                          className="text-rose-500 dark:text-rose-400 hover:text-rose-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-50 dark:bg-rose-900/30 transition-colors flex items-center gap-1 ml-auto"
                         >
                           <Archive size={14} /> Archive
                         </button>
                       ) : (
                         <button
                           onClick={() => openConfirmModal('reactivate', u)}
-                          className="text-emerald-500 hover:text-emerald-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-1 ml-auto"
+                          className="text-emerald-500 hover:text-emerald-700 dark:text-emerald-400 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-50 dark:bg-emerald-900/30 transition-colors flex items-center gap-1 ml-auto"
                         >
                           <CheckCircle size={14} /> Reactivate
                         </button>
@@ -285,13 +285,13 @@ export default function ManageUsers() {
       <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title={formData.access_type === 'visiting' ? 'Assign Visiting Doctor Access' : 'Create New Account'}>
         <form data-tour="page-form" onSubmit={handleCreate} className="space-y-4">
           {/* Access type toggle */}
-          <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-2">
+          <div className="flex gap-2 p-1 bg-slate-100 dark:bg-zinc-800/50 rounded-xl mb-2">
             {['permanent','visiting'].map((t) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => setFormData(f => ({ ...f, access_type: t }))}
-                className={`flex-1 py-1.5 rounded-lg text-sm font-semibold capitalize transition-all ${formData.access_type === t ? 'bg-white shadow text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-semibold capitalize transition-all ${formData.access_type === t ? 'bg-surface shadow text-sky-700 dark:text-sky-400' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700'}`}
               >
                 {t === 'visiting' ? '🩺 Visiting Doctor' : '🏥 Permanent Staff'}
               </button>
@@ -300,17 +300,17 @@ export default function ManageUsers() {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-            <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. Doctor Name" />
+            <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. Doctor Name" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-            <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+            <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
           </div>
 
           {formData.access_type === 'permanent' && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Assign Role</label>
-              <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white outline-none">
+              <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 bg-surface outline-none">
                 <option value="Doctor">Doctor</option>
                 <option value="Staff">Staff</option>
               </select>
@@ -320,7 +320,7 @@ export default function ManageUsers() {
           {(formData.role === 'Doctor' || formData.access_type === 'visiting') && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Specialization</label>
-              <select required value={formData.specialization} onChange={e => setFormData({...formData, specialization: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20 outline-none">
+              <select required value={formData.specialization} onChange={e => setFormData({...formData, specialization: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none">
                 {SPECIALIZATION_OPTIONS.map((specialization) => (
                   <option key={specialization} value={specialization}>{specialization}</option>
                 ))}
@@ -329,7 +329,7 @@ export default function ManageUsers() {
           )}
 
           {(formData.role === 'Doctor' || formData.access_type === 'visiting') && (
-            <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <div className="space-y-3 rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-background p-4">
               <label className="block text-sm font-semibold text-slate-700">Consultation Schedule</label>
               <div className="flex flex-wrap gap-2">
                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
@@ -340,7 +340,7 @@ export default function ManageUsers() {
                     className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                       formData.availability_days.includes(day)
                         ? 'bg-sky-500 text-white'
-                        : 'bg-white text-slate-500 border border-slate-200 hover:text-sky-600'
+                        : 'bg-surface text-slate-500 dark:text-zinc-500 border border-slate-300 dark:border-zinc-800 hover:text-sky-600 dark:text-sky-400'
                     }`}
                   >
                     {day.slice(0, 3)}
@@ -349,12 +349,12 @@ export default function ManageUsers() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Start Time</label>
-                  <input type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                  <label className="block text-xs font-medium text-slate-500 dark:text-zinc-500 mb-1">Start Time</label>
+                  <input type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-zinc-800 bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">End Time</label>
-                  <input type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                  <label className="block text-xs font-medium text-slate-500 dark:text-zinc-500 mb-1">End Time</label>
+                  <input type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-zinc-800 bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none" />
                 </div>
               </div>
             </div>
@@ -363,24 +363,24 @@ export default function ManageUsers() {
           {formData.role === 'Staff' && formData.access_type === 'permanent' && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
-              <input required value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. Outpatient, Pharmacy" />
+              <input required value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. Outpatient, Pharmacy" />
             </div>
           )}
 
           {formData.access_type === 'visiting' && (
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Access Expires On</label>
-              <input type="date" value={formData.expires_at} onChange={e => setFormData({...formData, expires_at: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-purple-500/20 outline-none" />
-              <p className="text-xs text-slate-400 mt-1">Leave blank for indefinite visiting access.</p>
+              <input type="date" value={formData.expires_at} onChange={e => setFormData({...formData, expires_at: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-purple-500/20 outline-none" />
+              <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1">Leave blank for indefinite visiting access.</p>
             </div>
           )}
 
-          <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-3 text-xs text-sky-700">
+          <div className="bg-sky-50 dark:bg-sky-900/30 border border-sky-100 rounded-xl px-4 py-3 text-xs text-sky-700 dark:text-sky-400">
             <strong>Note:</strong> A secure temporary password will be auto-generated. Share credentials only through a secure channel.
           </div>
 
           <div className="pt-2 flex justify-end gap-3">
-            <button type="button" onClick={() => setIsCreateOpen(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+            <button type="button" onClick={() => setIsCreateOpen(false)} className="px-5 py-2.5 text-slate-600 dark:text-zinc-400 font-medium hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 rounded-xl transition-colors">Cancel</button>
             <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-medium hover:bg-sky-600 rounded-xl flex items-center gap-2">
               <RefreshCw size={15} /> Generate &amp; Create
             </button>
@@ -392,7 +392,7 @@ export default function ManageUsers() {
       <Modal isOpen={isCredsOpen} onClose={() => setIsCredsOpen(false)} title="✅ Temporary Credentials Generated">
         {generatedCreds && (
           <div className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-zinc-400">
               Share these credentials with <strong>{generatedCreds.name}</strong> through a secure channel. The user should change their password upon first login.
             </p>
 
@@ -403,12 +403,12 @@ export default function ManageUsers() {
                 { label: 'Role',        value: `${generatedCreds.role}${generatedCreds.access_type === 'visiting' ? ' (Visiting)' : ''}` },
                 { label: 'Temp Password', value: generatedCreds.password, mono: true, sensitive: true },
               ].map(({ label, value, mono, sensitive }) => (
-                <div key={label} className={`flex items-center justify-between gap-4 rounded-xl px-4 py-3 border ${sensitive ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'}`}>
+                <div key={label} className={`flex items-center justify-between gap-4 rounded-xl px-4 py-3 border ${sensitive ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-200' : 'bg-background border-slate-300 dark:border-zinc-800 dark:border-zinc-800'}`}>
                   <div>
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{label}</p>
-                    <p className={`mt-0.5 text-slate-900 font-medium ${mono ? 'font-mono text-sm tracking-widest' : ''}`}>{value}</p>
+                    <p className="text-xs font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wide">{label}</p>
+                    <p className={`mt-0.5 text-text font-medium ${mono ? 'font-mono text-sm tracking-widest' : ''}`}>{value}</p>
                   </div>
-                  <button onClick={() => copyToClipboard(value)} className="p-1.5 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors shrink-0">
+                  <button onClick={() => copyToClipboard(value)} className="p-1.5 rounded-lg text-slate-400 dark:text-zinc-500 hover:text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:bg-sky-900/30 transition-colors shrink-0">
                     <Copy size={16} />
                   </button>
                 </div>
@@ -427,7 +427,7 @@ export default function ManageUsers() {
       {/* ── Confirmation Modal ─────────────────────────────────────────────── */}
       <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} title={confirmAction.type === 'archive' ? 'Archive Account' : 'Reactivate Account'}>
         <div className="space-y-4">
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-zinc-400">
             {confirmAction.type === 'archive' ? (
               <>Are you sure you want to archive the account for <strong>{confirmAction.user?.name}</strong>? They will be immediately logged out and lose access to the system until reactivated.</>
             ) : (
@@ -435,10 +435,10 @@ export default function ManageUsers() {
             )}
           </p>
           <div className="pt-4 flex justify-end gap-3">
-            <button onClick={() => setIsConfirmOpen(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
+            <button onClick={() => setIsConfirmOpen(false)} className="px-5 py-2.5 text-slate-600 dark:text-zinc-400 font-medium hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 rounded-xl transition-colors">Cancel</button>
             <button
               onClick={executeConfirmAction}
-              className={`px-5 py-2.5 font-medium rounded-xl text-white transition-colors shadow-md ${
+              className={`px-5 py-2.5 font-medium rounded-xl text-white transition-colors shadow-md dark:shadow-none ${
                 confirmAction.type === 'archive'
                   ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
                   : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200'

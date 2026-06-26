@@ -1,7 +1,8 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
+import useThemeStore from './store/useThemeStore';
 
 // Eager load layout shells for immediate rendering without layout shift
 import AuthLayout from './layouts/AuthLayout';
@@ -27,12 +28,22 @@ const PatientRecords = lazy(() => import('./pages/dashboard/PatientRecords'));
 
 // Loading fallback spinner
 const PageLoader = () => (
-  <div className="min-h-screen w-full flex items-center justify-center bg-slate-50">
+  <div className="min-h-screen w-full flex items-center justify-center bg-background">
     <div className="w-10 h-10 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin"></div>
   </div>
 );
 
 function App() {
+  const { theme } = useThemeStore();
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   return (
     <HelmetProvider>
       <BrowserRouter>

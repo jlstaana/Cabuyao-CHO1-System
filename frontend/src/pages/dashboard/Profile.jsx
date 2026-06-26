@@ -89,25 +89,25 @@ export default function Profile() {
     <div className="animate-in fade-in duration-500">
       <SEO title="Profile Settings" />
       <div className="mb-8">
-        <PageTitle icon={User} title="Account Profile" description="Manage your personal information and system preferences." iconClassName="bg-sky-50 text-sky-600" />
+        <PageTitle icon={User} title="Account Profile" description="Manage your personal information and system preferences." iconClassName="bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Avatar Card */}
         <div className="lg:col-span-1 space-y-4">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center text-center">
-            <div className="w-24 h-24 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center font-bold text-3xl mb-4 shadow-inner">
+          <div className="bg-surface rounded-2xl p-6 shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 flex flex-col items-center text-center">
+            <div className="w-24 h-24 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400 rounded-full flex items-center justify-center font-bold text-3xl mb-4 shadow-inner dark:shadow-none">
               {user?.name?.charAt(0)}
             </div>
-            <h2 className="text-xl font-bold text-slate-900">{user?.name}</h2>
-            <p className="text-slate-500 mb-4">{user?.email}</p>
-            <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{user?.role}</span>
+            <h2 className="text-xl font-bold text-text">{user?.name}</h2>
+            <p className="text-slate-500 dark:text-zinc-500 mb-4">{user?.email}</p>
+            <span className="bg-slate-100 dark:bg-zinc-800/50 text-slate-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{user?.role}</span>
           </div>
 
           <button
             data-tour="page-primary-action"
             onClick={() => setShowPwdModal(true)}
-            className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl hover:bg-slate-50 hover:border-sky-300 transition-all font-medium shadow-sm"
+            className="w-full flex items-center justify-center gap-2 bg-surface border border-slate-300 dark:border-zinc-800 text-slate-700 px-4 py-3 rounded-xl hover:bg-background hover:border-sky-300 transition-all font-medium shadow-sm dark:shadow-none"
           >
             <Key size={16} /> Change Password
           </button>
@@ -115,19 +115,19 @@ export default function Profile() {
 
         {/* Right Form */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100">
+          <div className="bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 overflow-hidden">
+            <div className="p-6 border-b border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
               <h3 className="font-semibold text-lg flex items-center gap-2"><User size={20} className="text-sky-500" /> Personal Details</h3>
             </div>
             <form data-tour="page-form" onSubmit={handleSave} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                  <input value={profile.name || user?.name || ''} onChange={e => setProfile({ ...profile, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none" />
+                  <input value={profile.name || user?.name || ''} onChange={e => setProfile({ ...profile, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                  <input defaultValue={user?.email} disabled className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed outline-none" />
+                  <input defaultValue={user?.email} disabled className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 bg-background text-slate-500 dark:text-zinc-500 cursor-not-allowed outline-none" />
                 </div>
               </div>
 
@@ -136,16 +136,16 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Contact Number</label>
-                      <input value={profile.contact_no} onChange={e => setProfile({ ...profile, contact_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                      <input value={profile.contact_no} onChange={e => setProfile({ ...profile, contact_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
-                      <input type="date" value={profile.dob} onChange={e => setProfile({ ...profile, dob: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                      <input type="date" value={profile.dob} onChange={e => setProfile({ ...profile, dob: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Home Address</label>
-                    <textarea value={profile.address} onChange={e => setProfile({ ...profile, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" rows="3" />
+                    <textarea value={profile.address} onChange={e => setProfile({ ...profile, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" rows="3" />
                   </div>
                 </>
               )}
@@ -155,18 +155,18 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Specialization</label>
-                      <input value={profile.specialization} onChange={e => setProfile({ ...profile, specialization: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. General Practice" />
+                      <input value={profile.specialization} onChange={e => setProfile({ ...profile, specialization: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. General Practice" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2"><Clock size={16} /> License Number</label>
-                      <input value={profile.license_no} onChange={e => setProfile({ ...profile, license_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                      <input value={profile.license_no} onChange={e => setProfile({ ...profile, license_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
                     </div>
                   </div>
                 </div>
               )}
 
               <div className="pt-4 flex justify-end">
-                <button type="submit" disabled={saving} className="flex items-center gap-2 bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-md shadow-sky-200 disabled:opacity-70">
+                <button type="submit" disabled={saving} className="flex items-center gap-2 bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-md dark:shadow-none shadow-sky-200 disabled:opacity-70">
                   <Save size={16} /> {saving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
@@ -178,23 +178,23 @@ export default function Profile() {
       {/* Change Password Modal */}
       {showPwdModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4" onClick={() => setShowPwdModal(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2"><Key size={20} className="text-sky-500" /> Change Password</h3>
+          <div className="bg-surface rounded-2xl shadow-2xl dark:shadow-none w-full max-w-md p-8" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-text mb-6 flex items-center gap-2"><Key size={20} className="text-sky-500" /> Change Password</h3>
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
-                <input type="password" required value={pwdForm.current_password} onChange={e => setPwdForm({ ...pwdForm, current_password: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                <input type="password" required value={pwdForm.current_password} onChange={e => setPwdForm({ ...pwdForm, current_password: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
-                <input type="password" required value={pwdForm.password} onChange={e => setPwdForm({ ...pwdForm, password: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                <input type="password" required value={pwdForm.password} onChange={e => setPwdForm({ ...pwdForm, password: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
-                <input type="password" required value={pwdForm.password_confirmation} onChange={e => setPwdForm({ ...pwdForm, password_confirmation: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                <input type="password" required value={pwdForm.password_confirmation} onChange={e => setPwdForm({ ...pwdForm, password_confirmation: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
               </div>
               <div className="pt-4 flex justify-end gap-3">
-                <button type="button" onClick={() => setShowPwdModal(false)} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium">Cancel</button>
+                <button type="button" onClick={() => setShowPwdModal(false)} className="px-5 py-2.5 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 rounded-xl font-medium">Cancel</button>
                 <button type="submit" disabled={changingPwd} className="px-5 py-2.5 bg-sky-500 text-white hover:bg-sky-600 rounded-xl font-medium disabled:opacity-70">
                   {changingPwd ? 'Updating...' : 'Update Password'}
                 </button>

@@ -97,24 +97,24 @@ function buildPatientRecords(consultations) {
 }
 
 const STATUS_STYLE = {
-  Completed:  'bg-emerald-100 text-emerald-700',
-  Scheduled:  'bg-sky-100 text-sky-700',
-  Pending:    'bg-amber-100 text-amber-700',
-  Cancelled:  'bg-slate-100 text-slate-500',
+  Completed:  'bg-emerald-100 text-emerald-700 dark:text-emerald-400',
+  Scheduled:  'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400',
+  Pending:    'bg-amber-100 text-amber-700 dark:text-amber-400',
+  Cancelled:  'bg-slate-100 dark:bg-zinc-800/50 text-slate-500 dark:text-zinc-500',
 };
 
 const IMAGE_STATUS_STYLE = {
-  Reviewed:       'bg-emerald-100 text-emerald-700',
-  'Pending Review': 'bg-amber-100 text-amber-700',
+  Reviewed:       'bg-emerald-100 text-emerald-700 dark:text-emerald-400',
+  'Pending Review': 'bg-amber-100 text-amber-700 dark:text-amber-400',
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function InfoChip({ icon: Icon, label, value }) {
   return (
     <div className="flex items-start gap-2">
-      <Icon size={14} className="text-slate-400 mt-0.5 shrink-0" />
+      <Icon size={14} className="text-slate-400 dark:text-zinc-500 mt-0.5 shrink-0" />
       <div>
-        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{label}</p>
+        <p className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wide">{label}</p>
         <p className="text-sm text-slate-700 font-medium">{value}</p>
       </div>
     </div>
@@ -167,7 +167,7 @@ export default function PatientRecords() {
   // Guard: clinical/admin roles only
   if (!['Doctor', 'Admin', 'Staff'].includes(user?.role)) {
     return (
-      <div className="p-8 text-center text-slate-500 bg-white rounded-2xl shadow-sm border border-slate-100">
+      <div className="p-8 text-center text-slate-500 dark:text-zinc-500 bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
         This page is only accessible to doctors, health officers, and admins.
       </div>
     );
@@ -258,22 +258,22 @@ export default function PatientRecords() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageTitle icon={Users} title="Patient Records" description={canEditRecords ? 'Open patient records, update permitted information, and review history.' : 'View medical history, vitals, images, and consultations for your patients.'} iconClassName="bg-indigo-50 text-indigo-600" />
+        <PageTitle icon={Users} title="Patient Records" description={canEditRecords ? 'Open patient records, update permitted information, and review history.' : 'View medical history, vitals, images, and consultations for your patients.'} iconClassName="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600" />
         <div className="text-right">
-          <p className="text-2xl font-black text-sky-600">{patients.length}</p>
-          <p className="text-xs text-slate-400 font-medium">Assigned Patients</p>
+          <p className="text-2xl font-black text-sky-600 dark:text-sky-400">{patients.length}</p>
+          <p className="text-xs text-slate-400 dark:text-zinc-500 font-medium">Assigned Patients</p>
         </div>
       </div>
 
       {/* Search */}
       <div data-tour="page-search" className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={18} />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search patient by name or address..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-white transition-all"
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface transition-all"
         />
       </div>
 
@@ -281,16 +281,16 @@ export default function PatientRecords() {
       <div data-tour="page-list" className="space-y-4">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 animate-pulse">
-              <div className="h-5 bg-slate-200 rounded w-40 mb-3" />
-              <div className="h-4 bg-slate-100 rounded w-64" />
+            <div key={i} className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-5 animate-pulse">
+              <div className="h-5 bg-slate-200 dark:bg-zinc-800 rounded w-40 mb-3" />
+              <div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded w-64" />
             </div>
           ))
         ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-14 text-center">
+          <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none p-14 text-center">
             <Users size={36} className="mx-auto mb-3 text-slate-300" />
-            <p className="font-semibold text-slate-600">No patients found</p>
-            <p className="text-sm text-slate-400 mt-1">Try adjusting your search.</p>
+            <p className="font-semibold text-slate-600 dark:text-zinc-400">No patients found</p>
+            <p className="text-sm text-slate-400 dark:text-zinc-500 mt-1">Try adjusting your search.</p>
           </div>
         ) : (
           filtered.map((patient) => {
@@ -298,7 +298,7 @@ export default function PatientRecords() {
             const tab = getTab(patient.id);
 
             return (
-              <div key={patient.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div key={patient.id} className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none overflow-hidden hover:shadow-md dark:shadow-none transition-shadow">
 
                 {/* Patient row header */}
                 <button
@@ -307,17 +307,17 @@ export default function PatientRecords() {
                   className="w-full flex items-center gap-4 p-5 text-left"
                 >
                   {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-inner">
+                  <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-inner dark:shadow-none">
                     {patient.name.charAt(0)}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold text-slate-900">{patient.name}</p>
-                      <span className="text-xs text-slate-400">·</span>
-                    <p className="text-sm text-slate-500">{calcAge(patient.dob)} yrs · {patient.blood_type}</p>
+                      <p className="font-bold text-text">{patient.name}</p>
+                      <span className="text-xs text-slate-400 dark:text-zinc-500">·</span>
+                    <p className="text-sm text-slate-500 dark:text-zinc-500">{calcAge(patient.dob)} yrs · {patient.blood_type}</p>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 flex-wrap">
+                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 dark:text-zinc-500 flex-wrap">
                       <span className="flex items-center gap-1"><Calendar size={11} /> Last visit: {patient.last_visit}</span>
                       <span className="flex items-center gap-1"><ClipboardList size={11} /> {patient.total_consultations} consultation{patient.total_consultations !== 1 ? 's' : ''}</span>
                       {patient.images.length > 0 && (
@@ -328,20 +328,20 @@ export default function PatientRecords() {
 
                   {/* Next scheduled status */}
                   {patient.consultations.some(c => c.status === 'Scheduled') && (
-                    <span className="hidden sm:flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 flex-shrink-0">
+                    <span className="hidden sm:flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400 flex-shrink-0">
                       <Clock size={11} /> Upcoming
                     </span>
                   )}
 
                   {isOpen
-                    ? <ChevronUp size={18} className="text-slate-400 flex-shrink-0" />
-                    : <ChevronDown size={18} className="text-slate-400 flex-shrink-0" />
+                    ? <ChevronUp size={18} className="text-slate-400 dark:text-zinc-500 flex-shrink-0" />
+                    : <ChevronDown size={18} className="text-slate-400 dark:text-zinc-500 flex-shrink-0" />
                   }
                 </button>
 
                 {/* Expanded panel */}
                 {isOpen && (
-                  <div className="border-t border-slate-100">
+                  <div className="border-t border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
 
                     {/* Tab nav */}
                     <div className="flex gap-1 px-5 pt-4 overflow-x-auto">
@@ -356,8 +356,8 @@ export default function PatientRecords() {
                           onClick={() => setTab(patient.id, key)}
                           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
                             tab === key
-                              ? 'bg-sky-600 text-white shadow-sm'
-                              : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                              ? 'bg-sky-600 text-white shadow-sm dark:shadow-none'
+                              : 'text-slate-500 dark:text-zinc-500 hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 hover:text-slate-700'
                           }`}
                         >
                           <Icon size={14} /> {label}
@@ -379,25 +379,25 @@ export default function PatientRecords() {
                             <InfoChip icon={AlertCircle} label="Allergies" value={patient.allergies} />
                           </div>
                           {patient.medical_history && (
-                            <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-                              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Medical History</p>
-                              <p className="mt-1 text-sm text-slate-600 whitespace-pre-wrap">{patient.medical_history}</p>
+                            <div className="rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-background px-4 py-3">
+                              <p className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wide">Medical History</p>
+                              <p className="mt-1 text-sm text-slate-600 dark:text-zinc-400 whitespace-pre-wrap">{patient.medical_history}</p>
                             </div>
                           )}
 
                           {/* Quick action buttons */}
-                          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
                             {canEditRecords && (
                               <>
                                 <button
                                   onClick={() => openEdit(patient)}
-                                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-medium hover:bg-indigo-100 transition-colors"
+                                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-xl text-sm font-medium hover:bg-indigo-100 transition-colors"
                                 >
                                   <Edit size={15} /> Edit Record
                                 </button>
                                 <button
                                   onClick={() => openArchive(patient)}
-                                  className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors"
+                                  className="flex items-center gap-2 px-4 py-2 bg-rose-50 dark:bg-rose-900/30 text-rose-700 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors"
                                 >
                                   <Archive size={15} /> Archive
                                 </button>
@@ -405,27 +405,27 @@ export default function PatientRecords() {
                             )}
                             <button
                               onClick={() => setTab(patient.id, 'consultations')}
-                              className="flex items-center gap-2 px-4 py-2 bg-sky-50 text-sky-700 rounded-xl text-sm font-medium hover:bg-sky-100 transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 rounded-xl text-sm font-medium hover:bg-sky-100 dark:bg-sky-900/50 transition-colors"
                             >
                               <ClipboardList size={15} /> View Consultations
                             </button>
                             <button
                               onClick={() => setTab(patient.id, 'vitals')}
-                              className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 bg-rose-50 dark:bg-rose-900/30 text-rose-700 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors"
                             >
                               <HeartPulse size={15} /> View Vitals
                             </button>
                             {patient.consultations.some(c => c.status === 'Scheduled') && (
                               <Link
                                 to={`/room/${patient.consultations.find(c => c.status === 'Scheduled').id}`}
-                                className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors shadow-sm"
+                                className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors shadow-sm dark:shadow-none"
                               >
                                 <Video size={15} /> Join Teleconsultation
                               </Link>
                             )}
                             <Link
                               to="/prescriptions"
-                              className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors"
                             >
                               <FileText size={15} /> Create Prescription
                             </Link>
@@ -437,26 +437,26 @@ export default function PatientRecords() {
                       {tab === 'consultations' && (
                         <div className="space-y-3">
                           {patient.consultations.length === 0 ? (
-                            <p className="text-slate-400 text-sm text-center py-8">No consultation records yet.</p>
+                            <p className="text-slate-400 dark:text-zinc-500 text-sm text-center py-8">No consultation records yet.</p>
                           ) : patient.consultations.map((c) => (
-                            <div key={c.id} className="rounded-xl border border-slate-100 p-4 space-y-2">
+                            <div key={c.id} className="rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-4 space-y-2">
                               <div className="flex items-center justify-between gap-2 flex-wrap">
                                 <div className="flex items-center gap-2 text-sm">
-                                  <Calendar size={14} className="text-slate-400" />
-                                  <span className="font-semibold text-slate-800">{c.date}</span>
-                                  <span className="text-slate-400">·</span>
-                                  <Clock size={14} className="text-slate-400" />
-                                  <span className="text-slate-600">{c.time}</span>
+                                  <Calendar size={14} className="text-slate-400 dark:text-zinc-500" />
+                                  <span className="font-semibold text-text">{c.date}</span>
+                                  <span className="text-slate-400 dark:text-zinc-500">·</span>
+                                  <Clock size={14} className="text-slate-400 dark:text-zinc-500" />
+                                  <span className="text-slate-600 dark:text-zinc-400">{c.time}</span>
                                 </div>
                                 <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_STYLE[c.status] || STATUS_STYLE.Pending}`}>
                                   {c.status}
                                 </span>
                               </div>
                               {c.diagnosis && (
-                                <p className="text-sm font-semibold text-slate-800">Dx: {c.diagnosis}</p>
+                                <p className="text-sm font-semibold text-text">Dx: {c.diagnosis}</p>
                               )}
                               {c.notes && (
-                                <p className="text-sm text-slate-500 leading-relaxed">{c.notes}</p>
+                                <p className="text-sm text-slate-500 dark:text-zinc-500 leading-relaxed">{c.notes}</p>
                               )}
                               <div className="flex gap-2 pt-1">
                                 {c.status === 'Scheduled' && (
@@ -470,7 +470,7 @@ export default function PatientRecords() {
                                 {c.prescription_id && (
                                   <Link
                                     to="/prescriptions"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors"
                                   >
                                     <FileText size={13} /> View Prescription
                                   </Link>
@@ -484,22 +484,22 @@ export default function PatientRecords() {
                       {/* ── Vitals tab ────────────────────────────────────── */}
                       {tab === 'vitals' && (
                         <div className="space-y-4">
-                          <p className="text-xs text-slate-400 font-medium">Latest recorded vital signs</p>
+                          <p className="text-xs text-slate-400 dark:text-zinc-500 font-medium">Latest recorded vital signs</p>
                           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                            <VitalBadge label="Blood Pressure" value={patient.vitals.blood_pressure} unit="mmHg"  color="bg-sky-50 text-sky-700" />
-                            <VitalBadge label="Heart Rate"     value={patient.vitals.heart_rate}     unit="bpm"   color="bg-rose-50 text-rose-700" />
-                            <VitalBadge label="Temperature"    value={patient.vitals.temperature}    unit="°C"    color="bg-amber-50 text-amber-700" />
-                            <VitalBadge label="SpO₂"           value={patient.vitals.oxygen}         unit="%"     color="bg-indigo-50 text-indigo-700" />
-                            <VitalBadge label="Weight"         value={patient.vitals.weight}         unit="kg"    color="bg-emerald-50 text-emerald-700" />
+                            <VitalBadge label="Blood Pressure" value={patient.vitals.blood_pressure} unit="mmHg"  color="bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400" />
+                            <VitalBadge label="Heart Rate"     value={patient.vitals.heart_rate}     unit="bpm"   color="bg-rose-50 dark:bg-rose-900/30 text-rose-700" />
+                            <VitalBadge label="Temperature"    value={patient.vitals.temperature}    unit="°C"    color="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" />
+                            <VitalBadge label="SpO₂"           value={patient.vitals.oxygen}         unit="%"     color="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400" />
+                            <VitalBadge label="Weight"         value={patient.vitals.weight}         unit="kg"    color="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" />
                           </div>
                           {/* Abnormal flags */}
                           {parseInt(patient.vitals.heart_rate) > 100 && (
-                            <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2">
+                            <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 rounded-xl px-4 py-2">
                               <AlertCircle size={16} /> Heart rate elevated — consider further assessment.
                             </div>
                           )}
                           {parseInt(patient.vitals.oxygen) < 95 && (
-                            <div className="flex items-center gap-2 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-2">
+                            <div className="flex items-center gap-2 text-sm text-rose-700 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 rounded-xl px-4 py-2">
                               <AlertCircle size={16} /> SpO₂ below normal — oxygen supplementation may be needed.
                             </div>
                           )}
@@ -510,25 +510,25 @@ export default function PatientRecords() {
                       {tab === 'images' && (
                         <div className="space-y-3">
                           {patient.images.length === 0 ? (
-                            <div className="text-center py-10 text-slate-400">
+                            <div className="text-center py-10 text-slate-400 dark:text-zinc-500">
                               <ImagePlus size={28} className="mx-auto mb-2 opacity-30" />
                               <p className="text-sm">No medical images uploaded by this patient.</p>
                             </div>
                           ) : patient.images.map((img) => (
-                            <div key={img.id} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
-                              <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                            <div key={img.id} className="flex items-center gap-4 p-3 rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 hover:bg-background transition-colors">
+                              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
                                 {isImageType(img.mimeType) ? <FileImage size={18} className="text-indigo-500" /> : <FileText size={18} className="text-indigo-500" />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-slate-800 truncate">{img.name}</p>
-                                <p className="text-xs text-slate-400 mt-0.5">{img.type} · {img.fileType?.toUpperCase()} · {img.date}</p>
-                                {img.notes && <p className="text-xs text-slate-400 mt-0.5 truncate">{img.notes}</p>}
+                                <p className="text-sm font-semibold text-text truncate">{img.name}</p>
+                                <p className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">{img.type} · {img.fileType?.toUpperCase()} · {img.date}</p>
+                                {img.notes && <p className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5 truncate">{img.notes}</p>}
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${IMAGE_STATUS_STYLE[img.status] || 'bg-slate-100 text-slate-500'}`}>
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${IMAGE_STATUS_STYLE[img.status] || 'bg-slate-100 dark:bg-zinc-800/50 text-slate-500 dark:text-zinc-500'}`}>
                                   {img.status}
                                 </span>
-                                <button type="button" onClick={() => handleDownload(img)} className="p-2 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors" title="Download file">
+                                <button type="button" onClick={() => handleDownload(img)} className="p-2 rounded-lg text-slate-400 dark:text-zinc-500 hover:text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:bg-sky-900/30 transition-colors" title="Download file">
                                   <Download size={16} />
                                 </button>
                               </div>
@@ -549,34 +549,34 @@ export default function PatientRecords() {
       <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Update Patient Record">
         {selected && (
           <form data-tour="page-form" onSubmit={handleUpdateRecord} className="space-y-4">
-            <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+            <div className="rounded-xl border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-3 text-sm text-indigo-700 dark:text-indigo-400">
               Edit permitted patient information. Invalid changes are rejected and the previous record is kept.
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-              <input required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+              <input required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
-                <input type="date" value={editForm.dob} onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                <input type="date" value={editForm.dob} onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Contact No.</label>
-                <input value={editForm.contact_no} onChange={(e) => setEditForm({ ...editForm, contact_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                <input value={editForm.contact_no} onChange={(e) => setEditForm({ ...editForm, contact_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
-              <textarea rows={2} value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
+              <textarea rows={2} value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Medical History</label>
-              <textarea rows={4} value={editForm.medical_history} onChange={(e) => setEditForm({ ...editForm, medical_history: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
+              <textarea rows={4} value={editForm.medical_history} onChange={(e) => setEditForm({ ...editForm, medical_history: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
             </div>
             <div className="pt-2 flex justify-end gap-3">
-              <button type="button" onClick={() => setEditModal(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
-              <button type="submit" className="px-5 py-2.5 bg-indigo-500 text-white font-semibold hover:bg-indigo-600 rounded-xl flex items-center gap-2 shadow-md shadow-indigo-200">
+              <button type="button" onClick={() => setEditModal(false)} className="px-5 py-2.5 text-slate-600 dark:text-zinc-400 font-medium hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 rounded-xl transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-indigo-500 text-white font-semibold hover:bg-indigo-600 rounded-xl flex items-center gap-2 shadow-md dark:shadow-none shadow-indigo-200">
                 <Save size={16} /> Submit Changes
               </button>
             </div>
@@ -587,7 +587,7 @@ export default function PatientRecords() {
       <Modal isOpen={archiveModal} onClose={() => setArchiveModal(false)} title="Archive Patient Record">
         {selected && (
           <form onSubmit={handleArchiveRecord} className="space-y-4">
-            <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <div className="rounded-xl border border-rose-100 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-900/30 px-4 py-3 text-sm text-rose-700">
               Provide a reason before archiving {selected.name}. Records with active consultation requests or schedules cannot be archived.
             </div>
             <div>
@@ -598,12 +598,12 @@ export default function PatientRecords() {
                 value={archiveReason}
                 onChange={(e) => setArchiveReason(e.target.value)}
                 placeholder="Enter the reason for archiving this patient record"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-rose-500/20 outline-none resize-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-rose-500/20 outline-none resize-none"
               />
             </div>
             <div className="pt-2 flex justify-end gap-3">
-              <button type="button" onClick={() => setArchiveModal(false)} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
-              <button type="submit" className="px-5 py-2.5 bg-rose-500 text-white font-semibold hover:bg-rose-600 rounded-xl flex items-center gap-2 shadow-md shadow-rose-200">
+              <button type="button" onClick={() => setArchiveModal(false)} className="px-5 py-2.5 text-slate-600 dark:text-zinc-400 font-medium hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 rounded-xl transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-rose-500 text-white font-semibold hover:bg-rose-600 rounded-xl flex items-center gap-2 shadow-md dark:shadow-none shadow-rose-200">
                 <Archive size={16} /> Confirm Archive
               </button>
             </div>

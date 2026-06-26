@@ -471,10 +471,10 @@ export default function TeleconsultationRoom() {
       <SEO title="Live Teleconsultation" />
       
       {/* Video Call Area */}
-      <div data-tour="page-video" className="flex-1 bg-slate-900 rounded-3xl overflow-hidden relative shadow-2xl flex flex-col border border-slate-800">
+      <div data-tour="page-video" className="flex-1 bg-slate-900 rounded-3xl overflow-hidden relative shadow-2xl dark:shadow-none flex flex-col border border-slate-800">
         <div className="absolute top-4 left-4 z-10 flex gap-2">
             <span className="bg-rose-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse flex items-center gap-2">
-               <span className="w-2 h-2 bg-white rounded-full"></span> LIVE
+               <span className="w-2 h-2 bg-surface rounded-full"></span> LIVE
             </span>
             <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium">
                {consultation ? (user.role === 'Patient' ? `Consulting Dr. ${consultation?.doctor?.user?.name || 'Assigned Doctor'}` : `Patient: ${consultation?.patient?.user?.name}`) : 'Loading...'}
@@ -493,7 +493,7 @@ export default function TeleconsultationRoom() {
         
         <div className="flex-1 flex items-center justify-center bg-slate-800 relative overflow-hidden">
            {!callActive ? (
-             <button data-tour="page-primary-action" onClick={toggleCall} className="bg-emerald-500 text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all hover:scale-105 flex items-center gap-3">
+             <button data-tour="page-primary-action" onClick={toggleCall} className="bg-emerald-500 text-white px-8 py-4 rounded-full font-bold shadow-lg dark:shadow-none shadow-emerald-500/30 hover:bg-emerald-600 transition-all hover:scale-105 flex items-center gap-3">
                 <Video size={24} /> Start / Join Camera
              </button>
            ) : (
@@ -506,9 +506,9 @@ export default function TeleconsultationRoom() {
                  className={`w-full h-full object-cover ${cameraActive ? 'opacity-100' : 'opacity-0'}`}
                  style={{ transform: 'scaleX(-1)' }} // Mirror camera
                />
-               {!cameraActive && <div className="absolute inset-0 flex items-center justify-center text-slate-500">Camera Disabled</div>}
+               {!cameraActive && <div className="absolute inset-0 flex items-center justify-center text-slate-500 dark:text-zinc-500">Camera Disabled</div>}
                
-               <div className="absolute bottom-6 right-6 w-32 h-48 bg-slate-700 rounded-2xl border-2 border-white/20 shadow-2xl overflow-hidden flex items-center justify-center">
+               <div className="absolute bottom-6 right-6 w-32 h-48 bg-slate-700 rounded-2xl border-2 border-white/20 shadow-2xl dark:shadow-none overflow-hidden flex items-center justify-center">
                   <span className="text-xs text-white/50 px-3 text-center">Remote video connects through the telehealth service</span>
                </div>
              </>
@@ -517,13 +517,13 @@ export default function TeleconsultationRoom() {
 
         {/* Call Controls */}
         <div data-tour="page-actions" className="h-20 bg-slate-950 flex items-center justify-center gap-4 px-6 z-10 relative">
-           <button onClick={toggleMic} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${micActive ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-rose-500/20 text-rose-500 hover:bg-rose-500/30'}`}>
+           <button onClick={toggleMic} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${micActive ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:bg-rose-500/30'}`}>
              {micActive ? <Mic size={20} /> : <MicOff size={20} />}
            </button>
-           <button onClick={toggleCamera} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${cameraActive ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-rose-500/20 text-rose-500 hover:bg-rose-500/30'}`}>
+           <button onClick={toggleCamera} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${cameraActive ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-rose-500/20 text-rose-500 dark:text-rose-400 hover:bg-rose-500/30'}`}>
              {cameraActive ? <Video size={20} /> : <VideoOff size={20} />}
            </button>
-           <button onClick={toggleCall} className="w-14 h-14 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20"><PhoneOff size={24} /></button>
+           <button onClick={toggleCall} className="w-14 h-14 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-colors shadow-lg dark:shadow-none shadow-rose-500/20"><PhoneOff size={24} /></button>
         </div>
       </div>
 
@@ -531,44 +531,44 @@ export default function TeleconsultationRoom() {
       <div className="w-full md:w-[28rem] flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
          
          {/* Patient Context & Vitals */}
-         <div data-tour="page-form" className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
-            <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><Activity size={18} className="text-sky-500"/> Vital Signs</h3>
+         <div data-tour="page-form" className="bg-surface rounded-2xl p-5 shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shrink-0">
+            <h3 className="font-semibold text-text flex items-center gap-2 mb-4"><Activity size={18} className="text-sky-500"/> Vital Signs</h3>
             {user.role === 'Patient' ? (
                <form className="space-y-3" onSubmit={saveVitals}>
-                  <input value={vitals.blood_pressure} onChange={e=>setVitals({...vitals, blood_pressure: e.target.value})} placeholder="Blood Pressure (e.g. 120/80)" className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" required/>
-                  <input value={vitals.heart_rate} onChange={e=>setVitals({...vitals, heart_rate: e.target.value})} placeholder="Heart Rate (bpm)" className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" required/>
-                  <input value={vitals.temperature} onChange={e=>setVitals({...vitals, temperature: e.target.value})} placeholder="Temperature (°C)" className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" required/>
-                  <button type="submit" className="w-full bg-sky-50 text-sky-600 font-medium py-2 rounded-xl hover:bg-sky-100 transition-colors text-sm">Submit Live Vitals</button>
+                  <input value={vitals.blood_pressure} onChange={e=>setVitals({...vitals, blood_pressure: e.target.value})} placeholder="Blood Pressure (e.g. 120/80)" className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-zinc-800 text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" required/>
+                  <input value={vitals.heart_rate} onChange={e=>setVitals({...vitals, heart_rate: e.target.value})} placeholder="Heart Rate (bpm)" className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-zinc-800 text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" required/>
+                  <input value={vitals.temperature} onChange={e=>setVitals({...vitals, temperature: e.target.value})} placeholder="Temperature (°C)" className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-zinc-800 text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" required/>
+                  <button type="submit" className="w-full bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 font-medium py-2 rounded-xl hover:bg-sky-100 dark:bg-sky-900/50 transition-colors text-sm">Submit Live Vitals</button>
                </form>
             ) : (
                <div className="space-y-2 text-sm">
                   {consultation?.vital_signs ? (
                     <>
-                      <div className="flex justify-between border-b border-slate-50 pb-2"><span className="text-slate-500">BP</span><span className="font-medium">{consultation.vital_signs.blood_pressure}</span></div>
-                      <div className="flex justify-between border-b border-slate-50 pb-2"><span className="text-slate-500">Heart Rate</span><span className="font-medium">{consultation.vital_signs.heart_rate} bpm</span></div>
-                      <div className="flex justify-between pb-2"><span className="text-slate-500">Temperature</span><span className="font-medium">{consultation.vital_signs.temperature} °C</span></div>
+                      <div className="flex justify-between border-b border-slate-50 pb-2"><span className="text-slate-500 dark:text-zinc-500">BP</span><span className="font-medium">{consultation.vital_signs.blood_pressure}</span></div>
+                      <div className="flex justify-between border-b border-slate-50 pb-2"><span className="text-slate-500 dark:text-zinc-500">Heart Rate</span><span className="font-medium">{consultation.vital_signs.heart_rate} bpm</span></div>
+                      <div className="flex justify-between pb-2"><span className="text-slate-500 dark:text-zinc-500">Temperature</span><span className="font-medium">{consultation.vital_signs.temperature} °C</span></div>
                     </>
-                  ) : <p className="text-slate-400 italic">Waiting for patient to submit vitals...</p>}
+                  ) : <p className="text-slate-400 dark:text-zinc-500 italic">Waiting for patient to submit vitals...</p>}
                </div>
             )}
          </div>
 
          {/* Session Chat */}
-         <div data-tour="page-chat" className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
-            <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><MessageCircle size={18} className="text-teal-500"/> Session Chat</h3>
-            <div ref={chatListRef} className="h-56 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-3 custom-scrollbar">
+         <div data-tour="page-chat" className="bg-surface rounded-2xl p-5 shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shrink-0">
+            <h3 className="font-semibold text-text flex items-center gap-2 mb-4"><MessageCircle size={18} className="text-teal-500"/> Session Chat</h3>
+            <div ref={chatListRef} className="h-56 overflow-y-auto rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-background p-3 space-y-3 custom-scrollbar">
               {chatMessages.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-16">No messages yet.</p>
+                <p className="text-xs text-slate-400 dark:text-zinc-500 text-center py-16">No messages yet.</p>
               ) : chatMessages.map((message) => {
                 const isMine = message.sender_id === user?.id;
                 return (
                   <div key={message.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm ${isMine ? 'bg-teal-500 text-white rounded-br-md' : 'bg-white text-slate-700 border border-slate-200 rounded-bl-md'}`}>
-                      <div className={`mb-1 text-[10px] font-semibold ${isMine ? 'text-teal-50' : 'text-slate-400'}`}>
+                    <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm ${isMine ? 'bg-teal-500 text-white rounded-br-md' : 'bg-surface text-slate-700 border border-slate-300 dark:border-zinc-800 rounded-bl-md'}`}>
+                      <div className={`mb-1 text-[10px] font-semibold ${isMine ? 'text-teal-50' : 'text-slate-400 dark:text-zinc-500'}`}>
                         {isMine ? 'You' : message.sender?.name || 'Participant'}
                       </div>
                       <p className="whitespace-pre-wrap break-words leading-relaxed">{message.message}</p>
-                      <div className={`mt-1 text-[10px] ${isMine ? 'text-teal-50' : 'text-slate-400'}`}>
+                      <div className={`mt-1 text-[10px] ${isMine ? 'text-teal-50' : 'text-slate-400 dark:text-zinc-500'}`}>
                         {message.created_at ? new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                       </div>
                     </div>
@@ -581,7 +581,7 @@ export default function TeleconsultationRoom() {
                 value={chatMessage}
                 onChange={e => setChatMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="min-w-0 flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 outline-none"
+                className="min-w-0 flex-1 px-4 py-2 rounded-xl border border-slate-300 dark:border-zinc-800 text-sm focus:ring-2 focus:ring-teal-500/20 outline-none"
                 maxLength={1000}
               />
               <button type="submit" disabled={chatSending || !chatMessage.trim()} className="w-11 h-11 rounded-xl bg-teal-500 text-white flex items-center justify-center hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
@@ -591,42 +591,42 @@ export default function TeleconsultationRoom() {
          </div>
 
          {/* Medical Images */}
-         <div data-tour="page-list" className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 shrink-0">
-            <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><Upload size={18} className="text-indigo-500"/> Medical Images</h3>
+         <div data-tour="page-list" className="bg-surface rounded-2xl p-5 shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shrink-0">
+            <h3 className="font-semibold text-text flex items-center gap-2 mb-4"><Upload size={18} className="text-indigo-500"/> Medical Images</h3>
             {user.role === 'Patient' && (
-               <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition-colors cursor-pointer mb-4" onClick={() => navigate('/medical-images')}>
-                  <Upload size={24} className="mx-auto text-slate-400 mb-2" />
-                  <p className="text-xs text-slate-500">Click to upload lab results or imaging</p>
+               <div className="border-2 border-dashed border-slate-300 dark:border-zinc-800 rounded-xl p-4 text-center hover:bg-background transition-colors cursor-pointer mb-4" onClick={() => navigate('/medical-images')}>
+                  <Upload size={24} className="mx-auto text-slate-400 dark:text-zinc-500 mb-2" />
+                  <p className="text-xs text-slate-500 dark:text-zinc-500">Click to upload lab results or imaging</p>
                </div>
             )}
-            <div className="flex gap-2 text-sm text-slate-500">
+            <div className="flex gap-2 text-sm text-slate-500 dark:text-zinc-500">
                No images uploaded for this session.
             </div>
          </div>
 
          {/* Doctor's Consultation & E-Prescription Form */}
          {user.role === 'Doctor' && (
-            <div data-tour="page-prescription" className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex-1 flex flex-col">
-               <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><FileText size={18} className="text-emerald-500"/> Clinical Diagnosis & E-Prescription</h3>
+            <div data-tour="page-prescription" className="bg-surface rounded-2xl p-5 shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 flex-1 flex flex-col">
+               <h3 className="font-semibold text-text flex items-center gap-2 mb-4"><FileText size={18} className="text-emerald-500"/> Clinical Diagnosis & E-Prescription</h3>
                
                <form className="space-y-4 flex-1 flex flex-col" onSubmit={completeConsultation}>
                   {/* Diagnosis */}
-                  <textarea value={symptoms} onChange={e=>setSymptoms(e.target.value)} placeholder="Observed symptoms..." className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none h-16 shrink-0" required />
-                  <textarea value={diagnosis} onChange={e=>setDiagnosis(e.target.value)} placeholder="Official Diagnosis..." className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none h-16 shrink-0" required />
+                  <textarea value={symptoms} onChange={e=>setSymptoms(e.target.value)} placeholder="Observed symptoms..." className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-zinc-800 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none h-16 shrink-0" required />
+                  <textarea value={diagnosis} onChange={e=>setDiagnosis(e.target.value)} placeholder="Official Diagnosis..." className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-zinc-800 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none h-16 shrink-0" required />
                   
                   {/* E-Prescription Builder */}
-                  <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 flex-1 overflow-y-auto">
+                  <div className="border border-slate-300 dark:border-zinc-800 rounded-xl p-3 bg-background flex-1 overflow-y-auto">
                      <div className="flex justify-between items-center mb-3">
                         <span className="text-sm font-semibold text-slate-700 flex items-center gap-1"><Pill size={14}/> Prescribe Medicines</span>
-                        <button type="button" onClick={addPrescriptionItem} className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200 font-bold flex items-center"><Plus size={12}/> Add</button>
+                        <button type="button" onClick={addPrescriptionItem} className="text-xs bg-emerald-100 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded hover:bg-emerald-200 font-bold flex items-center"><Plus size={12}/> Add</button>
                      </div>
                      
                      <div className="space-y-3">
-                       {prescriptionItems.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No medicines prescribed yet.</p>}
+                       {prescriptionItems.length === 0 && <p className="text-xs text-slate-400 dark:text-zinc-500 text-center py-2">No medicines prescribed yet.</p>}
                        {prescriptionItems.map((item, idx) => (
-                         <div key={idx} className="bg-white p-2 rounded-lg border border-slate-200 space-y-2">
+                         <div key={idx} className="bg-surface p-2 rounded-lg border border-slate-300 dark:border-zinc-800 space-y-2">
                             <select 
-                              className="w-full text-sm p-1.5 border border-slate-200 rounded bg-slate-50"
+                              className="w-full text-sm p-1.5 border border-slate-300 dark:border-zinc-800 rounded bg-background"
                               value={item.medicine_id}
                               onChange={e => {
                                 const newItems = [...prescriptionItems];
@@ -641,8 +641,8 @@ export default function TeleconsultationRoom() {
                                ))}
                             </select>
                             <div className="flex gap-2">
-                               <input placeholder="Dosage (e.g. 1 Tablet)" value={item.dosage} onChange={e => { const newItems = [...prescriptionItems]; newItems[idx].dosage = e.target.value; setPrescriptionItems(newItems); }} className="w-1/2 text-xs p-1.5 border border-slate-200 rounded" required/>
-                               <input placeholder="Frequency (e.g. 3x a day)" value={item.frequency} onChange={e => { const newItems = [...prescriptionItems]; newItems[idx].frequency = e.target.value; setPrescriptionItems(newItems); }} className="w-1/2 text-xs p-1.5 border border-slate-200 rounded" required/>
+                               <input placeholder="Dosage (e.g. 1 Tablet)" value={item.dosage} onChange={e => { const newItems = [...prescriptionItems]; newItems[idx].dosage = e.target.value; setPrescriptionItems(newItems); }} className="w-1/2 text-xs p-1.5 border border-slate-300 dark:border-zinc-800 rounded" required/>
+                               <input placeholder="Frequency (e.g. 3x a day)" value={item.frequency} onChange={e => { const newItems = [...prescriptionItems]; newItems[idx].frequency = e.target.value; setPrescriptionItems(newItems); }} className="w-1/2 text-xs p-1.5 border border-slate-300 dark:border-zinc-800 rounded" required/>
                             </div>
                          </div>
                        ))}
@@ -650,10 +650,10 @@ export default function TeleconsultationRoom() {
                   </div>
 
                   {prescriptionItems.length > 0 && (
-                    <div className="border border-slate-200 rounded-xl bg-white p-4">
+                    <div className="border border-slate-300 dark:border-zinc-800 rounded-xl bg-surface p-4">
                       <div className="flex items-center justify-between gap-3 mb-3">
                         <span className="text-sm font-semibold text-slate-700 flex items-center gap-1"><PenLine size={14}/> Doctor E-Signature</span>
-                        <button type="button" onClick={clearSignature} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded hover:bg-slate-200 font-bold flex items-center gap-1">
+                        <button type="button" onClick={clearSignature} className="text-xs bg-slate-100 dark:bg-zinc-800/50 text-slate-600 dark:text-zinc-400 px-2 py-1 rounded hover:bg-slate-200 dark:bg-zinc-800 font-bold flex items-center gap-1">
                           <Eraser size={12}/> Clear
                         </button>
                       </div>
@@ -669,14 +669,14 @@ export default function TeleconsultationRoom() {
                           onTouchStart={startSignature}
                           onTouchMove={drawSignature}
                           onTouchEnd={stopSignature}
-                          className="mx-auto h-32 w-full rounded-xl bg-slate-50 cursor-crosshair touch-none border border-slate-100"
+                          className="mx-auto h-32 w-full rounded-xl bg-background cursor-crosshair touch-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800"
                         />
                         <div className="mx-auto mt-2 w-2/3 border-t border-slate-300" />
                       </div>
                     </div>
                   )}
 
-                  <button type="submit" className="w-full bg-emerald-500 text-white font-bold py-3 rounded-xl hover:bg-emerald-600 transition-colors text-sm shadow-lg shadow-emerald-500/30 mt-4 shrink-0 flex items-center justify-center gap-2">
+                  <button type="submit" className="w-full bg-emerald-500 text-white font-bold py-3 rounded-xl hover:bg-emerald-600 transition-colors text-sm shadow-lg dark:shadow-none shadow-emerald-500/30 mt-4 shrink-0 flex items-center justify-center gap-2">
                      <CheckCircle size={18} /> Finalize & Generate PDF
                   </button>
                </form>

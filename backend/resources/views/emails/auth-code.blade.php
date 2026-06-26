@@ -102,7 +102,7 @@
                 </div>
                 
                 <p class="warning">
-                    This code will expire in 15 minutes. <br>
+                    This code will expire in 15 minutes. You may receive the OTP in your spam folder.<br>
                     <strong>Please do not share this code with anyone.</strong>
                 </p>
             </div>

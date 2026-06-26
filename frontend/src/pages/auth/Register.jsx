@@ -78,11 +78,11 @@ export default function Register() {
     return (
       <div>
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600">
             <ShieldCheck size={24} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Verify Your Account</h1>
-          <p className="text-slate-500 mt-2 text-sm">Enter the 6-digit code sent to {pendingEmail}.</p>
+          <h1 className="text-2xl font-bold text-text">Verify Your Account</h1>
+          <p className="text-slate-500 dark:text-zinc-500 mt-2 text-sm">Enter the 6-digit code sent to {pendingEmail}.</p>
         </div>
         <form onSubmit={handleVerify} className="space-y-5">
           <div>
@@ -92,7 +92,7 @@ export default function Register() {
               onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
               inputMode="numeric"
               maxLength="6"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] text-slate-900 outline-none transition-all focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/20"
+              className="w-full rounded-xl border border-slate-300 dark:border-zinc-800 bg-background px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] text-text outline-none transition-all focus:border-sky-500 focus:bg-surface focus:ring-2 focus:ring-sky-500/20"
               placeholder="000000"
               required
             />
@@ -100,16 +100,16 @@ export default function Register() {
 
           <button
             disabled={verifying || code.length !== 6}
-            className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg shadow-sky-200 disabled:opacity-70"
+            className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg dark:shadow-none shadow-sky-200 disabled:opacity-70"
           >
             {verifying ? 'Verifying...' : 'Verify Account'}
           </button>
         </form>
-        <div className="mt-5 flex flex-col items-center gap-3 text-sm text-slate-600">
-          <button type="button" onClick={handleResend} disabled={resending} className="font-semibold text-sky-600 hover:underline disabled:opacity-60">
+        <div className="mt-5 flex flex-col items-center gap-3 text-sm text-slate-600 dark:text-zinc-400">
+          <button type="button" onClick={handleResend} disabled={resending} className="font-semibold text-sky-600 dark:text-sky-400 hover:underline disabled:opacity-60">
             {resending ? 'Sending new code...' : 'Resend verification code'}
           </button>
-          <button type="button" onClick={() => setPendingEmail('')} className="text-slate-500 hover:text-slate-700">
+          <button type="button" onClick={() => setPendingEmail('')} className="text-slate-500 dark:text-zinc-500 hover:text-slate-700">
             Back to registration
           </button>
         </div>
@@ -120,18 +120,18 @@ export default function Register() {
   return (
     <div>
       <div className="text-center mb-8">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400">
           <UserPlus size={24} />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900">Create Account</h1>
-        <p className="text-slate-500 mt-2 text-sm">Register for Cabuyao CHO Services</p>
+        <h1 className="text-2xl font-bold text-text">Create Account</h1>
+        <p className="text-slate-500 dark:text-zinc-500 mt-2 text-sm">Register for Cabuyao CHO Services</p>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
           <input 
             {...register('name', { required: true })} 
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-slate-50 focus:bg-white"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
           />
         </div>
         <div>
@@ -139,17 +139,17 @@ export default function Register() {
           <input 
             type="email"
             {...register('email', { required: true })} 
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-slate-50 focus:bg-white"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
              <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
-             <input type="date" {...register('dob', { required: true })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-slate-50 focus:bg-white" />
+             <input type="date" {...register('dob', { required: true })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-background focus:bg-surface" />
           </div>
           <div>
              <label className="block text-sm font-medium text-slate-700 mb-1">Contact No.</label>
-             <input {...register('contact_no', { required: true })} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-slate-50 focus:bg-white" />
+             <input {...register('contact_no', { required: true })} className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-background focus:bg-surface" />
           </div>
         </div>
         <div>
@@ -157,38 +157,38 @@ export default function Register() {
           <input 
             type="password"
             {...register('password', { required: true, minLength: 8 })} 
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-slate-50 focus:bg-white"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
           />
         </div>
         <button 
           disabled={loading}
-          className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg shadow-sky-200 disabled:opacity-70 mt-2"
+          className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg dark:shadow-none shadow-sky-200 disabled:opacity-70 mt-2"
         >
           {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
-      <p className="text-center mt-6 text-sm text-slate-600">
-        Already have an account? <Link to="/login" className="text-sky-600 font-semibold hover:underline">Log in</Link>
+      <p className="text-center mt-6 text-sm text-slate-600 dark:text-zinc-400">
+        Already have an account? <Link to="/login" className="text-sky-600 dark:text-sky-400 font-semibold hover:underline">Log in</Link>
       </p>
-      <div className="mt-5 border-t border-slate-100 pt-5">
+      <div className="mt-5 border-t border-slate-300 dark:border-zinc-800 dark:border-zinc-800 pt-5">
         {!showRecovery ? (
           <button
             type="button"
             onClick={() => setShowRecovery(true)}
-            className="w-full text-sm font-semibold text-sky-600 hover:underline"
+            className="w-full text-sm font-semibold text-sky-600 dark:text-sky-400 hover:underline"
           >
             Already registered but need to verify?
           </button>
         ) : (
           <form onSubmit={handleContinueVerification} className="space-y-3">
-            <p className="text-center text-sm text-slate-500">
+            <p className="text-center text-sm text-slate-500 dark:text-zinc-500">
               Enter your email and we will send a new verification code.
             </p>
             <input
               type="email"
               value={recoveryEmail}
               onChange={(event) => setRecoveryEmail(event.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-slate-50 focus:bg-white"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
               placeholder="you@example.com"
               required
             />
@@ -196,13 +196,13 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => setShowRecovery(false)}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                className="flex-1 rounded-xl border border-slate-300 dark:border-zinc-800 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-background"
               >
                 Cancel
               </button>
               <button
                 disabled={resending}
-                className="flex-1 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-sky-200 transition-colors hover:bg-sky-600 disabled:opacity-70"
+                className="flex-1 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg dark:shadow-none shadow-sky-200 transition-colors hover:bg-sky-600 disabled:opacity-70"
               >
                 {resending ? 'Sending...' : 'Send Code'}
               </button>

@@ -4,10 +4,10 @@ import choLogo from '../assets/CHO1-Logo.png';
 export default function CHOLogo({ to = '/', light = false, compact = false }) {
   return (
     <Link to={to} className="flex items-center gap-3">
-      <span className={`flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border shadow-sm ${
+      <span className={`flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border shadow-sm dark:shadow-none ${
         light
-          ? 'border-white/30 bg-white'
-          : 'border-sky-100 bg-white'
+          ? 'border-white/30 bg-surface'
+          : 'border-sky-100 bg-surface'
       }`}>
         <img
           src={choLogo}
@@ -17,10 +17,10 @@ export default function CHOLogo({ to = '/', light = false, compact = false }) {
       </span>
       {!compact && (
         <span className="leading-tight">
-          <span className={`block text-lg font-black tracking-tight ${light ? 'text-white' : 'text-slate-900'}`}>
+          <span className={`block text-lg font-black tracking-tight ${light ? 'text-white' : 'text-text'}`}>
             CHO-I
           </span>
-          <span className={`block text-xs font-semibold uppercase tracking-wider ${light ? 'text-sky-100' : 'text-sky-600'}`}>
+          <span className={`block text-xs font-semibold uppercase tracking-wider ${light ? 'text-sky-100' : 'text-sky-600 dark:text-sky-400'}`}>
             Cabuyao
           </span>
         </span>

@@ -3,17 +3,18 @@ import {
   CalendarCheck,
   FileText,
   HeartPulse,
-  ImagePlus,
-  LockKeyhole,
   Pill,
   ShieldCheck,
   Stethoscope,
   Users,
   Video,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import Footer from '../components/Footer';
 import CHOLogo from '../components/CHOLogo';
+import useThemeStore from '../store/useThemeStore';
 import landingTeleconsultBg from '../assets/landing-teleconsult-bg.png';
 import landingTeleconsultMobile from '../assets/landing-teleconsult-mobile.png';
 import landingEPrescriptionBg from '../assets/landing-eprescription-bg.png';
@@ -77,8 +78,9 @@ const roleHighlights = [
 ];
 
 export default function Landing() {
+  const { theme, toggleTheme } = useThemeStore();
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
+    <div className="relative min-h-screen overflow-hidden bg-background text-text">
       <SEO title="Home" description="Welcome to the Cabuyao City Health Office Portal" />
       <div className="absolute inset-x-0 top-0 h-screen pointer-events-none">
         {backgroundSlides.map((slide, index) => (
@@ -91,45 +93,54 @@ export default function Landing() {
             style={{ animationDelay: `${index * 6}s` }}
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40 md:via-white/80 md:to-white/20" />
-        <div className="absolute inset-0 bg-gradient-to-b from-sky-50/80 via-white/20 to-slate-50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white dark:from-background via-white/90 dark:via-background/90 to-white/40 dark:to-background/40 md:via-white/80 md:dark:via-background/80 md:to-white/20 md:dark:to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-sky-50/80 dark:from-sky-950/40 via-surface/20 dark:via-background/20 to-background dark:to-background" />
       </div>
 
-      <nav className="container relative z-10 mx-auto flex items-center justify-between px-6 py-4">
-        <CHOLogo />
-        <div className="flex items-center gap-3">
-          <Link to="/login" className="font-medium text-slate-600 transition-colors hover:text-sky-600">Login</Link>
-          <Link to="/register" className="rounded-full bg-sky-500 px-5 py-2 font-medium text-white shadow-lg shadow-sky-200 transition-all hover:-translate-y-0.5 hover:bg-sky-600">Register</Link>
+      <nav className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800">
+        <div className="container mx-auto flex items-center justify-between px-6 py-4">
+          <CHOLogo />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50 transition-colors mr-1"
+              aria-label="Toggle dark mode"
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <Link to="/login" className="font-medium text-slate-600 dark:text-zinc-400 transition-colors hover:text-sky-600 dark:text-sky-400">Login</Link>
+            <Link to="/register" className="rounded-full bg-sky-500 px-5 py-2 font-medium text-white shadow-lg dark:shadow-none shadow-sky-200 transition-all hover:-translate-y-0.5 hover:bg-sky-600">Register</Link>
+          </div>
         </div>
       </nav>
 
       <main className="relative z-10">
         <section className="container mx-auto flex min-h-[calc(100vh-72px)] flex-col justify-center px-6 pb-16 pt-16 md:flex-row md:items-center">
           <div className="max-w-2xl space-y-8 md:w-1/2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/80 px-4 py-2 text-sm font-semibold text-sky-700 shadow-sm backdrop-blur">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-surface/80 px-4 py-2 text-sm font-semibold text-sky-700 dark:text-sky-400 shadow-sm dark:shadow-none backdrop-blur">
               <ShieldCheck size={16} />
               Cabuyao Health Office Portal
             </div>
             <div className="space-y-5">
-              <h1 className="text-5xl font-bold leading-tight text-slate-950 md:text-6xl">
+              <h1 className="text-5xl font-bold leading-tight text-slate-900 dark:text-zinc-50 md:text-6xl">
                 Care that begins <br />
                 <span className="bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">with your needs.</span>
               </h1>
-              <p className="max-w-xl text-lg leading-relaxed text-slate-600">
+              <p className="max-w-xl text-lg leading-relaxed text-slate-600 dark:text-zinc-400">
                 Book online consultations, share vital details, and receive follow-up care from your local CHO-I team through a secure patient portal designed for convenience and trust.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-8 py-3.5 font-medium text-white shadow-xl transition-colors hover:bg-slate-800">
+              <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 dark:bg-zinc-100 px-8 py-3.5 font-medium text-white dark:text-zinc-900 shadow-xl dark:shadow-none transition-colors hover:bg-slate-800 dark:hover:bg-zinc-200">
                 <Users size={18} />
                 Get Started
               </Link>
             </div>
             <div className="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
               {portalStats.map((stat) => (
-                <div key={stat.label} className="rounded-lg border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur transition-colors duration-300 hover:bg-sky-50 hover:border-sky-200">
-                  <p className="text-2xl font-black text-sky-600">{stat.value}</p>
-                  <p className="mt-1 text-sm font-medium leading-snug text-slate-500">{stat.label}</p>
+                <div key={stat.label} className="rounded-lg border border-white/70 bg-surface/80 p-4 shadow-sm dark:shadow-none backdrop-blur transition-colors duration-300 hover:bg-sky-50 dark:bg-sky-900/30 hover:border-sky-200">
+                  <p className="text-2xl font-black text-sky-600 dark:text-sky-400">{stat.value}</p>
+                  <p className="mt-1 text-sm font-medium leading-snug text-slate-500 dark:text-zinc-500">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -137,68 +148,68 @@ export default function Landing() {
           <div className="hidden md:block md:w-1/2" aria-hidden="true" />
         </section>
 
-        <section className="bg-white py-16">
+        <section className="bg-surface py-16">
           <div className="container mx-auto px-6">
             <div className="mb-8 max-w-3xl">
-              <p className="text-sm font-bold uppercase text-sky-600">What patients receive</p>
-              <h2 className="mt-2 text-3xl font-bold text-slate-950">A patient portal designed for clarity and convenience</h2>
-              <p className="mt-3 text-base leading-7 text-slate-600">
+              <p className="text-sm font-bold uppercase text-sky-600 dark:text-sky-400">What patients receive</p>
+              <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-zinc-50">A patient portal designed for clarity and convenience</h2>
+              <p className="mt-3 text-base leading-7 text-slate-600 dark:text-zinc-400">
                 Use the portal to request care online, review your treatment details, and keep personal health records accessible in one trusted place.
               </p>
             </div>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
               {services.map((service) => (
-                <article key={service.title} className="rounded-lg border border-slate-100 bg-slate-50 p-5 shadow-sm transition-colors duration-300 hover:bg-sky-50 hover:border-sky-200">
-                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+                <article key={service.title} className="rounded-lg border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-background p-5 shadow-sm dark:shadow-none transition-colors duration-300 hover:bg-sky-50 dark:bg-sky-900/30 hover:border-sky-200">
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400">
                     <service.icon size={22} />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900">{service.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{service.description}</p>
+                  <h3 className="text-lg font-bold text-text">{service.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-zinc-400">{service.description}</p>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="bg-slate-50 py-16">
+        <section className="bg-background py-16">
           <div className="container mx-auto grid gap-10 px-6 lg:grid-cols-[1fr_1.15fr] lg:items-start">
             <div>
-              <p className="text-sm font-bold uppercase text-sky-600">How It Works</p>
-              <h2 className="mt-2 text-3xl font-bold text-slate-950">A simple path from request to follow-up</h2>
-              <p className="mt-3 text-base leading-7 text-slate-600">
+              <p className="text-sm font-bold uppercase text-sky-600 dark:text-sky-400">How It Works</p>
+              <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-zinc-50">A simple path from request to follow-up</h2>
+              <p className="mt-3 text-base leading-7 text-slate-600 dark:text-zinc-400">
                 Start your health journey online, share a symptom summary, and receive clear follow-up information from your CHO-I care team without unnecessary delays.
               </p>
             </div>
             <div className="space-y-4">
               {workflow.map((step, index) => (
-                <div key={step} className="flex gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 hover:bg-sky-50 hover:border-sky-200">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
+                <div key={step} className="flex gap-4 rounded-lg border border-slate-300 dark:border-zinc-800 bg-surface p-5 shadow-sm dark:shadow-none transition-colors duration-300 hover:bg-sky-50 dark:bg-sky-900/30 hover:border-sky-200">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 dark:bg-zinc-100 text-sm font-bold text-white dark:text-zinc-900">
                     {index + 1}
                   </div>
-                  <p className="pt-1 text-base font-medium leading-7 text-slate-700">{step}</p>
+                  <p className="pt-1 text-base font-medium leading-7 text-slate-700 dark:text-zinc-300">{step}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="bg-white py-16">
+        <section className="bg-surface py-16">
           <div className="container mx-auto px-6">
             <div className="mb-8 max-w-3xl">
-              <p className="text-sm font-bold uppercase text-sky-600">Why choose Cabuyao CHO-I</p>
-              <h2 className="mt-2 text-3xl font-bold text-slate-950">Patient-first features that make care easier</h2>
-              <p className="mt-3 text-base leading-7 text-slate-600">
+              <p className="text-sm font-bold uppercase text-sky-600 dark:text-sky-400">Why choose Cabuyao CHO-I</p>
+              <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-zinc-50">Patient-first features that make care easier</h2>
+              <p className="mt-3 text-base leading-7 text-slate-600 dark:text-zinc-400">
                 The portal helps you start consultations with confidence, access follow-up guidance quickly, and keep your health information protected.
               </p>
             </div>
             <div className="grid gap-5 md:grid-cols-3">
               {roleHighlights.map((role) => (
-                <article key={role.title} className="rounded-lg border border-slate-100 p-6 shadow-sm transition-colors duration-300 hover:bg-sky-50 hover:border-sky-200">
-                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                <article key={role.title} className="rounded-lg border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-6 shadow-sm dark:shadow-none transition-colors duration-300 hover:bg-sky-50 dark:bg-sky-900/30 hover:border-sky-200">
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
                     <role.icon size={22} />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-950">{role.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{role.details}</p>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-zinc-50">{role.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-zinc-400">{role.details}</p>
                 </article>
               ))}
             </div>
@@ -215,7 +226,7 @@ export default function Landing() {
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-sky-700 transition-colors hover:bg-sky-50">
+              <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-full bg-surface px-6 py-3 font-semibold text-sky-700 dark:text-sky-400 transition-colors hover:bg-sky-50 dark:bg-sky-900/30">
                 <CalendarCheck size={18} />
                 Register Now
               </Link>

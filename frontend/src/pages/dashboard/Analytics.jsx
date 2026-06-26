@@ -33,10 +33,10 @@ const maxTotal = (items) => Math.max(...items.map((item) => Number(item.total ||
 
 function StatCard({ label, value, sub, color = 'sky' }) {
   const colors = {
-    sky: 'bg-sky-50 text-sky-600 border-sky-100',
-    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
-    rose: 'bg-rose-50 text-rose-600 border-rose-100',
+    sky: 'bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 border-sky-100',
+    emerald: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 border-emerald-100 dark:border-emerald-900/50',
+    indigo: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 border-indigo-100 dark:border-indigo-900/50',
+    rose: 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50',
   };
   return (
     <div className={`rounded-2xl border p-5 ${colors[color]}`}>
@@ -51,8 +51,8 @@ function BarRow({ label, value, max, color = 'bg-sky-500' }) {
   const width = max ? Math.max((Number(value || 0) / max) * 100, value ? 6 : 0) : 0;
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-slate-500 w-36 truncate shrink-0">{label}</span>
-      <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+      <span className="text-xs text-slate-500 dark:text-zinc-500 w-36 truncate shrink-0">{label}</span>
+      <div className="flex-1 h-2.5 bg-slate-100 dark:bg-zinc-800/50 rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${width}%` }} />
       </div>
       <span className="text-xs font-semibold text-slate-700 w-10 text-right">{formatNumber(value)}</span>
@@ -62,7 +62,7 @@ function BarRow({ label, value, max, color = 'bg-sky-500' }) {
 
 function EmptyBlock({ label }) {
   return (
-    <div className="h-44 bg-slate-50 rounded-xl border border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm">
+    <div className="h-44 bg-background rounded-xl border border-dashed border-slate-300 dark:border-zinc-800 flex items-center justify-center text-slate-400 dark:text-zinc-500 text-sm">
       {label}
     </div>
   );
@@ -171,7 +171,7 @@ export default function Analytics() {
   }, [user]);
 
   if (user?.role !== 'Admin') {
-    return <div className="p-8 text-center text-slate-500 bg-white rounded-2xl shadow-sm border border-slate-100">Access Denied. Health Officers only.</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-zinc-500 bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800">Access Denied. Health Officers only.</div>;
   }
 
   const summary = stats.summary || {};
@@ -216,12 +216,12 @@ export default function Analytics() {
       <SEO title="Analytics & Reports" description="Descriptive analytics and system activity for Cabuyao CHO" />
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports and monitor system activity logs." iconClassName="bg-indigo-50 text-indigo-600" />
+        <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports and monitor system activity logs." iconClassName="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600" />
         <button
           data-tour="page-primary-action"
           onClick={handleExportFullReport}
           disabled={exporting || loading}
-          className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm font-medium text-sm disabled:opacity-70"
+          className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm dark:shadow-none font-medium text-sm disabled:opacity-70"
         >
           <Download size={16} /> {exporting ? 'Exporting...' : 'Export Full Report'}
         </button>
@@ -237,8 +237,8 @@ export default function Analytics() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                 active
-                  ? 'bg-sky-600 text-white shadow-md shadow-sky-200'
-                  : 'bg-white text-slate-500 border border-slate-200 hover:border-sky-300 hover:text-sky-600'
+                  ? 'bg-sky-600 text-white shadow-md dark:shadow-none shadow-sky-200'
+                  : 'bg-surface text-slate-500 dark:text-zinc-500 border border-slate-300 dark:border-zinc-800 hover:border-sky-300 hover:text-sky-600 dark:text-sky-400'
               }`}
             >
               <Icon size={15} />
@@ -257,16 +257,16 @@ export default function Analytics() {
             <StatCard label="Pending / In Review" value={formatNumber(summary.pending_consultations)} sub="Needs action" color="rose" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><Activity size={16} className="text-sky-500" /> Daily Consultation Volume</h3>
+            <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none p-6">
+              <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><Activity size={16} className="text-sky-500" /> Daily Consultation Volume</h3>
               {stats.time_based_volume.length ? (
                 <div className="space-y-3">
                   {stats.time_based_volume.map((row) => <BarRow key={row.date} label={row.date} value={row.count} max={maxTotal(stats.time_based_volume)} />)}
                 </div>
               ) : <EmptyBlock label="No consultation volume yet" />}
             </div>
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><Users size={16} className="text-indigo-500" /> By Doctor</h3>
+            <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none p-6">
+              <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><Users size={16} className="text-indigo-500" /> By Doctor</h3>
               {stats.consultations_by_doctor.length ? (
                 <div className="space-y-3">
                   {stats.consultations_by_doctor.map((row) => <BarRow key={row.name} label={row.name} value={row.total} max={doctorMax} color="bg-indigo-400" />)}
@@ -285,8 +285,8 @@ export default function Analytics() {
             <StatCard label="Top Medicine Entries" value={formatNumber(stats.top_medicines.length)} sub="Based on prescriptions" color="indigo" />
             <StatCard label="Completed Consults" value={formatNumber(summary.completed_consultations)} sub="Eligible for prescriptions" color="rose" />
           </div>
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h3 className="font-semibold text-slate-900 mb-5 flex items-center gap-2"><FileText size={16} className="text-emerald-500" /> Most Prescribed Medicines</h3>
+          <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none p-6">
+            <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><FileText size={16} className="text-emerald-500" /> Most Prescribed Medicines</h3>
             {stats.top_medicines.length ? (
               <div className="space-y-3">
                 {stats.top_medicines.map((row) => <BarRow key={`${row.name}-${row.category}`} label={row.name} value={row.total} max={medicineMax} color="bg-emerald-400" />)}
@@ -304,8 +304,8 @@ export default function Analytics() {
             <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Medicine database" color="emerald" />
             <StatCard label="Pending Work" value={formatNumber(summary.pending_consultations)} sub="Open consultations" color="rose" />
           </div>
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><BarChart2 size={16} className="text-sky-500" /> System Utilization</h3>
+          <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none p-6">
+            <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><BarChart2 size={16} className="text-sky-500" /> System Utilization</h3>
             <div className="space-y-3">
               {serviceRows.map((row) => <BarRow key={row.name} label={row.name} value={row.total} max={serviceMax} color="bg-sky-400" />)}
             </div>
@@ -314,16 +314,16 @@ export default function Analytics() {
       )}
 
       {activeTab === 'logs' && (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-            <h3 className="font-semibold text-slate-900 flex items-center gap-2"><List size={16} className="text-rose-500" /> System Activity Logs</h3>
+        <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none overflow-hidden">
+          <div className="p-4 border-b border-slate-300 dark:border-zinc-800 dark:border-zinc-800 flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+            <h3 className="font-semibold text-text flex items-center gap-2"><List size={16} className="text-rose-500 dark:text-rose-400" /> System Activity Logs</h3>
             <div className="flex items-center gap-2">
-              <Filter size={14} className="text-slate-400" />
+              <Filter size={14} className="text-slate-400 dark:text-zinc-500" />
               {['all','admin','doctor','staff','patient','system'].map((f) => (
                 <button
                   key={f}
                   onClick={() => setLogFilter(f)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold capitalize transition-colors ${logFilter === f ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold capitalize transition-colors ${logFilter === f ? 'bg-slate-900 text-white' : 'bg-slate-100 dark:bg-zinc-800/50 text-slate-500 dark:text-zinc-500 hover:bg-slate-200 dark:bg-zinc-800'}`}
                 >
                   {f}
                 </button>
@@ -332,15 +332,15 @@ export default function Analytics() {
           </div>
           <div className="divide-y divide-slate-50">
             {filteredLogs.length === 0 ? (
-              <div className="px-6 py-12 text-center text-sm text-slate-400">No activity logs found.</div>
+              <div className="px-6 py-12 text-center text-sm text-slate-400 dark:text-zinc-500">No activity logs found.</div>
             ) : filteredLogs.map((log, i) => (
-              <div key={`${log.created_at}-${i}`} className="flex justify-between items-center px-6 py-4 hover:bg-slate-50/60 transition-colors">
+              <div key={`${log.created_at}-${i}`} className="flex justify-between items-center px-6 py-4 hover:bg-background/60 transition-colors">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800">{log.action}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{log.user || 'System'}{log.role ? ` · ${log.role}` : ''}</p>
+                  <p className="text-sm font-medium text-text">{log.action}</p>
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">{log.user || 'System'}{log.role ? ` · ${log.role}` : ''}</p>
                 </div>
                 <div className="text-right shrink-0 ml-4">
-                  <p className="text-xs font-semibold text-slate-400">{formatDateTime(log.created_at)}</p>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-zinc-500">{formatDateTime(log.created_at)}</p>
                   <p className="text-[11px] text-slate-300 mt-0.5">IP: {log.ip_address || 'N/A'}</p>
                 </div>
               </div>

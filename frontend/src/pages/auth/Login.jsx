@@ -90,11 +90,11 @@ export default function Login() {
       <div>
         <SEO title="Forgot Password" description="Reset your Cabuyao CHO account password" />
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400">
             <KeyRound size={24} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Reset Password</h1>
-          <p className="text-slate-500 mt-2 text-sm">Enter your email and we will send a reset code.</p>
+          <h1 className="text-2xl font-bold text-text">Reset Password</h1>
+          <p className="text-slate-500 dark:text-zinc-500 mt-2 text-sm">Enter your email and we will send a reset code.</p>
         </div>
         <form onSubmit={handleForgotPassword} className="space-y-5">
           <div>
@@ -103,16 +103,16 @@ export default function Login() {
               type="email"
               value={resetEmail}
               onChange={(event) => setResetEmail(event.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-slate-50 focus:bg-white"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
               placeholder="you@example.com"
               required
             />
           </div>
-          <button disabled={loading} className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg shadow-sky-200 disabled:opacity-70">
+          <button disabled={loading} className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg dark:shadow-none shadow-sky-200 disabled:opacity-70">
             {loading ? 'Sending...' : 'Send Reset Code'}
           </button>
         </form>
-        <button type="button" onClick={() => setMode('login')} className="mt-5 w-full text-sm font-semibold text-sky-600 hover:underline">
+        <button type="button" onClick={() => setMode('login')} className="mt-5 w-full text-sm font-semibold text-sky-600 dark:text-sky-400 hover:underline">
           Back to sign in
         </button>
       </div>
@@ -124,11 +124,11 @@ export default function Login() {
       <div>
         <SEO title="Set New Password" description="Set a new Cabuyao CHO account password" />
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600">
             <LockKeyhole size={24} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Set New Password</h1>
-          <p className="text-slate-500 mt-2 text-sm">Enter the code sent to {resetEmail}.</p>
+          <h1 className="text-2xl font-bold text-text">Set New Password</h1>
+          <p className="text-slate-500 dark:text-zinc-500 mt-2 text-sm">Enter the code sent to {resetEmail}.</p>
         </div>
         <form onSubmit={handleResetPassword} className="space-y-4">
           <div>
@@ -138,7 +138,7 @@ export default function Login() {
               onChange={(event) => setResetCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
               inputMode="numeric"
               maxLength="6"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] text-slate-900 outline-none transition-all focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/20"
+              className="w-full rounded-xl border border-slate-300 dark:border-zinc-800 bg-background px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] text-text outline-none transition-all focus:border-sky-500 focus:bg-surface focus:ring-2 focus:ring-sky-500/20"
               placeholder="000000"
               required
             />
@@ -150,7 +150,7 @@ export default function Login() {
               type="password"
               value={resetPassword}
               onChange={(event) => setResetPassword(event.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-slate-50 focus:bg-white"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
               required
               minLength="8"
             />
@@ -161,20 +161,20 @@ export default function Login() {
               type="password"
               value={resetPasswordConfirmation}
               onChange={(event) => setResetPasswordConfirmation(event.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-slate-50 focus:bg-white"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
               required
               minLength="8"
             />
           </div>
-          <button disabled={loading || resetCode.length !== 6} className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg shadow-sky-200 disabled:opacity-70">
+          <button disabled={loading || resetCode.length !== 6} className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg dark:shadow-none shadow-sky-200 disabled:opacity-70">
             {loading ? 'Updating...' : 'Update Password'}
           </button>
         </form>
         <div className="mt-5 flex flex-col items-center gap-3 text-sm">
-          <button type="button" onClick={handleForgotPassword} disabled={loading} className="font-semibold text-sky-600 hover:underline disabled:opacity-60">
+          <button type="button" onClick={handleForgotPassword} disabled={loading} className="font-semibold text-sky-600 dark:text-sky-400 hover:underline disabled:opacity-60">
             Resend reset code
           </button>
-          <button type="button" onClick={() => setMode('login')} className="text-slate-500 hover:text-slate-700">
+          <button type="button" onClick={() => setMode('login')} className="text-slate-500 dark:text-zinc-500 hover:text-slate-700">
             Back to sign in
           </button>
         </div>
@@ -186,44 +186,44 @@ export default function Login() {
     <div>
       <SEO title="Login" description="Sign in to your Cabuyao CHO account" />
       <div className="text-center mb-8">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400">
           <LogIn size={24} />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
-        <p className="text-slate-500 mt-2 text-sm">Sign in to your Cabuyao CHO account</p>
+        <h1 className="text-2xl font-bold text-text">Welcome Back</h1>
+        <p className="text-slate-500 dark:text-zinc-500 mt-2 text-sm">Sign in to your Cabuyao CHO account</p>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
           <input 
             {...register('email', { required: true })} 
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-slate-50 focus:bg-white"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
             placeholder="you@example.com"
           />
         </div>
         <div>
           <div className="mb-1 flex items-center justify-between gap-3">
             <label className="block text-sm font-medium text-slate-700">Password</label>
-            <button type="button" onClick={() => setMode('forgot')} className="text-xs font-semibold text-sky-600 hover:underline">
+            <button type="button" onClick={() => setMode('forgot')} className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline">
               Forgot password?
             </button>
           </div>
           <input 
             type="password"
             {...register('password', { required: true })} 
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-slate-50 focus:bg-white"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
             placeholder="••••••••"
           />
         </div>
         <button 
           disabled={loading}
-          className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg shadow-sky-200 disabled:opacity-70 mt-2"
+          className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg dark:shadow-none shadow-sky-200 disabled:opacity-70 mt-2"
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
-      <p className="text-center mt-6 text-sm text-slate-600">
-        Don't have an account? <Link to="/register" className="text-sky-600 font-semibold hover:underline">Register here</Link>
+      <p className="text-center mt-6 text-sm text-slate-600 dark:text-zinc-400">
+        Don't have an account? <Link to="/register" className="text-sky-600 dark:text-sky-400 font-semibold hover:underline">Register here</Link>
       </p>
     </div>
   );

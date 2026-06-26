@@ -4,6 +4,8 @@ import CHOLogo from '../components/CHOLogo';
 import landingTeleconsultBg from '../assets/landing-teleconsult-bg.png';
 import landingTeleconsultMobile from '../assets/landing-teleconsult-mobile.png';
 import landingEPrescriptionBg from '../assets/landing-eprescription-bg.png';
+import useThemeStore from '../store/useThemeStore';
+import { Sun, Moon } from 'lucide-react';
 
 const authSlides = [
   landingTeleconsultBg,
@@ -13,10 +15,20 @@ const authSlides = [
 
 export default function AuthLayout() {
   const { isAuthenticated } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return (
-    <div className="min-h-screen bg-slate-50 p-4 lg:p-6">
-      <div className="mx-auto grid min-h-[calc(100vh-32px)] max-w-7xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/80 lg:min-h-[calc(100vh-48px)] lg:grid-cols-2">
+    <div className="min-h-screen bg-background p-4 lg:p-6 transition-colors duration-300">
+      <div className="absolute top-6 right-6 lg:top-8 lg:right-10 z-50">
+        <button
+          onClick={toggleTheme}
+          className="p-2 text-slate-400 dark:text-zinc-500 hover:text-sky-500 hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 dark:hover:bg-slate-800 rounded-full transition-colors"
+          title="Toggle theme"
+        >
+          {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
+        </button>
+      </div>
+      <div className="mx-auto grid min-h-[calc(100vh-32px)] max-w-7xl overflow-hidden rounded-3xl border border-slate-300 dark:border-zinc-800 dark:border-slate-800 bg-surface shadow-2xl dark:shadow-none shadow-slate-200/80 dark:shadow-none lg:min-h-[calc(100vh-48px)] lg:grid-cols-2">
         <section className="relative hidden overflow-hidden bg-sky-900 lg:block">
           {authSlides.map((slide, index) => (
             <img
@@ -42,9 +54,9 @@ export default function AuthLayout() {
           </div>
         </section>
 
-        <section className="flex min-h-full flex-col">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 lg:hidden">
-            <CHOLogo />
+        <section className="flex min-h-full flex-col relative z-10">
+          <div className="flex items-center justify-between border-b border-slate-300 dark:border-zinc-800 dark:border-zinc-800 dark:border-slate-800 px-6 py-4 lg:hidden">
+            <CHOLogo light={theme === 'dark'} />
           </div>
           <div className="flex flex-1 items-center justify-center overflow-y-auto p-6 sm:p-8">
             <div className="w-full max-w-md">
