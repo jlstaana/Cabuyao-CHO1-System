@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import api from '../utils/api';
 import CHOLogo from '../components/CHOLogo';
@@ -179,7 +179,7 @@ export default function DashboardLayout() {
   }
 
   useEffect(() => {
-    if (!isAuthenticated || !user || !['Patient', 'Doctor'].includes(user.role)) return undefined;
+    if (!user || !['Patient', 'Doctor'].includes(user.role)) return undefined;
 
     let stopped = false;
     const notifiedKey = `teleconsult-reminders:${user.id}`;
@@ -231,11 +231,11 @@ export default function DashboardLayout() {
       stopped = true;
       window.clearInterval(interval);
     };
-  }, [isAuthenticated, user]);
+  }, [user]);
 
   // Fetch unread notifications count for ALL roles
   useEffect(() => {
-    if (!isAuthenticated || !user) return undefined;
+    if (!user) return undefined;
     
     let isNotifActive = true;
     const fetchUnreadCount = async () => {
@@ -272,8 +272,9 @@ export default function DashboardLayout() {
       isNotifActive = false;
       window.clearInterval(notifInterval);
     };
-  }, [isAuthenticated, user]);
+  }, [user]);
 
+  if (!isAuthenticated && !loading) return <Navigate to="/login" replace />;
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -283,10 +284,6 @@ export default function DashboardLayout() {
   }
 
   const handleLogout = async () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
     await logout();
     navigate('/login');
   };
@@ -303,7 +300,7 @@ export default function DashboardLayout() {
   };
 
   const handleCompleteTutorial = async () => {
-    if (isAuthenticated && user.first_login) {
+    if (user.first_login) {
       await completeOnboarding();
     }
     handleCloseTutorial();
@@ -367,7 +364,7 @@ export default function DashboardLayout() {
             </Link>
             <div className="hidden md:block text-right mr-2">
                <p className="text-sm font-semibold leading-tight">{user.name}</p>
-               <p className="text-xs text-sky-200 leading-tight">{isAuthenticated ? user.role : 'Public review access'}</p>
+               <p className="text-xs text-sky-200 leading-tight">{user.role}</p>
             </div>
             <Link data-tour="profile" to="/profile" className="w-10 h-10 bg-sky-500 hover:bg-sky-400 text-white rounded-full flex items-center justify-center font-bold shadow-inner transition-colors cursor-pointer border-2 border-sky-400">
                {user.name.charAt(0)}
@@ -432,10 +429,10 @@ export default function DashboardLayout() {
               data-tour="logout"
               onClick={handleLogout} 
               className={`flex items-center gap-3 py-3 w-full rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors font-medium ${sidebarCollapsed ? 'justify-center px-0' : 'px-4'}`}
-              title={sidebarCollapsed ? (isAuthenticated ? 'Sign Out' : 'Sign In') : ''}
+              title={sidebarCollapsed ? 'Sign Out' : ''}
             >
               <LogOut size={22} className="shrink-0 text-slate-400 hover:text-rose-500" /> 
-              <span className={`transition-all duration-300 ${sidebarCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100 block'}`}>{isAuthenticated ? 'Sign Out' : 'Sign In'}</span>
+              <span className={`transition-all duration-300 ${sidebarCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100 block'}`}>Sign Out</span>
             </button>
           </div>
         </aside>

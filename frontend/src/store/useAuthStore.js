@@ -1,19 +1,10 @@
 import { create } from 'zustand';
 import api from '../utils/api';
 
-export const publicReviewUser = {
-  id: 'public-reviewer',
-  name: 'Public Reviewer',
-  email: 'reviewer@public.local',
-  role: 'Admin',
-  first_login: false,
-  is_public_review: true,
-};
-
 const storedToken = localStorage.getItem('token') || null;
 
 const useAuthStore = create((set) => ({
-  user: storedToken ? null : publicReviewUser,
+  user: null,
   token: storedToken,
   isAuthenticated: !!storedToken,
   loading: !!storedToken,
@@ -33,7 +24,7 @@ const useAuthStore = create((set) => ({
       // Ignore error on logout
     }
     localStorage.removeItem('token');
-    set({ token: null, user: publicReviewUser, isAuthenticated: false, loading: false });
+    set({ token: null, user: null, isAuthenticated: false, loading: false });
   },
 
   fetchUser: async () => {
@@ -42,7 +33,7 @@ const useAuthStore = create((set) => ({
       set({ user: response.data, isAuthenticated: true, loading: false });
     } catch {
       localStorage.removeItem('token');
-      set({ user: publicReviewUser, token: null, isAuthenticated: false, loading: false });
+      set({ user: null, token: null, isAuthenticated: false, loading: false });
     }
   },
 

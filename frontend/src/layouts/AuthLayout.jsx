@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
+import useAuthStore from '../store/useAuthStore';
 import CHOLogo from '../components/CHOLogo';
 import landingTeleconsultBg from '../assets/landing-teleconsult-bg.png';
 import landingTeleconsultMobile from '../assets/landing-teleconsult-mobile.png';
@@ -11,6 +12,8 @@ const authSlides = [
 ];
 
 export default function AuthLayout() {
+  const { isAuthenticated } = useAuthStore();
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return (
     <div className="min-h-screen bg-slate-50 p-4 lg:p-6">
       <div className="mx-auto grid min-h-[calc(100vh-32px)] max-w-7xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/80 lg:min-h-[calc(100vh-48px)] lg:grid-cols-2">
