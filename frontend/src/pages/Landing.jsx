@@ -45,6 +45,14 @@ export default function Landing() {
           <p className="text-lg text-slate-600 leading-relaxed max-w-lg">
             Access teleconsultations, digital prescriptions, and secure health records seamlessly through the Cabuyao City Health Office Portal.
           </p>
+          <div className="max-w-xl rounded-2xl border border-sky-200/80 bg-white/80 p-5 shadow-lg shadow-sky-100/60 backdrop-blur">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">
+              Assessment Access
+            </p>
+            <p className="mt-2 text-base leading-relaxed text-slate-700">
+              All websites and relevant pages must remain publicly accessible at all times to allow proper assessment.
+            </p>
+          </div>
           <div className="flex gap-4">
             <Link to="/register" className="bg-slate-900 text-white px-8 py-3.5 rounded-full font-medium hover:bg-slate-800 transition-colors shadow-xl">Get Started</Link>
           </div>
