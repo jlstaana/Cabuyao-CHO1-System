@@ -5,10 +5,10 @@ const choImageUrl = 'https://streetviewpixels-pa.googleapis.com/v1/thumbnail?cb_
 
 export default function Footer({ className = '' }) {
   return (
-    <footer className={`border-t border-slate-300 dark:border-zinc-800 bg-slate-950 text-slate-300 ${className}`}>
+    <footer className={`border-t border-border bg-slate-950 text-text-light opacity-60 ${className}`}>
       <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-7 lg:grid-cols-[1.15fr_1fr_0.9fr]">
         <div className="space-y-4">
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl dark:shadow-none shadow-slate-950/30">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/30">
             <div className="relative h-24 md:h-28">
               <div className="absolute inset-0 bg-gradient-to-br from-sky-900 via-slate-900 to-emerald-900" />
               <img
@@ -31,7 +31,7 @@ export default function Footer({ className = '' }) {
               </div>
             </div>
           </div>
-          <p className="max-w-xl text-sm leading-6 text-slate-400 dark:text-zinc-500">
+          <p className="max-w-xl text-sm leading-6 text-text-light">
             A local digital health portal built to support secure consultations, prescriptions, records, and public health workflows for Cabuyao residents.
           </p>
         </div>
@@ -43,21 +43,21 @@ export default function Footer({ className = '' }) {
               <MapPin size={18} className="mt-0.5 shrink-0 text-sky-400" />
               <div>
                 <p className="font-semibold text-slate-100">City Health Office-1</p>
-                <p className="mt-1 leading-relaxed text-slate-400 dark:text-zinc-500">F.B. Bailon St., Brgy. Sala, Cabuyao City, 4025 Laguna, Philippines</p>
+                <p className="mt-1 leading-relaxed text-text-light">F.B. Bailon St., Brgy. Sala, Cabuyao City, 4025 Laguna, Philippines</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Phone size={18} className="mt-0.5 shrink-0 text-sky-400" />
               <div>
                 <p className="font-semibold text-slate-100">Contact Numbers</p>
-                <p className="mt-1 text-slate-400 dark:text-zinc-500">(049) 531-1153</p>
+                <p className="mt-1 text-text-light">(049) 531-1153</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Clock size={18} className="mt-0.5 shrink-0 text-sky-400" />
               <div>
                 <p className="font-semibold text-slate-100">Service Access</p>
-                <p className="mt-1 text-slate-400 dark:text-zinc-500">Online portal access is available for registered patients and authorized CHO staff.</p>
+                <p className="mt-1 text-text-light">Online portal access is available for registered patients and authorized CHO staff.</p>
               </div>
             </div>
           </div>
@@ -66,10 +66,10 @@ export default function Footer({ className = '' }) {
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-white">Portal</h3>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-1">
-            <Link to="/" className="font-medium text-slate-300 transition-colors hover:text-sky-300">Home</Link>
-            <Link to="/login" className="font-medium text-slate-300 transition-colors hover:text-sky-300">Login</Link>
-            <Link to="/register" className="font-medium text-slate-300 transition-colors hover:text-sky-300">Register</Link>
-            <Link to="/dashboard" className="font-medium text-slate-300 transition-colors hover:text-sky-300">Dashboard</Link>
+            <Link to="/" className="font-medium text-text-light opacity-60 transition-colors hover:text-sky-300">Home</Link>
+            <Link to="/login" className="font-medium text-text-light opacity-60 transition-colors hover:text-sky-300">Login</Link>
+            <Link to="/register" className="font-medium text-text-light opacity-60 transition-colors hover:text-sky-300">Register</Link>
+            <Link to="/dashboard" className="font-medium text-text-light opacity-60 transition-colors hover:text-sky-300">Dashboard</Link>
           </div>
 
           <div className="mt-5 rounded-2xl border border-white/10 bg-surface/[0.03] p-4">
@@ -77,7 +77,7 @@ export default function Footer({ className = '' }) {
               <ShieldCheck size={17} className="text-emerald-400" />
               Secure Health Records
             </div>
-            <p className="mt-2 text-sm leading-6 text-slate-400 dark:text-zinc-500">
+            <p className="mt-2 text-sm leading-6 text-text-light">
               Patient information is handled through authenticated access for privacy-focused care delivery.
             </p>
           </div>
@@ -85,13 +85,13 @@ export default function Footer({ className = '' }) {
       </div>
 
       <div className="border-t border-white/10 px-6 py-3">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 text-xs text-slate-500 dark:text-zinc-500 md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 text-xs text-text-muted md:flex-row md:items-center md:justify-between">
           <span>© {new Date().getFullYear()} Cabuyao City Health Office. All rights reserved.</span>
           <a
             href="https://www.google.com/maps/search/?api=1&query=City+Health+Office-1+F.B.+Bailon+St+Cabuyao"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 font-medium text-slate-400 dark:text-zinc-500 transition-colors hover:text-sky-300"
+            className="inline-flex items-center gap-1 font-medium text-text-light transition-colors hover:text-sky-300"
           >
             View CHO-1 Cabuyao on Map
             <ExternalLink size={13} />

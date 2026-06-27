@@ -3,6 +3,7 @@ import { Navigate, Outlet, Link, useNavigate, useLocation } from 'react-router-d
 import useAuthStore from '../store/useAuthStore';
 import api from '../utils/api';
 import CHOLogo from '../components/CHOLogo';
+import SEO from '../components/SEO';
 import OnboardingTutorial from '../components/OnboardingTutorial';
 import {
   LogOut, Home, Users, FileText, Bell, Menu, X, Pill,
@@ -152,6 +153,25 @@ export default function DashboardLayout() {
   const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const getSeoTitle = () => {
+    const path = location.pathname;
+    if (path.includes('/dashboard')) return 'Overview';
+    if (path.includes('/vitals')) return 'Vital Signs';
+    if (path.includes('/medical-images')) return 'Medical Images';
+    if (path.includes('/consultations')) return 'Consultations';
+    if (path.includes('/consultation-history')) return 'Consultation History';
+    if (path.includes('/prescriptions')) return 'Prescriptions';
+    if (path.includes('/medicines')) return 'Medicine Database';
+    if (path.includes('/users')) return 'Manage Users';
+    if (path.includes('/analytics')) return 'Analytics & Reports';
+    if (path.includes('/patient-records')) return 'Patient Records';
+    if (path.includes('/profile')) return 'Profile';
+    if (path.includes('/notifications')) return 'Notifications';
+    if (path.includes('/room/')) return 'Teleconsultation Room';
+    return 'Dashboard';
+  };
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -297,18 +317,19 @@ export default function DashboardLayout() {
 
   // Role badge config
   const roleBadge = {
-    Admin:   { label: 'Health Officer / Admin', color: 'bg-sky-50 dark:bg-sky-900/30 border-sky-100 text-sky-700 dark:text-sky-400', icon: ShieldCheck },
-    Doctor:  { label: 'Doctor',                 color: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400', icon: Stethoscope },
-    Staff:   { label: 'Staff',                  color: 'bg-amber-50 dark:bg-amber-900/30 border-amber-100 dark:border-amber-900/50 text-amber-700 dark:text-amber-400', icon: Users },
-    Patient: { label: 'Patient',                color: 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-100 dark:border-indigo-900/50 text-indigo-700 dark:text-indigo-400', icon: UserCircle },
+    Admin:   { label: 'Health Officer / Admin', color: 'bg-primary-bg border-sky-100 text-primary-text', icon: ShieldCheck },
+    Doctor:  { label: 'Doctor',                 color: 'bg-success-bg border-success-border text-success-text', icon: Stethoscope },
+    Staff:   { label: 'Staff',                  color: 'bg-warning-bg border-warning-border text-warning-text', icon: Users },
+    Patient: { label: 'Patient',                color: 'bg-brand-bg border-brand-border text-brand-text', icon: UserCircle },
   };
   const badge = roleBadge[user.role];
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans text-text overflow-hidden transition-colors duration-300">
+      <SEO title={getSeoTitle()} />
       
       {/* Top Navbar */}
-      <header data-tour="topbar" className="bg-sky-600 text-white shadow-md dark:shadow-none px-4 py-3 flex justify-between items-center z-30 relative">
+      <header data-tour="topbar" className="bg-sky-600 text-white shadow-md px-4 py-3 flex justify-between items-center z-30 relative">
          <div className="flex items-center gap-4">
             <CHOLogo light to="/dashboard" />
             {/* Desktop Sidebar Toggle */}
@@ -360,7 +381,7 @@ export default function DashboardLayout() {
                <p className="text-sm font-semibold leading-tight">{user.name}</p>
                <p className="text-xs text-sky-200 leading-tight">{user.role}</p>
             </div>
-            <Link data-tour="profile" to="/profile" className="w-10 h-10 bg-sky-500 hover:bg-sky-400 text-white rounded-full flex items-center justify-center font-bold shadow-inner dark:shadow-none transition-colors cursor-pointer border-2 border-sky-400">
+            <Link data-tour="profile" to="/profile" className="w-10 h-10 bg-sky-500 hover:bg-sky-400 text-white rounded-full flex items-center justify-center font-bold shadow-inner transition-colors cursor-pointer border-2 border-sky-400">
                {user.name.charAt(0)}
             </Link>
          </div>
@@ -375,7 +396,7 @@ export default function DashboardLayout() {
         {/* Sidebar */}
         <aside 
           data-tour="sidebar"
-          className={`absolute md:relative z-20 flex flex-col bg-surface border-r border-slate-300 dark:border-zinc-800 dark:border-slate-800 h-full shadow-2xl dark:shadow-none md:shadow-none transition-all duration-300 ease-in-out ${
+          className={`absolute md:relative z-20 flex flex-col bg-surface border-r border-border dark:border-slate-800 h-full shadow-2xl md:shadow-none transition-all duration-300 ease-in-out ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           } ${sidebarCollapsed ? 'w-20' : 'w-64'}`}
         >
@@ -391,7 +412,7 @@ export default function DashboardLayout() {
             {navGroups.map((group) => (
               <div key={group.label} className="mb-2">
                 {/* Group label */}
-                <p className={`text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1 px-3 transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 h-0 mb-0 overflow-hidden' : 'opacity-100'}`}>
+                <p className={`text-[10px] font-bold text-text-light uppercase tracking-widest mb-1 px-3 transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 h-0 mb-0 overflow-hidden' : 'opacity-100'}`}>
                   {group.label}
                 </p>
                 {group.links.map((link, idx) => {
@@ -404,10 +425,10 @@ export default function DashboardLayout() {
                       onClick={() => setMobileMenuOpen(false)}
                       title={sidebarCollapsed ? link.label : ''}
                       className={`flex items-center gap-3 py-2.5 rounded-xl font-medium transition-all duration-200 whitespace-nowrap ${
-                        isActive ? 'bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 shadow-sm dark:shadow-none' : 'text-slate-600 dark:text-zinc-400 hover:bg-background hover:text-text'
+                        isActive ? 'bg-primary-bg text-primary-text shadow-sm' : 'text-text-muted hover:bg-surface-hover hover:text-slate-900 dark:hover:text-white'
                       } ${sidebarCollapsed ? 'px-0 justify-center' : 'px-4'}`}
                     >
-                      <link.icon size={20} className={`shrink-0 ${isActive ? 'text-sky-500' : 'text-slate-400 dark:text-zinc-500'}`} />
+                      <link.icon size={20} className={`shrink-0 ${isActive ? 'text-sky-500' : 'text-text-light'}`} />
                       <span className={`transition-all duration-300 text-sm ${sidebarCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100 block'}`}>
                         {link.label}
                       </span>
@@ -418,14 +439,14 @@ export default function DashboardLayout() {
             ))}
           </nav>
           
-          <div className="p-4 border-t border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
+          <div className="p-4 border-t border-border">
             <button 
               data-tour="logout"
               onClick={handleLogout} 
-              className={`flex items-center gap-3 py-3 w-full rounded-xl text-slate-600 dark:text-zinc-400 hover:bg-rose-50 dark:bg-rose-900/30 hover:text-rose-600 dark:text-rose-400 transition-colors font-medium ${sidebarCollapsed ? 'justify-center px-0' : 'px-4'}`}
+              className={`flex items-center gap-3 py-3 w-full rounded-xl text-text-muted hover:bg-danger-bg hover:text-danger-text transition-colors font-medium ${sidebarCollapsed ? 'justify-center px-0' : 'px-4'}`}
               title={sidebarCollapsed ? 'Sign Out' : ''}
             >
-              <LogOut size={22} className="shrink-0 text-slate-400 dark:text-zinc-500 hover:text-rose-500 dark:text-rose-400" /> 
+              <LogOut size={22} className="shrink-0 text-text-light hover:text-danger-text" /> 
               <span className={`transition-all duration-300 ${sidebarCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100 block'}`}>Sign Out</span>
             </button>
           </div>

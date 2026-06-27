@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, Trash2, Filter, FileText, Users, CheckCircle, X, Stethoscope, ShieldCheck } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
-import SEO from '../../components/SEO';
 import api from '../../utils/api';
 import PageTitle from '../../components/PageTitle';
 
@@ -14,9 +13,9 @@ const ROLE_FILTERS = {
 };
 
 const CATEGORY_BADGE = {
-  info: 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400',
-  success: 'bg-emerald-100 text-emerald-700 dark:text-emerald-400',
-  warning: 'bg-amber-100 text-amber-700 dark:text-amber-400',
+  info: 'bg-primary-hover text-primary-text',
+  success: 'bg-emerald-100 text-success-text',
+  warning: 'bg-amber-100 text-warning-text',
   error: 'bg-rose-100 text-rose-700',
 };
 
@@ -79,8 +78,8 @@ function buildConsultationNotifications(consultations, role, readIds = []) {
       message,
       time: consultation.updated_at ? new Date(consultation.updated_at).toLocaleString() : 'N/A',
       read: readSet.has(`consultation-${consultation.id}`),
-      iconBg: 'bg-sky-100 dark:bg-sky-900/50',
-      iconColor: 'text-sky-600 dark:text-sky-400',
+      iconBg: 'bg-primary-hover',
+      iconColor: 'text-primary-text',
       targetPath,
     };
   });
@@ -196,13 +195,10 @@ export default function Notifications() {
   const meta = PAGE_META[role] || PAGE_META.Patient;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto">
-      <SEO title={meta.title} description={meta.sub} />
-
-      <header className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto">      <header className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <PageTitle icon={Bell} title={meta.title} description={meta.sub} iconClassName="bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400" />
+            <PageTitle icon={Bell} title={meta.title} description={meta.sub} iconClassName="bg-primary-bg text-primary-text" />
             {unreadCount > 0 && (
               <span className="inline-flex items-center justify-center w-7 h-7 text-xs font-bold bg-rose-500 text-white rounded-full">
                 {unreadCount}
@@ -212,26 +208,26 @@ export default function Notifications() {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {selectedIds.length > 0 && (
-            <button onClick={deleteSelected} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 font-medium text-sm transition-colors">
+            <button onClick={deleteSelected} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-danger-bg text-danger-text hover:bg-rose-100 font-medium text-sm transition-colors">
               <Trash2 size={16} /> Delete ({selectedIds.length})
             </button>
           )}
-          <button onClick={markAllRead} disabled={unreadCount === 0} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 hover:bg-sky-100 dark:bg-sky-900/50 font-medium text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          <button onClick={markAllRead} disabled={unreadCount === 0} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-bg text-primary-text hover:bg-primary-hover font-medium text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             <CheckCheck size={16} /> Mark all read
           </button>
         </div>
       </header>
 
       <div data-tour="page-filters" className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
-        <Filter size={16} className="text-slate-400 dark:text-zinc-500 shrink-0" />
+        <Filter size={16} className="text-text-light shrink-0" />
         {filters.map((f) => (
           <button
             key={f}
             onClick={() => setActiveFilter(f)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
               activeFilter === f
-                ? 'bg-sky-600 text-white shadow-sm dark:shadow-none shadow-sky-200'
-                : 'bg-surface text-slate-600 dark:text-zinc-400 border border-slate-300 dark:border-zinc-800 hover:border-sky-300 hover:text-sky-600 dark:text-sky-400'
+                ? 'bg-sky-600 text-white shadow-sm shadow-sky-200'
+                : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'
             }`}
           >
             {f}
@@ -248,7 +244,7 @@ export default function Notifications() {
             onChange={toggleSelectAll}
             className="w-4 h-4 rounded accent-sky-600 cursor-pointer"
           />
-          <label htmlFor="select-all" className="text-sm text-slate-500 dark:text-zinc-500 cursor-pointer select-none">
+          <label htmlFor="select-all" className="text-sm text-text-muted cursor-pointer select-none">
             Select all ({filtered.length})
           </label>
         </div>
@@ -256,12 +252,12 @@ export default function Notifications() {
 
       <div data-tour="page-list" className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none p-16 text-center">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-zinc-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Bell size={32} className="text-slate-300" />
+          <div className="bg-surface rounded-2xl border border-border shadow-sm p-16 text-center">
+            <div className="w-16 h-16 bg-surface-hover/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Bell size={32} className="text-text-light opacity-60" />
             </div>
             <h3 className="font-semibold text-slate-700 text-lg">No notifications</h3>
-            <p className="text-slate-400 dark:text-zinc-500 text-sm mt-1">Notifications will appear when system records change.</p>
+            <p className="text-text-light text-sm mt-1">Notifications will appear when system records change.</p>
           </div>
         ) : (
           filtered.map((notification) => {
@@ -272,9 +268,9 @@ export default function Notifications() {
                 key={notification.id}
                 className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer ${
                   !notification.read
-                    ? 'bg-surface border-sky-200 shadow-sm dark:shadow-none shadow-sky-50'
-                    : 'bg-surface border-slate-300 dark:border-zinc-800 dark:border-zinc-800 opacity-80'
-                } ${isSelected ? 'ring-2 ring-sky-400' : 'hover:shadow-md dark:shadow-none hover:border-slate-300 dark:border-zinc-800'}`}
+                    ? 'bg-surface border-sky-200 shadow-sm shadow-sky-50'
+                    : 'bg-surface border-border opacity-80'
+                } ${isSelected ? 'ring-2 ring-sky-400' : 'hover:shadow-md dark:hover:shadow-none hover:border-border dark:hover:border-zinc-800'}`}
                 onClick={() => openNotification(notification)}
                 role="button"
                 tabIndex={0}
@@ -294,7 +290,7 @@ export default function Notifications() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className={`font-semibold text-text leading-snug ${notification.read ? 'font-medium text-slate-600 dark:text-zinc-400' : ''}`}>
+                      <p className={`font-semibold text-text leading-snug ${notification.read ? 'font-medium text-text-muted' : ''}`}>
                         {notification.title}
                       </p>
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${CATEGORY_BADGE[notification.category]}`}>
@@ -303,19 +299,19 @@ export default function Notifications() {
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); deleteOne(notification.id); }}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 dark:text-zinc-500 hover:text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:bg-rose-900/30 transition-all duration-200 flex-shrink-0"
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-text-light hover:text-danger-text hover:bg-danger-bg transition-all duration-200 flex-shrink-0"
                       title="Delete"
                     >
                       <X size={16} />
                     </button>
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-zinc-500 mt-1 leading-relaxed">{notification.message}</p>
-                  <div className="mt-2 flex items-center gap-2 text-xs text-slate-400 dark:text-zinc-500 font-medium">
+                  <p className="text-sm text-text-muted mt-1 leading-relaxed">{notification.message}</p>
+                  <div className="mt-2 flex items-center gap-2 text-xs text-text-light font-medium">
                     <span>{notification.time}</span>
                     {notification.targetPath && (
                       <>
                         <span>·</span>
-                        <span className="text-sky-600 dark:text-sky-400 group-hover:underline">Open details</span>
+                        <span className="text-primary-text group-hover:underline">Open details</span>
                       </>
                     )}
                   </div>
@@ -327,7 +323,7 @@ export default function Notifications() {
       </div>
 
       {notifications.length > 0 && (
-        <p className="text-center text-xs text-slate-400 dark:text-zinc-500 mt-8">
+        <p className="text-center text-xs text-text-light mt-8">
           Showing {filtered.length} of {notifications.length} notifications
         </p>
       )}

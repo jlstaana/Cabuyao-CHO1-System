@@ -5,7 +5,6 @@ import api from '../../utils/api';
 import Modal from '../../components/Modal';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
-import SEO from '../../components/SEO';
 import PageTitle from '../../components/PageTitle';
 import {
   Video, Calendar, Clock, CheckCircle, XCircle,
@@ -14,10 +13,10 @@ import {
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS = {
-  Pending:   { pill: 'bg-amber-100 text-amber-700 dark:text-amber-400',   dot: 'bg-amber-400',   icon: Clock },
-  Scheduled: { pill: 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400',       dot: 'bg-sky-400',     icon: Calendar },
-  Completed: { pill: 'bg-emerald-100 text-emerald-700 dark:text-emerald-400', dot: 'bg-emerald-400', icon: CheckCircle },
-  Cancelled: { pill: 'bg-slate-100 dark:bg-zinc-800/50 text-slate-500 dark:text-zinc-500',   dot: 'bg-slate-300',   icon: XCircle },
+  Pending:   { pill: 'bg-amber-100 text-warning-text',   dot: 'bg-amber-400',   icon: Clock },
+  Scheduled: { pill: 'bg-primary-hover text-primary-text',       dot: 'bg-sky-400',     icon: Calendar },
+  Completed: { pill: 'bg-emerald-100 text-success-text', dot: 'bg-emerald-400', icon: CheckCircle },
+  Cancelled: { pill: 'bg-surface-hover/50 text-text-muted',   dot: 'bg-slate-300',   icon: XCircle },
 };
 
 const TAB_ICON = {
@@ -72,9 +71,9 @@ function StatusPill({ status }) {
 
 function EmptyState({ message }) {
   return (
-    <div className="col-span-full py-16 text-center bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none">
-      <Stethoscope size={36} className="mx-auto mb-3 text-slate-300" />
-      <p className="font-semibold text-slate-500 dark:text-zinc-500">{message}</p>
+    <div className="col-span-full py-16 text-center bg-surface rounded-2xl border border-border shadow-sm">
+      <Stethoscope size={36} className="mx-auto mb-3 text-text-light opacity-60" />
+      <p className="font-semibold text-text-muted">{message}</p>
     </div>
   );
 }
@@ -189,7 +188,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
         <button
           data-tour="page-primary-action"
           onClick={onRequest}
-          className="flex items-center gap-2 bg-surface text-sky-700 dark:text-sky-400 px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-50 dark:bg-sky-900/30 transition-colors shadow-sm dark:shadow-none flex-shrink-0 active:scale-95"
+          className="flex items-center gap-2 bg-surface text-primary-text px-5 py-2.5 rounded-xl font-semibold hover:bg-primary-bg transition-colors shadow-sm flex-shrink-0 active:scale-95"
         >
           <Plus size={18} /> Request Teleconsult
         </button>
@@ -201,7 +200,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
           const Icon = TAB_ICON[t] || Stethoscope;
           return (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm dark:shadow-none' : 'bg-surface text-slate-500 dark:text-zinc-500 border border-slate-300 dark:border-zinc-800 hover:border-sky-300 hover:text-sky-600 dark:text-sky-400'}`}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
             ><Icon size={14} /> {t}</button>
           );
         })}
@@ -210,14 +209,14 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
       {/* Cards */}
       <div className="space-y-3">
         {loading ? Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-5 animate-pulse">
-            <div className="h-5 bg-slate-200 dark:bg-zinc-800 rounded w-40 mb-3" /><div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded w-64" />
+          <div key={i} className="bg-surface rounded-2xl border border-border p-5 animate-pulse">
+            <div className="h-5 bg-surface-hover rounded w-40 mb-3" /><div className="h-4 bg-surface-hover/50 rounded w-64" />
           </div>
         )) : filtered.length === 0 ? <EmptyState message={tab === 'All' ? 'No consultations yet.' : `No ${tab.toLowerCase()} consultations.`} />
         : filtered.map(c => {
           const cfg = STATUS[c.status] || STATUS.Pending;
           return (
-            <div key={c.id} className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div key={c.id} className="bg-surface rounded-2xl border border-border shadow-sm p-5 flex flex-col sm:flex-row sm:items-center gap-4">
               {/* Status dot */}
               <div className={`w-3 h-3 rounded-full flex-shrink-0 ${cfg.dot} hidden sm:block`} />
               <div className="flex-1 min-w-0">
@@ -227,7 +226,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
                   </p>
                   <StatusPill status={c.status} />
                 </div>
-                <div className="flex flex-wrap gap-3 text-xs text-slate-400 dark:text-zinc-500">
+                <div className="flex flex-wrap gap-3 text-xs text-text-light">
                   {c.requested_specialization && <span className="flex items-center gap-1"><Stethoscope size={12} /> {c.requested_specialization}</span>}
                   <span className="flex items-center gap-1"><Calendar size={12} /> Requested: {new Date(c.created_at).toLocaleDateString()}</span>
                   {c.scheduled_at && <span className="flex items-center gap-1"><Clock size={12} /> {c.status === 'Pending' ? 'Preferred' : 'Scheduled'}: {new Date(c.scheduled_at).toLocaleString()}</span>}
@@ -235,22 +234,22 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
               </div>
               <div className="flex gap-2 flex-shrink-0">
                 {['Pending', 'Scheduled'].includes(c.status) && (
-                  <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-4 py-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
+                  <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-4 py-2 bg-danger-bg text-danger-text rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
                     <XCircle size={16} /> Cancel
                   </button>
                 )}
                 {c.status === 'Scheduled' && (
-                  <button onClick={() => onReschedule(c)} className="flex items-center gap-1.5 px-4 py-2 bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 rounded-xl text-sm font-semibold hover:bg-sky-100 dark:bg-sky-900/50 transition-colors">
+                  <button onClick={() => onReschedule(c)} className="flex items-center gap-1.5 px-4 py-2 bg-primary-bg text-primary-text rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors">
                     <Calendar size={16} /> Reschedule
                   </button>
                 )}
                 {c.status === 'Scheduled' && (
-                  <Link to={`/room/${c.id}`} className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-semibold hover:bg-indigo-600 transition-colors shadow-sm dark:shadow-none">
+                  <Link to={`/room/${c.id}`} className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-semibold hover:bg-indigo-600 transition-colors shadow-sm">
                     <Video size={16} /> Join Now
                   </Link>
                 )}
                 {c.status === 'Completed' && (
-                  <Link to="/prescriptions" className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
+                  <Link to="/prescriptions" className="flex items-center gap-2 px-4 py-2 bg-success-bg text-success-text rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
                     <FilePlus size={16} /> View Rx
                   </Link>
                 )}
@@ -277,7 +276,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
     <div className="space-y-6">
       {/* Summary strip */}
       {availabilityStatus ? (
-        <div className={`rounded-2xl border px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${availabilityStatus.is_available_now ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 text-amber-700 dark:text-amber-400'}`}>
+        <div className={`rounded-2xl border px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${availabilityStatus.is_available_now ? 'bg-success-bg border-emerald-200 text-success-text' : 'bg-warning-bg border-amber-200 text-warning-text'}`}>
           <div className="flex items-center gap-2 font-semibold">
             <span className={`h-2.5 w-2.5 rounded-full ${availabilityStatus.is_available_now ? 'bg-emerald-500' : 'bg-amber-500'}`} />
             {availabilityStatus.doctor_type || 'Resident'} doctor · {availabilityStatus.is_available_now ? 'Active and on schedule now' : 'Active but outside scheduled hours'}
@@ -294,15 +293,15 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-slate-300 dark:border-zinc-800 bg-surface px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="rounded-2xl border border-border bg-surface px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="font-semibold text-text">Availability settings</p>
-            <p className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">Set your doctor type, available days, and time slots.</p>
+            <p className="text-xs text-text-light mt-0.5">Set your doctor type, available days, and time slots.</p>
           </div>
           <button
             data-tour="page-primary-action"
             onClick={onOpenAvailability}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-50 dark:bg-sky-900/30 px-4 py-2 text-sm font-bold text-sky-700 dark:text-sky-400 hover:bg-sky-100 dark:bg-sky-900/50 transition-colors"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary-bg px-4 py-2 text-sm font-bold text-primary-text hover:bg-primary-hover transition-colors"
           >
             <Settings size={15} /> Open Settings
           </button>
@@ -312,9 +311,9 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       {/* Summary strip */}
       <div data-tour="page-stats" className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Pending',   value: pending.length,   color: 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 text-amber-700 dark:text-amber-400' },
-          { label: 'Scheduled', value: scheduled.length, color: 'bg-sky-50 dark:bg-sky-900/30 border-sky-200 text-sky-700 dark:text-sky-400' },
-          { label: 'Completed', value: completed.length, color: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 text-emerald-700 dark:text-emerald-400' },
+          { label: 'Pending',   value: pending.length,   color: 'bg-warning-bg border-amber-200 text-warning-text' },
+          { label: 'Scheduled', value: scheduled.length, color: 'bg-primary-bg border-sky-200 text-primary-text' },
+          { label: 'Completed', value: completed.length, color: 'bg-success-bg border-emerald-200 text-success-text' },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-4 text-center ${s.color}`}>
             <p className="text-3xl font-black">{s.value}</p>
@@ -329,7 +328,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
           const Icon = TAB_ICON[t] || Stethoscope;
           return (
             <button key={t} onClick={() => setTab(t)}
-              className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm dark:shadow-none' : 'bg-surface text-slate-500 dark:text-zinc-500 border border-slate-300 dark:border-zinc-800 hover:border-sky-300 hover:text-sky-600 dark:text-sky-400'}`}
+              className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
             >
               <Icon size={14} /> {t}
               {counts[t] > 0 && t === 'Pending' && (
@@ -341,30 +340,30 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       </div>
 
       {/* Queue list */}
-      <div data-tour="page-list" className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none overflow-hidden">
+      <div data-tour="page-list" className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-6 space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <CheckCircle size={32} className="mx-auto mb-2 text-emerald-400" />
-            <p className="font-semibold text-slate-500 dark:text-zinc-500">{tab === 'Pending' ? 'No pending request.' : `No ${tab.toLowerCase()} consultations.`}</p>
+            <p className="font-semibold text-text-muted">{tab === 'Pending' ? 'No pending request.' : `No ${tab.toLowerCase()} consultations.`}</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-50">
             {filtered.map((c, i) => (
               <div key={c.id} className="flex items-center gap-4 px-5 py-4 hover:bg-background/60 transition-colors">
                 {/* Queue number */}
-                <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-zinc-800/50 text-slate-500 dark:text-zinc-500 flex items-center justify-center font-black text-sm flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-surface-hover/50 text-text-muted flex items-center justify-center font-black text-sm flex-shrink-0">
                   {i + 1}
                 </div>
                 {/* Patient avatar */}
-                <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center font-bold flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-brand-bg text-indigo-600 flex items-center justify-center font-bold flex-shrink-0">
                   {(c.patient?.user?.name || 'P').charAt(0)}
                 </div>
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-text">{c.patient?.user?.name || 'Unknown Patient'}</p>
-                  <div className="flex flex-wrap gap-3 text-xs text-slate-400 dark:text-zinc-500 mt-0.5">
+                  <div className="flex flex-wrap gap-3 text-xs text-text-light mt-0.5">
                     <span className="flex items-center gap-1"><Calendar size={11} /> {new Date(c.created_at).toLocaleDateString()}</span>
                     {c.scheduled_at && <span className="flex items-center gap-1"><Clock size={11} /> {c.status === 'Pending' ? 'Preferred' : 'Scheduled'}: {new Date(c.scheduled_at).toLocaleString()}</span>}
                   </div>
@@ -373,32 +372,32 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {c.status === 'Pending' && (
                     <>
-                      <span className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 px-3 py-1.5 rounded-lg font-medium">
+                      <span className="text-xs text-amber-600 bg-warning-bg border border-amber-200 px-3 py-1.5 rounded-lg font-medium">
                         Awaiting doctor
                       </span>
-                      <button onClick={() => onReview(c)} className="flex items-center gap-1.5 px-3 py-2 bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 rounded-xl text-sm font-semibold hover:bg-sky-100 dark:bg-sky-900/50 transition-colors">
+                      <button onClick={() => onReview(c)} className="flex items-center gap-1.5 px-3 py-2 bg-primary-bg text-primary-text rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors">
                         <FileText size={15} /> Review
                       </button>
-                      <button onClick={() => onAccept(c)} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
+                      <button onClick={() => onAccept(c)} className="flex items-center gap-1.5 px-3 py-2 bg-success-bg text-success-text rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
                         <CheckCircle size={15} /> Accept
                       </button>
                     </>
                   )}
                   {c.status === 'Scheduled' && (
                     <>
-                      <button onClick={() => onReschedule(c)} className="flex items-center gap-1.5 px-3 py-2 bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 rounded-xl text-sm font-semibold hover:bg-sky-100 dark:bg-sky-900/50 transition-colors">
+                      <button onClick={() => onReschedule(c)} className="flex items-center gap-1.5 px-3 py-2 bg-primary-bg text-primary-text rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors">
                         <Calendar size={15} /> Reschedule
                       </button>
-                      <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
+                      <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-3 py-2 bg-danger-bg text-danger-text rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
                         <XCircle size={15} /> Cancel
                       </button>
-                      <Link to={`/room/${c.id}`} className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-semibold hover:bg-indigo-600 transition-colors shadow-sm dark:shadow-none">
+                      <Link to={`/room/${c.id}`} className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-semibold hover:bg-indigo-600 transition-colors shadow-sm">
                         <Video size={16} /> Join Call
                       </Link>
                     </>
                   )}
                   {c.status === 'Completed' && (
-                    <Link to="/prescriptions" className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
+                    <Link to="/prescriptions" className="flex items-center gap-2 px-4 py-2 bg-success-bg text-success-text rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
                       <FilePlus size={16} /> E-Prescribe
                     </Link>
                   )}
@@ -438,26 +437,26 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
           const Icon = TAB_ICON[t] || Stethoscope;
           return (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm dark:shadow-none' : 'bg-surface text-slate-500 dark:text-zinc-500 border border-slate-300 dark:border-zinc-800 hover:border-sky-300 hover:text-sky-600 dark:text-sky-400'}`}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
             ><Icon size={14} /> {t} ({consultations.filter(c => c.status === t).length})</button>
           );
         })}
       </div>
 
       {/* Table */}
-      <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-6 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
-            <AlertCircle size={32} className="mx-auto mb-2 text-slate-300" />
-            <p className="font-semibold text-slate-500 dark:text-zinc-500">No {tab.toLowerCase()} consultations.</p>
+            <AlertCircle size={32} className="mx-auto mb-2 text-text-light opacity-60" />
+            <p className="font-semibold text-text-muted">No {tab.toLowerCase()} consultations.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table data-tour="page-list" className="w-full text-sm text-left whitespace-nowrap">
               <thead>
-                <tr className="bg-background text-slate-500 dark:text-zinc-500 text-xs border-b border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
+                <tr className="bg-background text-text-muted text-xs border-b border-border">
                   <th className="px-5 py-3 font-semibold">Patient</th>
                   <th className="px-5 py-3 font-semibold">Doctor Assigned</th>
                   <th className="px-5 py-3 font-semibold">Requested</th>
@@ -471,31 +470,31 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
                   <tr key={c.id} className="hover:bg-background/60 transition-colors">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-brand-bg text-indigo-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
                           {(c.patient?.user?.name || 'P').charAt(0)}
                         </div>
                         <span className="font-semibold text-text">{c.patient?.user?.name || '—'}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-slate-500 dark:text-zinc-500">
-                      {c.doctor?.user?.name ? `Dr. ${(c.doctor.user.name || '').replace(/^Dr\.\s*/i, '')}` : <span className="text-slate-300 italic">Unassigned</span>}
+                    <td className="px-5 py-3 text-text-muted">
+                      {c.doctor?.user?.name ? `Dr. ${(c.doctor.user.name || '').replace(/^Dr\.\s*/i, '')}` : <span className="text-text-light opacity-60 italic">Unassigned</span>}
                     </td>
-                    <td className="px-5 py-3 text-slate-400 dark:text-zinc-500">{new Date(c.created_at).toLocaleDateString()}</td>
-                    <td className="px-5 py-3 text-slate-400 dark:text-zinc-500">{c.scheduled_at ? new Date(c.scheduled_at).toLocaleString() : '—'}</td>
+                    <td className="px-5 py-3 text-text-light">{new Date(c.created_at).toLocaleDateString()}</td>
+                    <td className="px-5 py-3 text-text-light">{c.scheduled_at ? new Date(c.scheduled_at).toLocaleString() : '—'}</td>
                     <td className="px-5 py-3"><StatusPill status={c.status} /></td>
                     <td className="px-5 py-3 text-right">
                       {c.status === 'Pending' && (
-                        <span className="text-xs text-slate-400 dark:text-zinc-500 italic">Doctor-managed</span>
+                        <span className="text-xs text-text-light italic">Doctor-managed</span>
                       )}
                       {c.status === 'Scheduled' && (
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => onReschedule(c)} className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 rounded-lg text-xs font-bold hover:bg-sky-100 dark:bg-sky-900/50 transition-colors">
+                          <button onClick={() => onReschedule(c)} className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-bg text-primary-text rounded-lg text-xs font-bold hover:bg-primary-hover transition-colors">
                             <Calendar size={13} /> Reschedule
                           </button>
-                          <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors">
+                          <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-3 py-1.5 bg-danger-bg text-danger-text rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors">
                             <XCircle size={13} /> Cancel
                           </button>
-                          <Link to={`/room/${c.id}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors">
+                          <Link to={`/room/${c.id}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-bg text-brand-text rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors">
                             <Video size={13} /> Monitor
                           </Link>
                         </div>
@@ -771,11 +770,8 @@ export default function Consultations() {
   }));
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-      <SEO title={title.h1} description={title.sub} />
-
-      <header>
-        <PageTitle icon={Stethoscope} title={title.h1} description={title.sub} iconClassName="bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400" />
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      <header>
+        <PageTitle icon={Stethoscope} title={title.h1} description={title.sub} iconClassName="bg-primary-bg text-primary-text" />
       </header>
 
       {user?.role === 'Patient' && <PatientView consultations={consultations} loading={loading} onRequest={handleRequest} onReschedule={handleReschedule} onCancel={handleCancel} />}
@@ -788,12 +784,12 @@ export default function Consultations() {
       <Modal isOpen={reviewModal} onClose={() => setReviewModal(false)} title="Review Consultation Request">
         {selected && (
           <div className="space-y-5">
-            <div className="rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-background px-4 py-3">
+            <div className="rounded-xl border border-border bg-background px-4 py-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-slate-400 dark:text-zinc-500">Patient</p>
+                  <p className="text-xs font-semibold uppercase text-text-light">Patient</p>
                   <h3 className="text-lg font-bold text-text">{fullName(selected.patient?.user)}</h3>
-                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-zinc-500">
+                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-text-muted">
                     <span>Age: {formatPatientAge(selected.patient?.dob)}</span>
                     <span>Contact: {selected.patient?.contact_no || 'N/A'}</span>
                     <span>Requested: {selected.created_at ? new Date(selected.created_at).toLocaleString() : 'N/A'}</span>
@@ -802,28 +798,28 @@ export default function Consultations() {
                 <StatusPill status={selected.status} />
               </div>
               {selected.patient?.address && (
-                <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">Address: {selected.patient.address}</p>
+                <p className="mt-2 text-xs text-text-muted">Address: {selected.patient.address}</p>
               )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-surface p-4">
+              <div className="rounded-xl border border-border bg-surface p-4">
                 <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-text">
-                  <Stethoscope size={15} className="text-sky-600 dark:text-sky-400" /> Reason for Consultation
+                  <Stethoscope size={15} className="text-primary-text" /> Reason for Consultation
                 </p>
-                <p className="text-sm leading-relaxed text-slate-600 dark:text-zinc-400 whitespace-pre-wrap">
+                <p className="text-sm leading-relaxed text-text-muted whitespace-pre-wrap">
                   {selected.form?.symptoms || 'No consultation reason provided.'}
                 </p>
                 {selected.form?.notes && (
-                  <p className="mt-3 rounded-lg bg-background px-3 py-2 text-xs leading-relaxed text-slate-500 dark:text-zinc-500 whitespace-pre-wrap">
+                  <p className="mt-3 rounded-lg bg-background px-3 py-2 text-xs leading-relaxed text-text-muted whitespace-pre-wrap">
                     {selected.form.notes}
                   </p>
                 )}
               </div>
 
-              <div className="rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-surface p-4">
+              <div className="rounded-xl border border-border bg-surface p-4">
                 <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
-                  <HeartPulse size={15} className="text-rose-600 dark:text-rose-400" /> Vital Signs
+                  <HeartPulse size={15} className="text-danger-text" /> Vital Signs
                 </p>
                 {selected.vital_signs || selected.vitalSigns ? (
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -836,38 +832,38 @@ export default function Consultations() {
                       ['Weight', (selected.vital_signs || selected.vitalSigns).weight, 'kg'],
                     ].map(([label, value, unit]) => (
                       <div key={label} className="rounded-lg bg-background px-3 py-2">
-                        <p className="text-[11px] font-semibold uppercase text-slate-400 dark:text-zinc-500">{label}</p>
-                        <p className="font-bold text-text">{value || '-'} <span className="text-xs font-medium text-slate-400 dark:text-zinc-500">{value ? unit : ''}</span></p>
+                        <p className="text-[11px] font-semibold uppercase text-text-light">{label}</p>
+                        <p className="font-bold text-text">{value || '-'} <span className="text-xs font-medium text-text-light">{value ? unit : ''}</span></p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-400 dark:text-zinc-500">No vital signs recorded.</p>
+                  <p className="text-sm text-text-light">No vital signs recorded.</p>
                 )}
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-surface p-4">
+            <div className="rounded-xl border border-border bg-surface p-4">
               <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
                 <FilePlus size={15} className="text-indigo-600" /> Uploaded Files
               </p>
               {(selected.medical_images || selected.medicalImages || []).length === 0 ? (
-                <p className="text-sm text-slate-400 dark:text-zinc-500">No uploaded files for this request.</p>
+                <p className="text-sm text-text-light">No uploaded files for this request.</p>
               ) : (
                 <div className="divide-y divide-slate-50">
                   {(selected.medical_images || selected.medicalImages || []).map((file) => (
                     <div key={file.id} className="flex items-center gap-3 py-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-bg text-indigo-600">
                         <FileText size={17} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-text">{fileName(file)}</p>
-                        <p className="text-xs text-slate-400 dark:text-zinc-500">{file.document_type || file.file_type?.toUpperCase() || 'Medical File'} · {file.notes || 'No notes'}</p>
+                        <p className="text-xs text-text-light">{file.document_type || file.file_type?.toUpperCase() || 'Medical File'} · {file.notes || 'No notes'}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleDownloadMedicalFile(file)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-sky-50 dark:bg-sky-900/30 px-3 py-2 text-xs font-bold text-sky-700 dark:text-sky-400 hover:bg-sky-100 dark:bg-sky-900/50 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary-bg px-3 py-2 text-xs font-bold text-primary-text hover:bg-primary-hover transition-colors"
                       >
                         <Download size={14} /> Download
                       </button>
@@ -878,10 +874,10 @@ export default function Consultations() {
             </div>
 
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1">
-              <button type="button" onClick={() => handleReschedule(selected)} className="px-5 py-2.5 text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 font-semibold hover:bg-sky-100 dark:bg-sky-900/50 rounded-xl transition-colors flex items-center justify-center gap-2">
+              <button type="button" onClick={() => handleReschedule(selected)} className="px-5 py-2.5 text-primary-text bg-primary-bg font-semibold hover:bg-primary-hover rounded-xl transition-colors flex items-center justify-center gap-2">
                 <Calendar size={16} /> Reschedule
               </button>
-              <button type="button" onClick={() => handleAccept(selected)} className="px-5 py-2.5 bg-emerald-500 text-white font-semibold hover:bg-emerald-600 rounded-xl flex items-center justify-center gap-2 shadow-md dark:shadow-none shadow-emerald-200">
+              <button type="button" onClick={() => handleAccept(selected)} className="px-5 py-2.5 bg-emerald-500 text-white font-semibold hover:bg-emerald-600 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-emerald-200">
                 <CheckCircle size={16} /> Accept Request
               </button>
             </div>
@@ -892,13 +888,13 @@ export default function Consultations() {
       {/* Doctor Availability Settings Modal */}
       <Modal isOpen={availabilityModal} onClose={() => setAvailabilityModal(false)} title="Availability Settings">
         <form data-tour="page-form" onSubmit={handleAvailabilitySubmit} className="space-y-4">
-          <div className="rounded-xl border border-sky-100 bg-sky-50 dark:bg-sky-900/30 px-4 py-3 text-sm text-sky-700 dark:text-sky-400">
+          <div className="rounded-xl border border-sky-100 bg-primary-bg px-4 py-3 text-sm text-primary-text">
             Select your doctor type and set available days and time slots. Conflicts keep your previous schedule unchanged.
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Doctor Type</label>
-            <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 dark:bg-zinc-800/50 p-1">
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-surface-hover/50 p-1">
               {['Resident', 'Visiting'].map((type) => (
                 <button
                   key={type}
@@ -906,8 +902,8 @@ export default function Consultations() {
                   onClick={() => setAvailabilityForm((form) => ({ ...form, doctor_type: type }))}
                   className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                     availabilityForm.doctor_type === type
-                      ? 'bg-surface text-sky-700 dark:text-sky-400 shadow-sm dark:shadow-none'
-                      : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700'
+                      ? 'bg-surface text-primary-text shadow-sm'
+                      : 'text-text-muted hover:text-slate-700'
                   }`}
                 >
                   {type}
@@ -927,19 +923,19 @@ export default function Consultations() {
               <button
                 type="button"
                 onClick={addAvailabilitySlot}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-sky-50 dark:bg-sky-900/30 px-3 py-1.5 text-xs font-bold text-sky-700 dark:text-sky-400 hover:bg-sky-100 dark:bg-sky-900/50 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary-bg px-3 py-1.5 text-xs font-bold text-primary-text hover:bg-primary-hover transition-colors"
               >
                 <Plus size={13} /> Add Slot
               </button>
             </div>
 
             {availabilityForm.availability.map((slot, index) => (
-              <div key={`${slot.day_of_week}-${index}`} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_120px_auto] gap-2 rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-background p-3">
+              <div key={`${slot.day_of_week}-${index}`} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_120px_auto] gap-2 rounded-xl border border-border bg-background p-3">
                 <select
                   required
                   value={slot.day_of_week}
                   onChange={(e) => updateAvailabilitySlot(index, 'day_of_week', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-zinc-800 bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
                 >
                   {DAYS.map((day) => <option key={day} value={day}>{day}</option>)}
                 </select>
@@ -948,20 +944,20 @@ export default function Consultations() {
                   type="time"
                   value={slot.start_time}
                   onChange={(e) => updateAvailabilitySlot(index, 'start_time', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-zinc-800 bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
                 />
                 <input
                   required
                   type="time"
                   value={slot.end_time}
                   onChange={(e) => updateAvailabilitySlot(index, 'end_time', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-zinc-800 bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
                 />
                 <button
                   type="button"
                   onClick={() => removeAvailabilitySlot(index)}
                   disabled={availabilityForm.availability.length === 1}
-                  className="inline-flex items-center justify-center rounded-lg bg-surface px-3 py-2 text-rose-500 dark:text-rose-400 border border-slate-300 dark:border-zinc-800 hover:bg-rose-50 dark:bg-rose-900/30 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center rounded-lg bg-surface px-3 py-2 text-rose-500 border border-border hover:bg-danger-bg disabled:opacity-40 disabled:cursor-not-allowed"
                   title="Remove slot"
                 >
                   <Trash2 size={15} />
@@ -971,8 +967,8 @@ export default function Consultations() {
           </div>
 
           <div className="pt-2 flex justify-end gap-3">
-            <button type="button" onClick={() => setAvailabilityModal(false)} className="px-5 py-2.5 text-slate-600 dark:text-zinc-400 font-medium hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 rounded-xl transition-colors">Cancel</button>
-            <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-semibold hover:bg-sky-600 rounded-xl flex items-center gap-2 shadow-md dark:shadow-none shadow-sky-200">
+            <button type="button" onClick={() => setAvailabilityModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
+            <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-semibold hover:bg-sky-600 rounded-xl flex items-center gap-2 shadow-md shadow-sky-200">
               <Save size={16} /> Save Schedule
             </button>
           </div>
@@ -982,7 +978,7 @@ export default function Consultations() {
       {/* Patient Request Modal */}
       <Modal isOpen={requestModal} onClose={() => setRequestModal(false)} title="Request Teleconsultation">
         <form data-tour="page-form" onSubmit={handleRequestSubmit} className="space-y-4">
-          <div className="rounded-xl border border-sky-100 bg-sky-50 dark:bg-sky-900/30 px-4 py-3 text-sm text-sky-700 dark:text-sky-400">
+          <div className="rounded-xl border border-sky-100 bg-primary-bg px-4 py-3 text-sm text-primary-text">
             Enter your consultation details, vital signs, and preferred schedule. The system will schedule an available doctor or queue the request for coordination.
           </div>
           <div>
@@ -991,7 +987,7 @@ export default function Consultations() {
               required
               value={requestForm.requested_specialization}
               onChange={e => setRequestForm({ ...requestForm, requested_specialization: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none"
             >
               {specializations.length === 0 && <option value="General Medicine">General Medicine</option>}
               {specializations.map((specialization) => (
@@ -1000,15 +996,15 @@ export default function Consultations() {
             </select>
           </div>
           {requestForm.doctor_id && (
-            <div className="bg-sky-50 dark:bg-sky-900/30 border border-sky-100 rounded-xl px-4 py-3 flex items-center justify-between">
+            <div className="bg-primary-bg border border-sky-100 rounded-xl px-4 py-3 flex items-center justify-between">
               <div className="text-sm">
                 <span className="font-semibold text-sky-800">Selected Doctor: </span>
-                <span className="text-sky-700 dark:text-sky-400">Dr. {matchingAvailableDoctors.find(d => d.id === requestForm.doctor_id)?.name}</span>
+                <span className="text-primary-text">Dr. {matchingAvailableDoctors.find(d => d.id === requestForm.doctor_id)?.name}</span>
               </div>
               <button 
                 type="button" 
                 onClick={() => setRequestForm({ ...requestForm, doctor_id: null, scheduled_at: '' })}
-                className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700"
+                className="text-xs font-bold text-danger-text hover:text-rose-700"
               >
                 Clear Selection
               </button>
@@ -1022,7 +1018,7 @@ export default function Consultations() {
               value={requestForm.symptoms}
               onChange={e => setRequestForm({ ...requestForm, symptoms: e.target.value })}
               placeholder="Describe your symptoms or reason for consultation"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none resize-none"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none resize-none"
             />
           </div>
           <div>
@@ -1032,35 +1028,35 @@ export default function Consultations() {
               value={requestForm.notes}
               onChange={e => setRequestForm({ ...requestForm, notes: e.target.value })}
               placeholder="Medication, allergies, or other concerns"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none resize-none"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none resize-none"
             />
           </div>
           <div>
             <p className="block text-sm font-medium text-slate-700 mb-2">Vital Signs</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input required type="text" value={requestForm.vitals.blood_pressure} onChange={e => updateRequestVital('blood_pressure', e.target.value)} placeholder="Blood pressure, e.g. 120/80" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input required type="text" value={requestForm.vitals.heart_rate} onChange={e => updateRequestVital('heart_rate', e.target.value)} placeholder="Heart rate, e.g. 72 bpm" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input required type="text" value={requestForm.vitals.temperature} onChange={e => updateRequestVital('temperature', e.target.value)} placeholder="Temperature, e.g. 36.6 C" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input type="text" value={requestForm.vitals.respiratory} onChange={e => updateRequestVital('respiratory', e.target.value)} placeholder="Respiratory rate, e.g. 16/min" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input type="text" value={requestForm.vitals.oxygen} onChange={e => updateRequestVital('oxygen', e.target.value)} placeholder="Oxygen saturation, e.g. 98%" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input type="text" value={requestForm.vitals.weight} onChange={e => updateRequestVital('weight', e.target.value)} placeholder="Weight, e.g. 65 kg" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+              <input required type="text" value={requestForm.vitals.blood_pressure} onChange={e => updateRequestVital('blood_pressure', e.target.value)} placeholder="Blood pressure, e.g. 120/80" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
+              <input required type="text" value={requestForm.vitals.heart_rate} onChange={e => updateRequestVital('heart_rate', e.target.value)} placeholder="Heart rate, e.g. 72 bpm" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
+              <input required type="text" value={requestForm.vitals.temperature} onChange={e => updateRequestVital('temperature', e.target.value)} placeholder="Temperature, e.g. 36.6 C" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
+              <input type="text" value={requestForm.vitals.respiratory} onChange={e => updateRequestVital('respiratory', e.target.value)} placeholder="Respiratory rate, e.g. 16/min" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
+              <input type="text" value={requestForm.vitals.oxygen} onChange={e => updateRequestVital('oxygen', e.target.value)} placeholder="Oxygen saturation, e.g. 98%" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
+              <input type="text" value={requestForm.vitals.weight} onChange={e => updateRequestVital('weight', e.target.value)} placeholder="Weight, e.g. 65 kg" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
             </div>
           </div>
-          <div className="rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-background px-4 py-3">
-            <p className="text-xs font-semibold uppercase text-slate-400 dark:text-zinc-500 mb-2">Doctor Availability</p>
+          <div className="rounded-xl border border-border bg-background px-4 py-3">
+            <p className="text-xs font-semibold uppercase text-text-light mb-2">Doctor Availability</p>
             <div className="space-y-2">
               {matchingAvailableDoctors.length === 0 ? (
-                <p className="text-sm text-slate-400 dark:text-zinc-500">No active doctors listed for this specialization.</p>
+                <p className="text-sm text-text-light">No active doctors listed for this specialization.</p>
               ) : matchingAvailableDoctors.map((doctor) => (
-                <div key={doctor.id} className="flex items-center justify-between gap-3 rounded-lg bg-surface px-3 py-2 border border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
+                <div key={doctor.id} className="flex items-center justify-between gap-3 rounded-lg bg-surface px-3 py-2 border border-border">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-text">Dr. {(doctor.name || '').replace(/^Dr\.\s*/i, '')}</p>
-                    <p className="text-xs text-slate-400 dark:text-zinc-500">{doctor.specialization}</p>
-                    <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500 dark:text-zinc-500">
+                    <p className="text-xs text-text-light">{doctor.specialization}</p>
+                    <p className="mt-1 text-xs font-medium leading-relaxed text-text-muted">
                       {availabilityLabel(doctor.availability)}
                     </p>
                   </div>
-                  <span className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${doctor.is_available_now ? 'bg-emerald-100 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:text-amber-400'}`}>
+                  <span className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${doctor.is_available_now ? 'bg-emerald-100 text-success-text' : 'bg-amber-100 text-warning-text'}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${doctor.is_available_now ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                     {doctor.is_available_now ? 'Available now' : 'Off schedule'}
                   </span>
@@ -1075,34 +1071,34 @@ export default function Consultations() {
               type="datetime-local"
               value={requestForm.scheduled_at}
               onChange={e => setRequestForm({ ...requestForm, scheduled_at: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none"
+              className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none"
             />
           </div>
-          <div className="rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-surface p-4">
+          <div className="rounded-xl border border-border bg-surface p-4">
             <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-text">Available Appointment Slots</p>
-                <p className="text-xs text-slate-400 dark:text-zinc-500">Week of {requestWeekStart.toLocaleDateString()}</p>
+                <p className="text-xs text-text-light">Week of {requestWeekStart.toLocaleDateString()}</p>
               </div>
-              <span className="inline-flex w-fit items-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+              <span className="inline-flex w-fit items-center rounded-full bg-success-bg px-3 py-1 text-xs font-bold text-success-text">
                 Open slots can be selected
               </span>
             </div>
 
             {matchingAvailableDoctors.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-slate-300 dark:border-zinc-800 bg-background px-4 py-6 text-center text-sm text-slate-400 dark:text-zinc-500">
+              <div className="rounded-lg border border-dashed border-border bg-background px-4 py-6 text-center text-sm text-text-light">
                 Select a specialization with active doctors to see appointment slots.
               </div>
             ) : (
       <div data-tour="page-list" className="space-y-4">
                 {matchingAvailableDoctors.map((doctor) => (
-                  <div key={`request-slots-${doctor.id}`} className="rounded-lg border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-background p-3">
+                  <div key={`request-slots-${doctor.id}`} className="rounded-lg border border-border bg-background p-3">
                     <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-sm font-bold text-text">Dr. {(doctor.name || '').replace(/^Dr\.\s*/i, '')}</p>
-                        <p className="text-xs text-slate-400 dark:text-zinc-500">{doctor.doctor_type || 'Resident'} · {doctor.specialization} · {doctor.slot_capacity || 18} slots per block</p>
+                        <p className="text-xs text-text-light">{doctor.doctor_type || 'Resident'} · {doctor.specialization} · {doctor.slot_capacity || 18} slots per block</p>
                       </div>
-                      <p className="text-xs font-medium text-slate-500 dark:text-zinc-500">{availabilityLabel(doctor.availability)}</p>
+                      <p className="text-xs font-medium text-text-muted">{availabilityLabel(doctor.availability)}</p>
                     </div>
                     {doctor.availability?.length ? (
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
@@ -1116,14 +1112,14 @@ export default function Consultations() {
                             <div
                               key={`${doctor.id}-${date.toISOString()}`}
                               className={`min-h-28 rounded-lg border p-2 ${
-                                isSelectedDate ? 'border-sky-300 bg-sky-50 dark:bg-sky-900/30' : 'border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-surface'
+                                isSelectedDate ? 'border-sky-300 bg-primary-bg' : 'border-border bg-surface'
                               }`}
                             >
-                              <p className={`mb-2 text-xs font-bold ${isSelectedDate ? 'text-sky-700 dark:text-sky-400' : 'text-slate-600 dark:text-zinc-400'}`}>
+                              <p className={`mb-2 text-xs font-bold ${isSelectedDate ? 'text-primary-text' : 'text-text-muted'}`}>
                                 {shortDayLabel(date)}
                               </p>
                               {slots.length === 0 ? (
-                                <p className="rounded-md bg-background px-2 py-2 text-center text-[11px] font-medium text-slate-400 dark:text-zinc-500">
+                                <p className="rounded-md bg-background px-2 py-2 text-center text-[11px] font-medium text-text-light">
                                   No slots
                                 </p>
                               ) : (
@@ -1142,10 +1138,10 @@ export default function Consultations() {
                                         onClick={() => setRequestForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart), doctor_id: doctor.id }))}
                                         className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
                                           isFull
-                                            ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-400 line-through'
+                                            ? 'bg-danger-bg text-rose-400 line-through'
                                             : isSelectedSlot
-                                              ? 'bg-sky-600 text-white shadow-sm dark:shadow-none'
-                                              : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100'
+                                              ? 'bg-sky-600 text-white shadow-sm'
+                                              : 'bg-success-bg text-success-text hover:bg-emerald-100'
                                         }`}
                                       >
                                         {timeRangeLabel(slot)} · {isFull ? 'Full' : `${slotStatus.remaining} left`}
@@ -1159,7 +1155,7 @@ export default function Consultations() {
                         })}
                       </div>
                     ) : (
-                      <div className="rounded-lg border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-900/30 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
+                      <div className="rounded-lg border border-success-border bg-success-bg px-4 py-3 text-sm text-success-text">
                         This doctor has no fixed weekly schedule, so the preferred date and time can be typed manually.
                       </div>
                     )}
@@ -1169,8 +1165,8 @@ export default function Consultations() {
             )}
           </div>
           <div className="pt-2 flex justify-end gap-3">
-            <button type="button" onClick={() => setRequestModal(false)} className="px-5 py-2.5 text-slate-600 dark:text-zinc-400 font-medium hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 rounded-xl transition-colors">Cancel</button>
-            <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-semibold hover:bg-sky-600 rounded-xl flex items-center gap-2 shadow-md dark:shadow-none shadow-sky-200">
+            <button type="button" onClick={() => setRequestModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
+            <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-semibold hover:bg-sky-600 rounded-xl flex items-center gap-2 shadow-md shadow-sky-200">
               <Stethoscope size={16} /> Submit Request
             </button>
           </div>
@@ -1182,12 +1178,12 @@ export default function Consultations() {
         {selected && (
           <form onSubmit={handleRescheduleSubmit} className="space-y-4">
             <div className="flex items-center gap-3 bg-background rounded-xl px-4 py-3 mb-2">
-              <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center font-bold">
+              <div className="w-9 h-9 rounded-full bg-brand-bg text-indigo-600 flex items-center justify-center font-bold">
                 {(selected.patient?.user?.name || 'P').charAt(0)}
               </div>
               <div>
                 <p className="font-semibold text-text text-sm">{selected.patient?.user?.name || 'Patient'}</p>
-                <p className="text-xs text-slate-400 dark:text-zinc-500">
+                <p className="text-xs text-text-light">
                   Current schedule: {selected.scheduled_at ? new Date(selected.scheduled_at).toLocaleString() : 'Not scheduled'}
                 </p>
               </div>
@@ -1196,40 +1192,40 @@ export default function Consultations() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Assigned Doctor</label>
                 <select required value={rescheduleForm.doctor_id} onChange={e => setRescheduleForm({ ...rescheduleForm, doctor_id: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none">
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none">
                   <option value="">Select a doctor...</option>
                   {doctors.map(d => <option key={d.doctor?.id} value={d.doctor?.id}>Dr. {(d.name || '').replace(/^Dr\.\s*/i, '')}</option>)}
                 </select>
               </div>
             )}
             {user?.role === 'Patient' && (
-              <div className="rounded-xl border border-sky-100 bg-sky-50 dark:bg-sky-900/30 px-4 py-3 text-sm text-sky-700 dark:text-sky-400">
+              <div className="rounded-xl border border-sky-100 bg-primary-bg px-4 py-3 text-sm text-primary-text">
                 {rescheduleDoctorName
                   ? `Choose from Dr. ${(rescheduleDoctorName || '').replace(/^Dr\.\s*/i, '')}'s weekly available slots below.`
                   : 'Choose from your assigned doctor\'s weekly available slots below.'}
               </div>
             )}
-            <div className="rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-surface p-4">
+            <div className="rounded-xl border border-border bg-surface p-4">
               <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-text">Doctor Weekly Availability</p>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500">
+                  <p className="text-xs text-text-light">
                     Week of {rescheduleWeekStart.toLocaleDateString()} {rescheduleDoctorName ? `for Dr. ${(rescheduleDoctorName || '').replace(/^Dr\.\s*/i, '')}` : ''}
                   </p>
                 </div>
                 {rescheduleDoctor?.doctor_type && (
-                  <span className="inline-flex w-fit items-center rounded-full bg-sky-50 dark:bg-sky-900/30 px-3 py-1 text-xs font-bold text-sky-700 dark:text-sky-400">
+                  <span className="inline-flex w-fit items-center rounded-full bg-primary-bg px-3 py-1 text-xs font-bold text-primary-text">
                     {rescheduleDoctor.doctor_type}
                   </span>
                 )}
               </div>
 
               {!rescheduleDoctor ? (
-                <div className="rounded-lg border border-dashed border-slate-300 dark:border-zinc-800 bg-background px-4 py-6 text-center text-sm text-slate-400 dark:text-zinc-500">
+                <div className="rounded-lg border border-dashed border-border bg-background px-4 py-6 text-center text-sm text-text-light">
                   Select a doctor to see available days and time slots.
                 </div>
               ) : rescheduleAvailability.length === 0 ? (
-                <div className="rounded-lg border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-900/30 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
+                <div className="rounded-lg border border-success-border bg-success-bg px-4 py-3 text-sm text-success-text">
                   This doctor has no fixed weekly schedule, so any valid date and time can be selected.
                 </div>
               ) : (
@@ -1240,14 +1236,14 @@ export default function Consultations() {
                       <div
                         key={date.toISOString()}
                         className={`min-h-28 rounded-lg border p-2 transition-colors ${
-                          isSelectedDate ? 'border-sky-300 bg-sky-50 dark:bg-sky-900/30' : 'border-slate-300 dark:border-zinc-800 dark:border-zinc-800 bg-background'
+                          isSelectedDate ? 'border-sky-300 bg-primary-bg' : 'border-border bg-background'
                         }`}
                       >
-                        <p className={`mb-2 text-xs font-bold ${isSelectedDate ? 'text-sky-700 dark:text-sky-400' : 'text-slate-600 dark:text-zinc-400'}`}>
+                        <p className={`mb-2 text-xs font-bold ${isSelectedDate ? 'text-primary-text' : 'text-text-muted'}`}>
                           {shortDayLabel(date)}
                         </p>
                         {slots.length === 0 ? (
-                          <p className="rounded-md bg-surface px-2 py-2 text-center text-[11px] font-medium text-slate-400 dark:text-zinc-500">
+                          <p className="rounded-md bg-surface px-2 py-2 text-center text-[11px] font-medium text-text-light">
                             No slots
                           </p>
                         ) : (
@@ -1265,10 +1261,10 @@ export default function Consultations() {
                                   onClick={() => setRescheduleForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart) }))}
                                   className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
                                     isFull
-                                      ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-400 line-through'
+                                      ? 'bg-danger-bg text-rose-400 line-through'
                                       : isSelectedSlot
-                                      ? 'bg-sky-600 text-white shadow-sm dark:shadow-none'
-                                      : 'bg-surface text-slate-600 dark:text-zinc-400 hover:bg-sky-100 dark:bg-sky-900/50 hover:text-sky-700 dark:text-sky-400'
+                                      ? 'bg-sky-600 text-white shadow-sm'
+                                      : 'bg-surface text-text-muted hover:bg-primary-hover hover:text-primary-text'
                                   }`}
                                 >
                                   {timeRangeLabel(slot)} · {isFull ? 'Full' : `${slotStatus.remaining} left`}
@@ -1287,11 +1283,11 @@ export default function Consultations() {
               <label className="block text-sm font-medium text-slate-700 mb-1">New Date &amp; Time</label>
               <input required type="datetime-local" value={rescheduleForm.scheduled_at}
                 onChange={e => setRescheduleForm({ ...rescheduleForm, scheduled_at: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
             </div>
             <div className="pt-2 flex justify-end gap-3">
-              <button type="button" onClick={() => setRescheduleModal(false)} className="px-5 py-2.5 text-slate-600 dark:text-zinc-400 font-medium hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 rounded-xl transition-colors">Cancel</button>
-              <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-semibold hover:bg-sky-600 rounded-xl flex items-center gap-2 shadow-md dark:shadow-none shadow-sky-200">
+              <button type="button" onClick={() => setRescheduleModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-semibold hover:bg-sky-600 rounded-xl flex items-center gap-2 shadow-md shadow-sky-200">
                 <Calendar size={16} /> Save Schedule
               </button>
             </div>

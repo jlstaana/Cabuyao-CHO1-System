@@ -6,16 +6,85 @@
   --color-primary: #0ea5e9;
   --color-primary-dark: #0284c7;
   --color-secondary: #f43f5e;
+
+  /* Structural Colors */
   --color-background: #f8fafc;
   --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-surface-hover: #f1f5f9;
+  --color-border: #cbd5e1;
+  
+  /* Text Colors */
   --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-light: #94a3b8;
+  /* Status Colors (Light Mode) */
+  --color-primary-text: #0369a1;
+  --color-primary-bg: #f0f9ff;
+  --color-primary-hover: #e0f2fe;
+  --color-primary-border: #bae6fd;
+  
+  --color-success-text: #047857;
+  --color-success-bg: #ecfdf5;
+  --color-success-hover: #d1fae5;
+  --color-success-border: #a7f3d0;
+  
+  --color-danger-text: #e11d48;
+  --color-danger-bg: #fff1f2;
+  --color-danger-hover: #ffe4e6;
+  --color-danger-border: #fecdd3;
+  
+  --color-warning-text: #b45309;
+  --color-warning-bg: #fffbeb;
+  --color-warning-hover: #fef3c7;
+  --color-warning-border: #fde68a;
+  
+  --color-brand-text: #4338ca;
+  --color-brand-bg: #eef2ff;
+  --color-brand-hover: #e0e7ff;
+  --color-brand-border: #c7d2fe;
+
   --font-sans: 'Outfit', system-ui, sans-serif;
 }
 
 .dark {
+  /* Structural Colors */
   --color-background: #09090b;
   --color-surface: #18181b;
+  --color-surface-muted: rgba(39, 39, 42, 0.5);
+  --color-surface-hover: #27272a;
+  --color-border: #27272a;
+  
+  /* Text Colors */
   --color-text: #fafafa;
+  --color-text-muted: #a1a1aa;
+  --color-text-light: #71717a;
+
+  /* Status Colors (Dark Mode) */
+  --color-primary-text: #38bdf8;
+  --color-primary-bg: rgba(12, 74, 110, 0.3);
+  --color-primary-hover: rgba(12, 74, 110, 0.5);
+  --color-primary-border: rgba(12, 74, 110, 0.5);
+  
+  --color-success-text: #34d399;
+  --color-success-bg: rgba(6, 78, 59, 0.3);
+  --color-success-hover: rgba(6, 78, 59, 0.5);
+  --color-success-border: rgba(6, 78, 59, 0.5);
+  
+  --color-danger-text: #fb7185;
+  --color-danger-bg: rgba(136, 19, 55, 0.3);
+  --color-danger-hover: rgba(136, 19, 55, 0.5);
+  --color-danger-border: rgba(136, 19, 55, 0.5);
+  
+  --color-warning-text: #fbbf24;
+  --color-warning-bg: rgba(120, 53, 15, 0.3);
+  --color-warning-hover: rgba(120, 53, 15, 0.5);
+  --color-warning-border: rgba(120, 53, 15, 0.5);
+  
+  --color-brand-text: #818cf8;
+  --color-brand-bg: rgba(49, 46, 129, 0.3);
+  --color-brand-hover: rgba(49, 46, 129, 0.5);
+  --color-brand-border: rgba(49, 46, 129, 0.5);
 }
 
 

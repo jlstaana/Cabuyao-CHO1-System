@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
-import SEO from '../../components/SEO';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import { HeartPulse, Thermometer, Wind, Activity, Plus, Clock, TrendingUp, AlertCircle } from 'lucide-react';
@@ -16,11 +15,11 @@ const VITAL_FIELDS = [
 ];
 
 const COLOR_MAP = {
-  sky:     { bg: 'bg-sky-50 dark:bg-sky-900/30',     icon: 'text-sky-500',     border: 'border-sky-200',     badge: 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400' },
-  rose:    { bg: 'bg-rose-50 dark:bg-rose-900/30',    icon: 'text-rose-500 dark:text-rose-400',    border: 'border-rose-200',    badge: 'bg-rose-100 text-rose-700' },
-  amber:   { bg: 'bg-amber-50 dark:bg-amber-900/30',   icon: 'text-amber-500',   border: 'border-amber-200',   badge: 'bg-amber-100 text-amber-700 dark:text-amber-400' },
-  emerald: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', icon: 'text-emerald-500', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700 dark:text-emerald-400' },
-  indigo:  { bg: 'bg-indigo-50 dark:bg-indigo-900/30',  icon: 'text-indigo-500',  border: 'border-indigo-200',  badge: 'bg-indigo-100 text-indigo-700 dark:text-indigo-400' },
+  sky:     { bg: 'bg-primary-bg',     icon: 'text-sky-500',     border: 'border-sky-200',     badge: 'bg-primary-hover text-primary-text' },
+  rose:    { bg: 'bg-danger-bg',    icon: 'text-rose-500',    border: 'border-rose-200',    badge: 'bg-rose-100 text-rose-700' },
+  amber:   { bg: 'bg-warning-bg',   icon: 'text-amber-500',   border: 'border-amber-200',   badge: 'bg-amber-100 text-warning-text' },
+  emerald: { bg: 'bg-success-bg', icon: 'text-emerald-500', border: 'border-emerald-200', badge: 'bg-emerald-100 text-success-text' },
+  indigo:  { bg: 'bg-brand-bg',  icon: 'text-indigo-500',  border: 'border-indigo-200',  badge: 'bg-indigo-100 text-brand-text' },
   purple:  { bg: 'bg-purple-50',  icon: 'text-purple-500',  border: 'border-purple-200',  badge: 'bg-purple-100 text-purple-700' },
 };
 
@@ -62,7 +61,7 @@ export default function VitalSigns() {
   // Guard: Patients only
   if (user?.role !== 'Patient') {
     return (
-      <div className="p-8 text-center text-slate-500 dark:text-zinc-500 bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
+      <div className="p-8 text-center text-text-muted bg-surface rounded-2xl shadow-sm border border-border">
         This page is only accessible to patients.
       </div>
     );
@@ -95,15 +94,12 @@ export default function VitalSigns() {
   const latest = history[0];
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-      <SEO title="Vital Signs" description="Record and track your daily vital signs" />
-
-      {/* Header */}
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageTitle icon={HeartPulse} title="Vital Signs" description="Record and track your daily health measurements." iconClassName="bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400" />
+        <PageTitle icon={HeartPulse} title="Vital Signs" description="Record and track your daily health measurements." iconClassName="bg-danger-bg text-danger-text" />
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-2 bg-rose-500 text-white px-5 py-2.5 rounded-xl hover:bg-rose-600 transition-all shadow-md dark:shadow-none shadow-rose-200 font-medium active:scale-95"
+          className="flex items-center gap-2 bg-rose-500 text-white px-5 py-2.5 rounded-xl hover:bg-rose-600 transition-all shadow-md shadow-rose-200 font-medium active:scale-95"
         >
           <Plus size={18} /> {showForm ? 'Cancel' : 'Record Now'}
         </button>
@@ -111,9 +107,9 @@ export default function VitalSigns() {
 
       {/* Quick-entry form */}
       {showForm && (
-        <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none p-6">
+        <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
           <h2 className="font-semibold text-text mb-5 flex items-center gap-2">
-            <HeartPulse size={18} className="text-rose-500 dark:text-rose-400" /> Enter Today's Readings
+            <HeartPulse size={18} className="text-rose-500" /> Enter Today's Readings
           </h2>
           <form data-tour="page-form" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -124,16 +120,16 @@ export default function VitalSigns() {
                   <div key={field.key} className={`rounded-xl border ${c.border} ${c.bg} p-4`}>
                     <label className={`flex items-center gap-2 text-sm font-semibold mb-2 ${c.icon}`}>
                       <Icon size={15} /> {field.label}
-                      <span className="ml-auto text-xs font-normal text-slate-400 dark:text-zinc-500">{field.unit}</span>
+                      <span className="ml-auto text-xs font-normal text-text-light">{field.unit}</span>
                     </label>
                     <input
                       type="text"
                       value={form[field.key]}
                       onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
                       placeholder={field.placeholder}
-                      className="w-full bg-surface px-3 py-2 rounded-lg border border-slate-300 dark:border-zinc-800 outline-none focus:ring-2 focus:ring-sky-500/20 text-sm"
+                      className="w-full bg-surface px-3 py-2 rounded-lg border border-border outline-none focus:ring-2 focus:ring-sky-500/20 text-sm"
                     />
-                    <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1.5 flex items-center gap-1">
+                    <p className="text-[11px] text-text-light mt-1.5 flex items-center gap-1">
                       <AlertCircle size={10} /> Normal: {field.normal}
                     </p>
                   </div>
@@ -144,7 +140,7 @@ export default function VitalSigns() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex items-center gap-2 bg-rose-500 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-rose-600 transition-colors shadow-md dark:shadow-none shadow-rose-200 disabled:opacity-70"
+                className="flex items-center gap-2 bg-rose-500 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-rose-600 transition-colors shadow-md shadow-rose-200 disabled:opacity-70"
               >
                 <HeartPulse size={16} /> {saving ? 'Saving...' : 'Save Readings'}
               </button>
@@ -156,7 +152,7 @@ export default function VitalSigns() {
       {/* Latest readings summary */}
       {latest && (
         <div>
-          <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
             <Clock size={14} /> Latest Reading — {latest.date}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -165,13 +161,13 @@ export default function VitalSigns() {
               const c = COLOR_MAP[field.color];
               const value = latest[field.key];
               return (
-                <div key={field.key} className={`bg-surface rounded-2xl border ${c.border} p-4 flex flex-col items-center text-center shadow-sm dark:shadow-none`}>
+                <div key={field.key} className={`bg-surface rounded-2xl border ${c.border} p-4 flex flex-col items-center text-center shadow-sm`}>
                   <div className={`w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center mb-2`}>
                     <Icon size={20} className={c.icon} />
                   </div>
                   <p className={`text-lg font-black ${c.icon}`}>{value || '—'}</p>
-                  <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-0.5">{field.unit}</p>
-                  <p className="text-xs text-slate-500 dark:text-zinc-500 font-medium mt-1 leading-tight">{field.label}</p>
+                  <p className="text-[11px] text-text-light mt-0.5">{field.unit}</p>
+                  <p className="text-xs text-text-muted font-medium mt-1 leading-tight">{field.label}</p>
                 </div>
               );
             })}
@@ -180,8 +176,8 @@ export default function VitalSigns() {
       )}
 
       {/* History table */}
-      <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none overflow-hidden">
-        <div className="p-5 border-b border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
+      <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-border">
           <h2 className="font-semibold text-text flex items-center gap-2">
             <TrendingUp size={16} className="text-indigo-500" /> Vital Signs History
           </h2>
@@ -189,7 +185,7 @@ export default function VitalSigns() {
         <div className="overflow-x-auto">
           <table data-tour="page-list" className="w-full text-sm text-left whitespace-nowrap">
             <thead>
-              <tr className="bg-background text-slate-500 dark:text-zinc-500 text-xs border-b border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
+              <tr className="bg-background text-text-muted text-xs border-b border-border">
                 <th className="px-5 py-3 font-semibold">Date &amp; Time</th>
                 <th className="px-5 py-3 font-semibold">Blood Pressure</th>
                 <th className="px-5 py-3 font-semibold">Heart Rate</th>
@@ -201,12 +197,12 @@ export default function VitalSigns() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {history.length === 0 ? (
-                <tr><td colSpan={7} className="px-5 py-10 text-center text-slate-400 dark:text-zinc-500">No vital signs recorded yet. Tap "Record Now" to start.</td></tr>
+                <tr><td colSpan={7} className="px-5 py-10 text-center text-text-light">No vital signs recorded yet. Tap "Record Now" to start.</td></tr>
               ) : history.map((entry) => (
                 <tr key={entry.id} className="hover:bg-background/60 transition-colors">
-                  <td className="px-5 py-3 text-slate-600 dark:text-zinc-400 font-medium">{entry.date}</td>
-                  <td className="px-5 py-3"><span className="font-semibold text-sky-700 dark:text-sky-400">{entry.blood_pressure || '—'}</span> mmHg</td>
-                  <td className="px-5 py-3"><span className="font-semibold text-rose-600 dark:text-rose-400">{entry.heart_rate || '—'}</span> bpm</td>
+                  <td className="px-5 py-3 text-text-muted font-medium">{entry.date}</td>
+                  <td className="px-5 py-3"><span className="font-semibold text-primary-text">{entry.blood_pressure || '—'}</span> mmHg</td>
+                  <td className="px-5 py-3"><span className="font-semibold text-danger-text">{entry.heart_rate || '—'}</span> bpm</td>
                   <td className="px-5 py-3"><span className="font-semibold text-amber-600">{entry.temperature || '—'}</span></td>
                   <td className="px-5 py-3"><span className="font-semibold text-emerald-600">{entry.respiratory || '—'}</span>/min</td>
                   <td className="px-5 py-3"><span className="font-semibold text-indigo-600">{entry.oxygen || '—'}</span>%</td>

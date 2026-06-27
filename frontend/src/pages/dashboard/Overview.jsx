@@ -7,7 +7,6 @@ import {
   Clock, CheckCircle, Calendar, Pill, BarChart2, ShieldCheck,
   Video, ClipboardList, AlertCircle, ImagePlus,
 } from 'lucide-react';
-import SEO from '../../components/SEO';
 import Footer from '../../components/Footer';
 import PageTitle from '../../components/PageTitle';
 
@@ -26,10 +25,10 @@ function isToday(value) {
 
 function StatCard({ label, value, icon: Icon, color, bg }) {
   return (
-    <div data-tour="page-stats" className="bg-surface rounded-2xl p-6 shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 flex items-start gap-4 hover:shadow-md dark:shadow-none transition-shadow">
+    <div data-tour="page-stats" className="bg-surface rounded-2xl p-6 shadow-sm border border-border flex items-start gap-4 hover:shadow-md dark:hover:shadow-none transition-shadow">
       <div className={`p-3 rounded-xl ${bg} ${color}`}><Icon size={24} /></div>
       <div>
-        <p className="text-sm font-medium text-slate-500 dark:text-zinc-500">{label}</p>
+        <p className="text-sm font-medium text-text-muted">{label}</p>
         <h3 className="text-2xl font-bold text-text mt-1">{value}</h3>
       </div>
     </div>
@@ -38,7 +37,7 @@ function StatCard({ label, value, icon: Icon, color, bg }) {
 
 function QuickLink({ to, icon: Icon, label, color, bg }) {
   return (
-    <Link to={to} className={`flex items-center gap-3 p-4 rounded-xl border hover:shadow-sm dark:shadow-none transition-all font-medium text-sm ${bg} border-transparent hover:border-slate-300 dark:border-zinc-800 ${color}`}>
+    <Link to={to} className={`flex items-center gap-3 p-4 rounded-xl border hover:shadow-sm dark:hover:shadow-none transition-all font-medium text-sm ${bg} border-transparent hover:border-border dark:hover:border-zinc-800 ${color}`}>
       <Icon size={20} className={color} />
       {label}
     </Link>
@@ -51,7 +50,7 @@ function ActivityItem({ dot, label, time }) {
       <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${dot}`} />
       <div>
         <p className="text-sm font-medium text-text">{label}</p>
-        <p className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">{time}</p>
+        <p className="text-xs text-text-light mt-0.5">{time}</p>
       </div>
     </div>
   );
@@ -59,7 +58,7 @@ function ActivityItem({ dot, label, time }) {
 
 function EmptyPanel({ label }) {
   return (
-    <div className="h-40 flex items-center justify-center rounded-xl border border-dashed border-slate-300 dark:border-zinc-800 bg-background text-sm text-slate-400 dark:text-zinc-500">
+    <div className="h-40 flex items-center justify-center rounded-xl border border-dashed border-border bg-background text-sm text-text-light">
       {label}
     </div>
   );
@@ -68,14 +67,14 @@ function EmptyPanel({ label }) {
 function VolumePanel({ stats }) {
   const max = Math.max(...stats.time_based_volume.map((row) => Number(row.count || 0)), 1);
   return (
-    <div className="lg:col-span-2 bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-6">
+    <div className="lg:col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6">
       <h3 className="font-semibold text-text mb-4">Consultation Volume Trends</h3>
       {stats.time_based_volume.length === 0 ? <EmptyPanel label="No consultation volume yet" /> : (
         <div className="space-y-3">
           {stats.time_based_volume.slice(-7).map((row) => (
             <div key={row.date} className="flex items-center gap-3">
-              <span className="text-xs text-slate-500 dark:text-zinc-500 w-28">{row.date}</span>
-              <div className="h-2.5 flex-1 bg-slate-100 dark:bg-zinc-800/50 rounded-full overflow-hidden">
+              <span className="text-xs text-text-muted w-28">{row.date}</span>
+              <div className="h-2.5 flex-1 bg-surface-hover/50 rounded-full overflow-hidden">
                 <div className="h-full bg-sky-500 rounded-full" style={{ width: `${(Number(row.count || 0) / max) * 100}%` }} />
               </div>
               <span className="text-xs font-semibold text-slate-700 w-8 text-right">{row.count}</span>
@@ -89,7 +88,7 @@ function VolumePanel({ stats }) {
 
 function RecentActivity({ stats }) {
   return (
-    <div className="bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-6">
+    <div className="bg-surface rounded-2xl shadow-sm border border-border p-6">
       <h3 className="font-semibold text-text mb-4">Recent Activity</h3>
       <div className="space-y-4">
         {stats.recent_logs?.length ? stats.recent_logs.slice(0, 4).map((log, index) => (
@@ -99,7 +98,7 @@ function RecentActivity({ stats }) {
             label={log.action}
             time={log.created_at ? new Date(log.created_at).toLocaleString() : 'N/A'}
           />
-        )) : <p className="text-sm text-slate-400 dark:text-zinc-500">No recent activity.</p>}
+        )) : <p className="text-sm text-text-light">No recent activity.</p>}
       </div>
     </div>
   );
@@ -108,23 +107,23 @@ function RecentActivity({ stats }) {
 function ConsultationQueue({ consultations }) {
   const rows = consultations.filter((c) => ['Pending', 'Scheduled'].includes(c.status)).slice(0, 5);
   return (
-    <div data-tour="page-list" className="lg:col-span-2 bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-6">
+    <div data-tour="page-list" className="lg:col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6">
       <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><Stethoscope size={16} className="text-sky-500" /> Consultation Queue</h3>
       <div className="space-y-3">
-        {rows.length === 0 ? <p className="text-sm text-slate-400 dark:text-zinc-500">No pending or scheduled consultations.</p> : rows.map((c) => (
-          <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 hover:bg-background transition-colors">
+        {rows.length === 0 ? <p className="text-sm text-text-light">No pending or scheduled consultations.</p> : rows.map((c) => (
+          <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-background transition-colors">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center font-bold text-sm">
+              <div className="w-9 h-9 rounded-full bg-brand-bg text-indigo-600 flex items-center justify-center font-bold text-sm">
                 {(c.patient?.user?.name || 'P').charAt(0)}
               </div>
               <div>
                 <p className="font-semibold text-text text-sm">{c.patient?.user?.name || 'Patient'}</p>
-                <p className="text-xs text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+                <p className="text-xs text-text-light flex items-center gap-1">
                   <Clock size={10} /> {c.scheduled_at ? new Date(c.scheduled_at).toLocaleString() : 'Not scheduled'}
                 </p>
               </div>
             </div>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${c.status === 'Scheduled' ? 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400' : 'bg-amber-100 text-amber-700 dark:text-amber-400'}`}>{c.status}</span>
+            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${c.status === 'Scheduled' ? 'bg-primary-hover text-primary-text' : 'bg-amber-100 text-warning-text'}`}>{c.status}</span>
           </div>
         ))}
       </div>
@@ -135,16 +134,14 @@ function ConsultationQueue({ consultations }) {
 function AdminOverview({ user, stats }) {
   const summary = stats.summary || {};
   return (
-    <>
-      <SEO title="Dashboard" description="Health Officer administration overview" />
-      <header className="mb-8">
-        <PageTitle icon={ShieldCheck} title="Health Officer Dashboard" description={`Welcome, ${user?.name}. Here's the current system overview.`} iconClassName="bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400" />
+    <>      <header className="mb-8">
+        <PageTitle icon={ShieldCheck} title="Health Officer Dashboard" description={`Welcome, ${user?.name}. Here's the current system overview.`} iconClassName="bg-primary-bg text-primary-text" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} icon={Activity} color="text-sky-500" bg="bg-sky-100 dark:bg-sky-900/50" />
+        <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} icon={Activity} color="text-sky-500" bg="bg-primary-hover" />
         <StatCard label="Active Patients" value={formatNumber(summary.registered_patients)} icon={Users} color="text-indigo-500" bg="bg-indigo-100" />
         <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-emerald-500" bg="bg-emerald-100" />
-        <StatCard label="Completion Rate" value={`${summary.completion_rate || 0}%`} icon={TrendingUp} color="text-rose-500 dark:text-rose-400" bg="bg-rose-100" />
+        <StatCard label="Completion Rate" value={`${summary.completion_rate || 0}%`} icon={TrendingUp} color="text-rose-500" bg="bg-rose-100" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <VolumePanel stats={stats} />
@@ -157,15 +154,15 @@ function AdminOverview({ user, stats }) {
 
 function QuickActions({ admin = false, patient = false }) {
   return (
-    <div data-tour="page-actions" className="bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-6">
+    <div data-tour="page-actions" className="bg-surface rounded-2xl shadow-sm border border-border p-6">
       <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><ShieldCheck size={16} className="text-sky-500" /> Quick Actions</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {admin && <QuickLink to="/users" icon={Users} label="Manage Users" color="text-sky-700 dark:text-sky-400" bg="bg-sky-50 dark:bg-sky-900/30" />}
-        <QuickLink to="/medicines" icon={Pill} label="Medicine List" color="text-emerald-700 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-900/30" />
-        {admin && <QuickLink to="/analytics" icon={BarChart2} label="View Reports" color="text-indigo-700 dark:text-indigo-400" bg="bg-indigo-50 dark:bg-indigo-900/30" />}
-        <QuickLink to="/consultations" icon={ClipboardList} label="Consultations" color="text-rose-700" bg="bg-rose-50 dark:bg-rose-900/30" />
-        {patient && <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700" bg="bg-rose-50 dark:bg-rose-900/30" />}
-        {patient && <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-amber-700 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-900/30" />}
+        {admin && <QuickLink to="/users" icon={Users} label="Manage Users" color="text-primary-text" bg="bg-primary-bg" />}
+        <QuickLink to="/medicines" icon={Pill} label="Medicine List" color="text-success-text" bg="bg-success-bg" />
+        {admin && <QuickLink to="/analytics" icon={BarChart2} label="View Reports" color="text-brand-text" bg="bg-brand-bg" />}
+        <QuickLink to="/consultations" icon={ClipboardList} label="Consultations" color="text-rose-700" bg="bg-danger-bg" />
+        {patient && <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700" bg="bg-danger-bg" />}
+        {patient && <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-warning-text" bg="bg-warning-bg" />}
       </div>
     </div>
   );
@@ -176,26 +173,24 @@ function DoctorOverview({ user, consultations, prescriptions }) {
   const scheduledToday = consultations.filter((c) => c.status === 'Scheduled' && isToday(c.scheduled_at)).length;
   const completedToday = consultations.filter((c) => c.status === 'Completed' && isToday(c.updated_at)).length;
   return (
-    <>
-      <SEO title="Dashboard" description="Doctor overview and consultation queue" />
-      <header className="mb-8">
-        <PageTitle icon={Stethoscope} title={`Good day, Dr. ${(user?.name?.split(' ')[0] || '').replace(/^Dr\.\s*/i, '')}!`} description="Here's your consultation overview." iconClassName="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600" />
+    <>      <header className="mb-8">
+        <PageTitle icon={Stethoscope} title={`Good day, Dr. ${(user?.name?.split(' ')[0] || '').replace(/^Dr\.\s*/i, '')}!`} description="Here's your consultation overview." iconClassName="bg-success-bg text-emerald-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Pending Requests" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" />
-        <StatCard label="Scheduled Today" value={scheduledToday} icon={Calendar} color="text-sky-500" bg="bg-sky-100 dark:bg-sky-900/50" />
+        <StatCard label="Scheduled Today" value={scheduledToday} icon={Calendar} color="text-sky-500" bg="bg-primary-hover" />
         <StatCard label="Completed Today" value={completedToday} icon={CheckCircle} color="text-emerald-500" bg="bg-emerald-100" />
         <StatCard label="Prescriptions Issued" value={prescriptions.length} icon={FileText} color="text-indigo-500" bg="bg-indigo-100" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <ConsultationQueue consultations={consultations} />
-        <div className="bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-6">
+        <div className="bg-surface rounded-2xl shadow-sm border border-border p-6">
           <h3 className="font-semibold text-text mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <QuickLink to="/consultations" icon={Video} label="Start Teleconsultation" color="text-indigo-700 dark:text-indigo-400" bg="bg-indigo-50 dark:bg-indigo-900/30" />
-            <QuickLink to="/prescriptions" icon={FileText} label="Create E-Prescription" color="text-emerald-700 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-900/30" />
-            <QuickLink to="/medicines" icon={Pill} label="Browse Medicines" color="text-sky-700 dark:text-sky-400" bg="bg-sky-50 dark:bg-sky-900/30" />
-            <QuickLink to="/patient-records" icon={ClipboardList} label="Patient Records" color="text-amber-700 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-900/30" />
+            <QuickLink to="/consultations" icon={Video} label="Start Teleconsultation" color="text-brand-text" bg="bg-brand-bg" />
+            <QuickLink to="/prescriptions" icon={FileText} label="Create E-Prescription" color="text-success-text" bg="bg-success-bg" />
+            <QuickLink to="/medicines" icon={Pill} label="Browse Medicines" color="text-primary-text" bg="bg-primary-bg" />
+            <QuickLink to="/patient-records" icon={ClipboardList} label="Patient Records" color="text-warning-text" bg="bg-warning-bg" />
           </div>
         </div>
       </div>
@@ -207,37 +202,35 @@ function PatientOverview({ user, consultations, prescriptions }) {
   const upcoming = consultations.find((c) => c.status === 'Scheduled');
   const vitalEntries = consultations.filter((c) => c.vital_signs || c.vitalSigns).length;
   return (
-    <>
-      <SEO title="Dashboard" description="Patient health dashboard" />
-      <header className="mb-8">
-        <PageTitle icon={HeartPulse} title={`Hello, ${user?.name?.split(' ')[0]}!`} description="Here's your health summary and upcoming activities." iconClassName="bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400" />
+    <>      <header className="mb-8">
+        <PageTitle icon={HeartPulse} title={`Hello, ${user?.name?.split(' ')[0]}!`} description="Here's your health summary and upcoming activities." iconClassName="bg-danger-bg text-danger-text" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Consultations" value={consultations.length} icon={Stethoscope} color="text-sky-500" bg="bg-sky-100 dark:bg-sky-900/50" />
+        <StatCard label="Consultations" value={consultations.length} icon={Stethoscope} color="text-sky-500" bg="bg-primary-hover" />
         <StatCard label="Prescriptions" value={prescriptions.length} icon={FileText} color="text-emerald-500" bg="bg-emerald-100" />
-        <StatCard label="Vital Sign Entries" value={vitalEntries} icon={HeartPulse} color="text-rose-500 dark:text-rose-400" bg="bg-rose-100" />
+        <StatCard label="Vital Sign Entries" value={vitalEntries} icon={HeartPulse} color="text-rose-500" bg="bg-rose-100" />
         <StatCard label="Upcoming Visit" value={upcoming?.scheduled_at ? new Date(upcoming.scheduled_at).toLocaleDateString() : 'None'} icon={Calendar} color="text-indigo-500" bg="bg-indigo-100" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <ConsultationQueue consultations={consultations} />
-        <div className="bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-6">
+        <div className="bg-surface rounded-2xl shadow-sm border border-border p-6">
           <h3 className="font-semibold text-text mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <QuickLink to="/consultations" icon={Video} label="Request Teleconsult" color="text-sky-700 dark:text-sky-400" bg="bg-sky-50 dark:bg-sky-900/30" />
-            <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700" bg="bg-rose-50 dark:bg-rose-900/30" />
-            <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-amber-700 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-900/30" />
-            <QuickLink to="/prescriptions" icon={FileText} label="View Prescriptions" color="text-emerald-700 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-900/30" />
+            <QuickLink to="/consultations" icon={Video} label="Request Teleconsult" color="text-primary-text" bg="bg-primary-bg" />
+            <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700" bg="bg-danger-bg" />
+            <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-warning-text" bg="bg-warning-bg" />
+            <QuickLink to="/prescriptions" icon={FileText} label="View Prescriptions" color="text-success-text" bg="bg-success-bg" />
           </div>
         </div>
       </div>
       {vitalEntries === 0 && (
-        <div className="bg-rose-50 dark:bg-rose-900/30 border border-rose-200 rounded-2xl p-5 flex items-center gap-4">
+        <div className="bg-danger-bg border border-rose-200 rounded-2xl p-5 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0">
-            <AlertCircle size={20} className="text-rose-500 dark:text-rose-400" />
+            <AlertCircle size={20} className="text-rose-500" />
           </div>
           <div className="flex-1">
             <p className="font-semibold text-rose-800">Vital Signs Reminder</p>
-            <p className="text-sm text-rose-600 dark:text-rose-400 mt-0.5">No vital signs have been recorded yet.</p>
+            <p className="text-sm text-danger-text mt-0.5">No vital signs have been recorded yet.</p>
           </div>
           <Link to="/vitals" className="flex-shrink-0 px-4 py-2 bg-rose-500 text-white rounded-xl text-sm font-medium hover:bg-rose-600 transition-colors">
             Record Now
@@ -251,14 +244,12 @@ function PatientOverview({ user, consultations, prescriptions }) {
 function StaffOverview({ user, stats, consultations, medicines }) {
   const pending = consultations.filter((c) => c.status === 'Pending').length;
   return (
-    <>
-      <SEO title="Dashboard" description="Staff dashboard overview" />
-      <header className="mb-8">
-        <PageTitle icon={Users} title="Staff Dashboard" description={`Welcome, ${user?.name}. Here's the current workload.`} iconClassName="bg-amber-50 dark:bg-amber-900/30 text-amber-600" />
+    <>      <header className="mb-8">
+        <PageTitle icon={Users} title="Staff Dashboard" description={`Welcome, ${user?.name}. Here's the current workload.`} iconClassName="bg-warning-bg text-amber-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Pending Requests" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" />
-        <StatCard label="Active Patients" value={formatNumber(stats.summary?.registered_patients)} icon={Users} color="text-sky-500" bg="bg-sky-100 dark:bg-sky-900/50" />
+        <StatCard label="Active Patients" value={formatNumber(stats.summary?.registered_patients)} icon={Users} color="text-sky-500" bg="bg-primary-hover" />
         <StatCard label="Active Medicines" value={medicines.filter((m) => m.status).length} icon={AlertCircle} color="text-emerald-500" bg="bg-emerald-100" />
         <StatCard label="Scheduled Today" value={consultations.filter((c) => c.status === 'Scheduled' && isToday(c.scheduled_at)).length} icon={Calendar} color="text-emerald-500" bg="bg-emerald-100" />
       </div>

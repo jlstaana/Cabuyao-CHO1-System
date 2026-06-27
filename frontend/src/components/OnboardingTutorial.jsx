@@ -501,16 +501,16 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
       )}
 
       <div
-        className="absolute w-[calc(100vw-32px)] max-w-[360px] rounded-2xl bg-surface shadow-2xl dark:shadow-none transition-all duration-200"
+        className="absolute w-[calc(100vw-32px)] max-w-[360px] rounded-2xl bg-surface shadow-2xl transition-all duration-200"
         style={cardPosition}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-slate-300 dark:border-zinc-800 dark:border-zinc-800 px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white">
               <Icon size={23} />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-wide text-sky-700 dark:text-sky-400">
+              <p className="text-xs font-bold uppercase tracking-wide text-primary-text">
                 {isLastStep ? 'Last Step' : `Step: ${stepIndex + 1}`} · {activeStep.section || 'System guide'}
               </p>
               <h2 className="text-lg font-bold leading-tight text-text">{activeStep.title}</h2>
@@ -521,7 +521,7 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
             <button
               type="button"
               onClick={closeReplay}
-              className="rounded-full p-2 text-slate-400 dark:text-zinc-500 transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800 dark:bg-zinc-800/50 hover:text-slate-700"
+              className="rounded-full p-2 text-text-light transition-colors hover:bg-surface-hover hover:text-slate-700"
               aria-label="Close tutorial"
             >
               <X size={18} />
@@ -531,18 +531,18 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
 
         <div className="px-5 py-4">
           <p className="text-sm leading-6 text-slate-700">{activeStep.body}</p>
-          <div className="mt-4 rounded-xl border border-sky-100 bg-sky-50 dark:bg-sky-900/30 p-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-sky-700 dark:text-sky-400">What to do</p>
+          <div className="mt-4 rounded-xl border border-sky-100 bg-primary-bg p-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-primary-text">What to do</p>
             <p className="mt-1 text-sm leading-5 text-sky-900">{activeStep.action}</p>
           </div>
 
           {!targetRect && (
-            <div className="mt-3 rounded-xl border border-amber-100 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/30 p-3 text-sm text-amber-800">
+            <div className="mt-3 rounded-xl border border-warning-border bg-warning-bg p-3 text-sm text-amber-800">
               This part may be hidden on your screen. Open the menu or return to the dashboard, then continue.
             </div>
           )}
 
-          <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800/50">
+          <div className="mt-5 h-2 overflow-hidden rounded-full bg-surface-hover/50">
             <div className="h-full bg-sky-600 transition-all" style={{ width: `${((stepIndex + 1) / steps.length) * 100}%` }} />
           </div>
 
@@ -551,7 +551,7 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
               type="button"
               onClick={goBack}
               disabled={stepIndex === 0}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-zinc-800 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-zinc-400 transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-text-muted transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ArrowLeft size={16} />
               Back
@@ -562,7 +562,7 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
                 type="button"
                 onClick={finish}
                 disabled={saving}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none transition-colors hover:bg-sky-700 disabled:cursor-wait disabled:opacity-70"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sky-700 disabled:cursor-wait disabled:opacity-70"
               >
                 <CheckCircle2 size={16} />
                 {saving ? 'Saving...' : 'Finish'}
@@ -571,7 +571,7 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
               <button
                 type="button"
                 onClick={goNext}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none transition-colors hover:bg-sky-700"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sky-700"
               >
                 Next
                 <ArrowRight size={16} />

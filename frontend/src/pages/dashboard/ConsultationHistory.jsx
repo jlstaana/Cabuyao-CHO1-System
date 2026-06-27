@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
-import SEO from '../../components/SEO';
 import api from '../../utils/api';
 import {
   ClipboardList, Video, FileText, Search, Filter,
@@ -10,10 +9,10 @@ import {
 import PageTitle from '../../components/PageTitle';
 
 const STATUS_CONFIG = {
-  Completed:  { color: 'bg-emerald-100 text-emerald-700 dark:text-emerald-400', icon: CheckCircle },
-  Scheduled:  { color: 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-400',         icon: Clock },
-  Pending:    { color: 'bg-amber-100 text-amber-700 dark:text-amber-400',      icon: Loader2 },
-  Cancelled:  { color: 'bg-slate-100 dark:bg-zinc-800/50 text-slate-500 dark:text-zinc-500',      icon: XCircle },
+  Completed:  { color: 'bg-emerald-100 text-success-text', icon: CheckCircle },
+  Scheduled:  { color: 'bg-primary-hover text-primary-text',         icon: Clock },
+  Pending:    { color: 'bg-amber-100 text-warning-text',      icon: Loader2 },
+  Cancelled:  { color: 'bg-surface-hover/50 text-text-muted',      icon: XCircle },
 };
 
 const FILTERS = ['All', 'Completed', 'Scheduled', 'Pending', 'Cancelled'];
@@ -60,7 +59,7 @@ export default function ConsultationHistory() {
   // Guard: Patient only
   if (user?.role !== 'Patient') {
     return (
-      <div className="p-8 text-center text-slate-500 dark:text-zinc-500 bg-surface rounded-2xl shadow-sm dark:shadow-none border border-slate-300 dark:border-zinc-800 dark:border-zinc-800">
+      <div className="p-8 text-center text-text-muted bg-surface rounded-2xl shadow-sm border border-border">
         This page is only accessible to patients.
       </div>
     );
@@ -80,25 +79,22 @@ export default function ConsultationHistory() {
   const total = history.length;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-      <SEO title="Consultation History" description="View your complete consultation history" />
-
-      {/* Header */}
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      {/* Header */}
       <header>
-        <PageTitle icon={ClipboardList} title="Consultation History" description="A complete record of all your past and upcoming consultations." iconClassName="bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400" />
+        <PageTitle icon={ClipboardList} title="Consultation History" description="A complete record of all your past and upcoming consultations." iconClassName="bg-primary-bg text-primary-text" />
       </header>
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Sessions',     value: total,     color: 'text-sky-600 dark:text-sky-400',     bg: 'bg-sky-50 dark:bg-sky-900/30',     border: 'border-sky-100' },
-          { label: 'Completed',          value: completed, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/30', border: 'border-emerald-100 dark:border-emerald-900/50' },
-          { label: 'Cancelled',          value: history.filter(c => c.status === 'Cancelled').length, color: 'text-slate-500 dark:text-zinc-500', bg: 'bg-background', border: 'border-slate-300 dark:border-zinc-800 dark:border-zinc-800' },
-          { label: 'Prescriptions',      value: history.filter(c => c.prescription_id).length, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/30', border: 'border-indigo-100 dark:border-indigo-900/50' },
+          { label: 'Total Sessions',     value: total,     color: 'text-primary-text',     bg: 'bg-primary-bg',     border: 'border-sky-100' },
+          { label: 'Completed',          value: completed, color: 'text-emerald-600', bg: 'bg-success-bg', border: 'border-success-border' },
+          { label: 'Cancelled',          value: history.filter(c => c.status === 'Cancelled').length, color: 'text-text-muted', bg: 'bg-background', border: 'border-border' },
+          { label: 'Prescriptions',      value: history.filter(c => c.prescription_id).length, color: 'text-indigo-600', bg: 'bg-brand-bg', border: 'border-brand-border' },
         ].map((s) => (
           <div key={s.label} className={`rounded-2xl border p-5 ${s.bg} ${s.border}`}>
             <p className={`text-3xl font-black ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-slate-500 dark:text-zinc-500 font-medium mt-1">{s.label}</p>
+            <p className="text-xs text-text-muted font-medium mt-1">{s.label}</p>
           </div>
         ))}
       </div>
@@ -106,25 +102,25 @@ export default function ConsultationHistory() {
       {/* Search + Filter */}
       <div data-tour="page-search" className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light" size={18} />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by doctor, diagnosis, or date..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface transition-all"
           />
         </div>
         <div className="flex items-center gap-2 overflow-x-auto">
-          <Filter size={16} className="text-slate-400 dark:text-zinc-500 shrink-0" />
+          <Filter size={16} className="text-text-light shrink-0" />
           {FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => setStatusFilter(f)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 statusFilter === f
-                  ? 'bg-sky-600 text-white shadow-sm dark:shadow-none'
-                  : 'bg-surface text-slate-600 dark:text-zinc-400 border border-slate-300 dark:border-zinc-800 hover:border-sky-300 hover:text-sky-600 dark:text-sky-400'
+                  ? 'bg-sky-600 text-white shadow-sm'
+                  : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'
               }`}
             >
               {f}
@@ -137,16 +133,16 @@ export default function ConsultationHistory() {
       <div data-tour="page-list" className="space-y-3">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 p-5 animate-pulse">
-              <div className="h-5 bg-slate-200 dark:bg-zinc-800 rounded w-48 mb-3" />
-              <div className="h-4 bg-slate-100 dark:bg-zinc-800/50 rounded w-72" />
+            <div key={i} className="bg-surface rounded-2xl border border-border p-5 animate-pulse">
+              <div className="h-5 bg-surface-hover rounded w-48 mb-3" />
+              <div className="h-4 bg-surface-hover/50 rounded w-72" />
             </div>
           ))
         ) : filtered.length === 0 ? (
-          <div className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none p-14 text-center">
-            <ClipboardList size={36} className="mx-auto mb-3 text-slate-300" />
-            <p className="font-semibold text-slate-600 dark:text-zinc-400">No consultations found</p>
-            <p className="text-sm text-slate-400 dark:text-zinc-500 mt-1">Try adjusting your search or filter.</p>
+          <div className="bg-surface rounded-2xl border border-border shadow-sm p-14 text-center">
+            <ClipboardList size={36} className="mx-auto mb-3 text-text-light opacity-60" />
+            <p className="font-semibold text-text-muted">No consultations found</p>
+            <p className="text-sm text-text-light mt-1">Try adjusting your search or filter.</p>
           </div>
         ) : (
           filtered.map((c) => {
@@ -155,7 +151,7 @@ export default function ConsultationHistory() {
             const isOpen = expanded === c.id;
 
             return (
-              <div key={c.id} className="bg-surface rounded-2xl border border-slate-300 dark:border-zinc-800 dark:border-zinc-800 shadow-sm dark:shadow-none overflow-hidden hover:shadow-md dark:shadow-none transition-shadow">
+              <div key={c.id} className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-md dark:hover:shadow-none transition-shadow">
                 {/* Main row */}
                 <button
                   type="button"
@@ -163,20 +159,20 @@ export default function ConsultationHistory() {
                   className="w-full flex items-center gap-4 p-5 text-left"
                 >
                   {/* Type icon */}
-                  <div className="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
+                  <div className="w-11 h-11 rounded-xl bg-primary-bg flex items-center justify-center flex-shrink-0">
                     <Video size={20} className="text-sky-500" />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-text">{c.doctor}</p>
-                      <span className="text-xs text-slate-400 dark:text-zinc-500">·</span>
-                      <p className="text-sm text-slate-500 dark:text-zinc-500">{c.specialization}</p>
+                      <span className="text-xs text-text-light">·</span>
+                      <p className="text-sm text-text-muted">{c.specialization}</p>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 dark:text-zinc-500">
+                    <div className="flex items-center gap-3 mt-1 text-xs text-text-light">
                       <span className="flex items-center gap-1"><Calendar size={12} /> {c.date}</span>
                       <span className="flex items-center gap-1"><Clock size={12} /> {c.time}</span>
-                      <span className="bg-slate-100 dark:bg-zinc-800/50 text-slate-600 dark:text-zinc-400 px-2 py-0.5 rounded-full font-medium">{c.type}</span>
+                      <span className="bg-surface-hover/50 text-text-muted px-2 py-0.5 rounded-full font-medium">{c.type}</span>
                     </div>
                   </div>
 
@@ -185,30 +181,30 @@ export default function ConsultationHistory() {
                       <StatusIcon size={12} />
                       {c.status}
                     </span>
-                    {isOpen ? <ChevronUp size={16} className="text-slate-400 dark:text-zinc-500" /> : <ChevronDown size={16} className="text-slate-400 dark:text-zinc-500" />}
+                    {isOpen ? <ChevronUp size={16} className="text-text-light" /> : <ChevronDown size={16} className="text-text-light" />}
                   </div>
                 </button>
 
                 {/* Expanded detail */}
                 {isOpen && (
-                  <div className="border-t border-slate-300 dark:border-zinc-800 dark:border-zinc-800 px-5 pb-5 pt-4 space-y-4">
+                  <div className="border-t border-border px-5 pb-5 pt-4 space-y-4">
                     {c.diagnosis && (
                       <div>
-                        <p className="text-xs font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wide mb-1">Diagnosis</p>
+                        <p className="text-xs font-semibold text-text-light uppercase tracking-wide mb-1">Diagnosis</p>
                         <p className="text-sm font-semibold text-text">{c.diagnosis}</p>
                       </div>
                     )}
                     {c.notes && (
                       <div>
-                        <p className="text-xs font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wide mb-1">Doctor's Notes</p>
-                        <p className="text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">{c.notes}</p>
+                        <p className="text-xs font-semibold text-text-light uppercase tracking-wide mb-1">Doctor's Notes</p>
+                        <p className="text-sm text-text-muted leading-relaxed">{c.notes}</p>
                       </div>
                     )}
                     <div className="flex flex-wrap gap-2 pt-2">
                       {c.status === 'Scheduled' && (
                         <Link
                           to={`/room/${c.id}`}
-                          className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors shadow-sm dark:shadow-none"
+                          className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors shadow-sm"
                         >
                           <Video size={15} /> Join Teleconsultation
                         </Link>
@@ -216,7 +212,7 @@ export default function ConsultationHistory() {
                       {c.prescription_id && (
                         <Link
                           to="/prescriptions"
-                          className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors border border-emerald-200"
+                          className="flex items-center gap-2 px-4 py-2 bg-success-bg text-success-text rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors border border-emerald-200"
                         >
                           <FileText size={15} /> View Prescription
                         </Link>
