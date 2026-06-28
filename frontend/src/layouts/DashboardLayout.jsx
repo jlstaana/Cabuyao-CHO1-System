@@ -149,7 +149,7 @@ async function ensureNotificationPermission() {
 }
 
 export default function DashboardLayout() {
-  const { isAuthenticated, loading, user, logout, completeOnboarding } = useAuthStore();
+  const { isAuthenticated, loading, user, fetchUser, logout, completeOnboarding } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -175,6 +175,13 @@ export default function DashboardLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      fetchUser();
+    }
+  }, [isAuthenticated, user, fetchUser]);
+
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialReplay, setTutorialReplay] = useState(false);
   const [prevTutorialOpen, setPrevTutorialOpen] = useState(tutorialOpen);

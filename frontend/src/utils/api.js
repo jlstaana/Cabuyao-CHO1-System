@@ -5,6 +5,7 @@ const isNgrokApi = /ngrok(-free)?\.(app|dev)|ngrok\.io/i.test(apiBaseUrl);
 
 const api = axios.create({
   baseURL: apiBaseUrl,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
