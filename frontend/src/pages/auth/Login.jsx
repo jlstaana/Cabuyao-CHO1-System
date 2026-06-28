@@ -36,7 +36,6 @@ export default function Login() {
           || 'Invalid credentials';
       }
       toast.error(message);
-      console.error(error);
     } finally {
       setLoading(false);
     }
