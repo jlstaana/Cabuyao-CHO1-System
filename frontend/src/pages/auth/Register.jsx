@@ -82,7 +82,10 @@ export default function Register() {
             <ShieldCheck size={24} />
           </div>
           <h1 className="text-2xl font-bold text-text">Verify Your Account</h1>
-          <p className="text-text-muted mt-2 text-sm">Enter the 6-digit code sent to {pendingEmail}.</p>
+          <p className="text-text-muted mt-2 text-sm">
+            Enter the 6-digit code sent to {pendingEmail}. <br/>
+            <span className="font-medium text-amber-600">Note: Please check your spam or junk folder if you don't see it in your inbox.</span>
+          </p>
         </div>
         <form onSubmit={handleVerify} className="space-y-5">
           <div>

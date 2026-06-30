@@ -122,7 +122,10 @@ export default function Login() {
             <LockKeyhole size={24} />
           </div>
           <h1 className="text-2xl font-bold text-text">Set New Password</h1>
-          <p className="text-text-muted mt-2 text-sm">Enter the code sent to {resetEmail}.</p>
+          <p className="text-text-muted mt-2 text-sm">
+            Enter the code sent to {resetEmail}. <br/>
+            <span className="font-medium text-amber-600">Note: Please check your spam or junk folder if you don't see it in your inbox.</span>
+          </p>
         </div>
         <form onSubmit={handleResetPassword} className="space-y-4">
           <div>
