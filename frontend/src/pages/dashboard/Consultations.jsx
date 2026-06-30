@@ -232,7 +232,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
                   {c.scheduled_at && <span className="flex items-center gap-1"><Clock size={12} /> {c.status === 'Pending' ? 'Preferred' : 'Scheduled'}: {new Date(c.scheduled_at).toLocaleString()}</span>}
                 </div>
               </div>
-              <div className="flex gap-2 flex-shrink-0">
+              <div className="flex flex-wrap gap-2 flex-shrink-0 mt-3 sm:mt-0 w-full sm:w-auto justify-start sm:justify-end">
                 {['Pending', 'Scheduled'].includes(c.status) && (
                   <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-4 py-2 bg-danger-bg text-danger-text rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
                     <XCircle size={16} /> Cancel
@@ -351,8 +351,9 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
         ) : (
           <div className="divide-y divide-slate-50">
             {filtered.map((c, i) => (
-              <div key={c.id} className="flex items-center gap-4 px-5 py-4 hover:bg-background/60 transition-colors">
-                {/* Queue number */}
+              <div key={c.id} className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4 hover:bg-background/60 transition-colors">
+                <div className="flex items-center gap-4">
+                  {/* Queue number */}
                 <div className="w-9 h-9 rounded-xl bg-surface-hover/50 text-text-muted flex items-center justify-center font-black text-sm flex-shrink-0">
                   {i + 1}
                 </div>
@@ -368,8 +369,10 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
                     {c.scheduled_at && <span className="flex items-center gap-1"><Clock size={11} /> {c.status === 'Pending' ? 'Preferred' : 'Scheduled'}: {new Date(c.scheduled_at).toLocaleString()}</span>}
                   </div>
                 </div>
+                </div>
+                
                 {/* Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-wrap items-center gap-2 flex-shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
                   {c.status === 'Pending' && (
                     <>
                       <span className="text-xs text-amber-600 bg-warning-bg border border-amber-200 px-3 py-1.5 rounded-lg font-medium">

@@ -107,70 +107,72 @@ export default function Medicines() {
             />
           </div>
         </div>
-        <table data-tour="page-list" className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-background text-text-muted text-sm border-b border-border">
-              <th className="p-4 font-semibold">Medicine Name</th>
-              <th className="p-4 font-semibold">Category</th>
-              <th className="p-4 font-semibold">Status</th>
-              {(user?.role === 'Admin' || user?.role === 'Staff') && <th className="p-4 font-semibold text-right">Actions</th>}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <tr key={i}>
-                  <td className="p-4"><Skeleton className="h-6 w-40" /></td>
-                  <td className="p-4"><Skeleton className="h-6 w-24" /></td>
-                  <td className="p-4"><Skeleton className="h-6 w-16" /></td>
-                  {(user?.role === 'Admin' || user?.role === 'Staff') && <td className="p-4"><Skeleton className="h-6 w-24 ml-auto" /></td>}
-                </tr>
-              ))
-            ) : filtered.length === 0 ? (
-              <tr><td colSpan={user?.role === 'Admin' || user?.role === 'Staff' ? 4 : 3} className="p-8 text-center text-text-light">No medicines found.</td></tr>
-            ) : filtered.map(m => (
-              <tr key={m.id} className="hover:bg-background/50 transition-colors group">
-                <td className="p-4">
-                  <div className="flex items-center gap-3 font-medium text-text">
-                    <div className="w-8 h-8 rounded-lg bg-success-bg text-emerald-600 flex items-center justify-center shrink-0"><Pill size={16} /></div>
-                    <div>
-                      <p>{m.name}</p>
-                      {m.description && <p className="text-xs text-text-light font-normal">{m.description}</p>}
-                    </div>
-                  </div>
-                </td>
-                <td className="p-4 text-text-muted">{m.category}</td>
-                <td className="p-4">
-                  {m.status ? (
-                    <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold"><CheckCircle size={14} /> Active</span>
-                  ) : (
-                    <span className="text-text-light text-xs font-semibold flex items-center gap-1.5"><Archive size={14} /> Inactive</span>
-                  )}
-                </td>
-                {(user?.role === 'Admin' || user?.role === 'Staff') && (
-                  <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => { setEditTarget({ ...m }); setIsEditModalOpen(true); }}
-                        className="text-primary-text hover:text-sky-800 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-bg transition-colors flex items-center gap-1"
-                      >
-                        <Pencil size={14} /> Edit
-                      </button>
-                      {m.status && (
-                        <button
-                          onClick={() => handleDeactivate(m)}
-                          className="text-rose-500 hover:text-rose-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-danger-bg transition-colors flex items-center gap-1"
-                        >
-                          <Archive size={14} /> Deactivate
-                        </button>
-                      )}
+        <div className="overflow-x-auto">
+          <table data-tour="page-list" className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-background text-text-muted text-sm border-b border-border">
+                <th className="p-4 font-semibold">Medicine Name</th>
+                <th className="p-4 font-semibold">Category</th>
+                <th className="p-4 font-semibold">Status</th>
+                {(user?.role === 'Admin' || user?.role === 'Staff') && <th className="p-4 font-semibold text-right">Actions</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="p-4"><Skeleton className="h-6 w-40" /></td>
+                    <td className="p-4"><Skeleton className="h-6 w-24" /></td>
+                    <td className="p-4"><Skeleton className="h-6 w-16" /></td>
+                    {(user?.role === 'Admin' || user?.role === 'Staff') && <td className="p-4"><Skeleton className="h-6 w-24 ml-auto" /></td>}
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={user?.role === 'Admin' || user?.role === 'Staff' ? 4 : 3} className="p-8 text-center text-text-light">No medicines found.</td></tr>
+              ) : filtered.map(m => (
+                <tr key={m.id} className="hover:bg-background/50 transition-colors group">
+                  <td className="p-4">
+                    <div className="flex items-center gap-3 font-medium text-text">
+                      <div className="w-8 h-8 rounded-lg bg-success-bg text-emerald-600 flex items-center justify-center shrink-0"><Pill size={16} /></div>
+                      <div>
+                        <p>{m.name}</p>
+                        {m.description && <p className="text-xs text-text-light font-normal">{m.description}</p>}
+                      </div>
                     </div>
                   </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <td className="p-4 text-text-muted">{m.category}</td>
+                  <td className="p-4">
+                    {m.status ? (
+                      <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold"><CheckCircle size={14} /> Active</span>
+                    ) : (
+                      <span className="text-text-light text-xs font-semibold flex items-center gap-1.5"><Archive size={14} /> Inactive</span>
+                    )}
+                  </td>
+                  {(user?.role === 'Admin' || user?.role === 'Staff') && (
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => { setEditTarget({ ...m }); setIsEditModalOpen(true); }}
+                          className="text-primary-text hover:text-sky-800 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-bg transition-colors flex items-center gap-1"
+                        >
+                          <Pencil size={14} /> Edit
+                        </button>
+                        {m.status && (
+                          <button
+                            onClick={() => handleDeactivate(m)}
+                            className="text-rose-500 hover:text-rose-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-danger-bg transition-colors flex items-center gap-1"
+                          >
+                            <Archive size={14} /> Deactivate
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Add Medicine Modal */}

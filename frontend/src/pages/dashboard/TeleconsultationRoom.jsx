@@ -466,8 +466,8 @@ export default function TeleconsultationRoom() {
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6 animate-in fade-in duration-500">      {/* Video Call Area */}
-      <div data-tour="page-video" className="flex-1 bg-slate-900 rounded-3xl overflow-hidden relative shadow-2xl flex flex-col border border-slate-800">
+    <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-8rem)] gap-6 animate-in fade-in duration-500">      {/* Video Call Area */}
+      <div data-tour="page-video" className="flex-1 min-h-[70vh] lg:min-h-0 bg-slate-900 rounded-3xl overflow-hidden relative shadow-2xl flex flex-col border border-slate-800">
         <div className="absolute top-4 left-4 z-10 flex gap-2">
             <span className="bg-rose-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse flex items-center gap-2">
                <span className="w-2 h-2 bg-surface rounded-full"></span> LIVE
@@ -524,7 +524,7 @@ export default function TeleconsultationRoom() {
       </div>
 
       {/* Right Sidebar panels */}
-      <div className="w-full md:w-[28rem] flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
+      <div className="w-full lg:w-[28rem] flex flex-col gap-4 lg:overflow-y-auto lg:pr-2 custom-scrollbar">
          
          {/* Patient Context & Vitals */}
          <div data-tour="page-form" className="bg-surface rounded-2xl p-5 shadow-sm border border-border shrink-0">

@@ -139,8 +139,17 @@ class PrescriptionController extends Controller {
             'prescription' => $prescription->load('items.medicine', 'patient.user', 'doctor.user', 'versions'),
         ]);
     }
-    public function download($id) {
+    public function download(Request $request, $id) {
+        $user = $request->user();
         $prescription = Prescription::with(['items.medicine', 'patient.user', 'doctor.user'])->findOrFail($id);
+
+        if ($user->role === 'Patient' && (int) $prescription->patient_id !== (int) $user->patient?->id) {
+            return response()->json(['message' => 'Unauthorized prescription download'], 403);
+        }
+        if ($user->role === 'Doctor' && (int) $prescription->doctor_id !== (int) $user->doctor?->id) {
+            return response()->json(['message' => 'Unauthorized prescription download'], 403);
+        }
+
         $doctorSignatureSvg = $prescription->doctor_signature_svg;
         $doctorSignatureSrc = $doctorSignatureSvg
             ? 'data:image/svg+xml;base64,' . base64_encode($doctorSignatureSvg)

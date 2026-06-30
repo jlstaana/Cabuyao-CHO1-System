@@ -70,5 +70,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/staff', [AdminController::class, 'createStaff'])->middleware('role:Admin');
 
     // Analytics
-    Route::get('/analytics/stats', [AnalyticsController::class, 'stats']);
+    Route::get('/analytics/stats', [AnalyticsController::class, 'stats'])->middleware('role:Admin');
 });

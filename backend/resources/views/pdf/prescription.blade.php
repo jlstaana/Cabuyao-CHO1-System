@@ -19,7 +19,7 @@
         }
 
         .container {
-            width: 100%;
+            width: 90%;
             margin: 0 auto;
             padding: 14px 18px;
             box-sizing: border-box;
@@ -116,24 +116,25 @@
 
         .patient-box {
             border: 1px solid #cbd5e1;
-            padding: 7px 9px;
-            margin-bottom: 8px;
+            padding: 5px 7px;
+            margin-bottom: 6px;
         }
 
         .patient-grid {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .patient-grid td {
-            padding: 3px 5px;
+            padding: 2px 4px;
             vertical-align: bottom;
+            text-align: left;
         }
 
         .label {
             color: #475569;
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 0.4px;
             font-weight: bold;
@@ -141,19 +142,19 @@
 
         .line-value {
             border-bottom: 1px solid #94a3b8;
-            min-height: 15px;
+            min-height: 13px;
             color: #0f172a;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
         }
 
         .rx-symbol {
             text-align: left;
-            font-size: 44px;
+            font-size: 38px;
             font-weight: bold;
             font-family: DejaVu Serif, serif;
             color: #075985;
-            margin: 4px 0 0 0;
+            margin: 2px 0 0 0;
             line-height: 1;
         }
 
@@ -186,7 +187,7 @@
             color: #0c4a6e;
             font-weight: bold;
             text-align: left;
-            padding: 6px 8px;
+            padding: 4px 6px;
             border: 1px solid #bae6fd;
             text-transform: uppercase;
             font-size: 10px;
@@ -194,9 +195,10 @@
         }
 
         .medicines-table td {
-            padding: 7px 8px;
+            padding: 5px 6px;
             border: 1px solid #e2e8f0;
             vertical-align: top;
+            text-align: left;
         }
 
         .medicines-table tr,
@@ -208,27 +210,28 @@
         .medicine-name {
             font-weight: bold;
             color: #0f172a;
-            font-size: 13px;
+            font-size: 12px;
             margin-bottom: 2px;
         }
 
         .medicine-desc {
-            font-size: 11px;
+            font-size: 10px;
             color: #64748b;
         }
 
         .instructions {
             border: 1px solid #cbd5e1;
-            padding: 8px 10px;
-            margin-bottom: 12px;
-            min-height: 34px;
+            padding: 6px 8px;
+            margin-bottom: 8px;
+            min-height: 30px;
+            text-align: left;
         }
 
         .instructions h3 {
             margin-top: 0;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             color: #0f172a;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.4px;
         }
@@ -236,40 +239,43 @@
         .instructions p {
             margin: 0;
             color: #475569;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .footer {
-            margin-top: 12px;
-            padding-top: 10px;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 2px solid #cbd5e1;
         }
 
         .validity {
             float: left;
             width: 45%;
-            font-size: 10px;
+            font-size: 9px;
             color: #475569;
+            margin-bottom: 12px;
+            text-align: left;
         }
 
         .signature-box {
             float: right;
             text-align: center;
-            width: 280px;
+            width: 220px;
         }
 
         .signature-space {
-            width: 220px;
-            height: 34px;
-            margin: 0 auto 5px auto;
+            width: 180px;
+            height: 24px;
+            margin: 0 auto 3px auto;
             border-bottom: 1px solid #000;
             text-align: center;
         }
 
         .signature-image {
-            width: 160px;
-            height: 30px;
-            margin: 2px auto 0 auto;
+            width: 60px;
+            height: auto;
+            max-height: 18px;
+            margin: 0 auto;
             display: block;
         }
 
@@ -441,8 +447,7 @@
 
         <div class="footer clearfix">
             <div class="validity">
-                <p><strong>Reminder:</strong> Follow the prescribed dosage and consult your physician or the City Health
-                    Office for any adverse reaction or worsening symptoms.</p>
+                <p><strong>Reminder:</strong> Follow the prescribed dosage and consult your physician or the City Health Office for any adverse reaction.</p>
                 <p>This electronically generated prescription is issued through the Cabuyao CHO-I Telehealth System.</p>
             </div>
             <div class="signature-box">
