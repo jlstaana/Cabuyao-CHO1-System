@@ -95,7 +95,17 @@ class PrescriptionController extends Controller {
             return $prescription;
         });
 
-        return response()->json($prescription->load('items.medicine', 'patient.user', 'doctor.user'));
+        $prescription->load('items.medicine', 'patient.user', 'doctor.user');
+
+        $this->sendActivityAlert(
+            $prescription->patient->user,
+            'New E-Prescription Available',
+            "Dr. {$prescription->doctor->user->name} has issued a new e-prescription for you.",
+            "You can now view and download your e-prescription PDF from your dashboard.",
+            url(config('app.url') . '/prescriptions')
+        );
+
+        return response()->json($prescription);
     }
     public function update(Request $request, $id) {
         $data = $this->validatePrescriptionItems($request);
@@ -134,9 +144,19 @@ class PrescriptionController extends Controller {
             return $prescription;
         });
 
+        $prescription->load('items.medicine', 'patient.user', 'doctor.user', 'versions');
+
+        $this->sendActivityAlert(
+            $prescription->patient->user,
+            'E-Prescription Updated',
+            "Dr. {$prescription->doctor->user->name} has updated your e-prescription.",
+            "Please review the updated medicine list and dosage instructions.",
+            url(config('app.url') . '/prescriptions')
+        );
+
         return response()->json([
             'message' => 'Prescription updated. Patient has been notified.',
-            'prescription' => $prescription->load('items.medicine', 'patient.user', 'doctor.user', 'versions'),
+            'prescription' => $prescription,
         ]);
     }
     public function download(Request $request, $id) {

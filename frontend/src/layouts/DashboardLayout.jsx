@@ -263,16 +263,43 @@ export default function DashboardLayout() {
         const readIds = JSON.parse(localStorage.getItem(`cho1-read-notifications-${user.id || 'guest'}`) || '[]');
         const readSet = new Set(readIds);
         
+        const pushedKey = `cho1-pushed-notifications-${user.id || 'guest'}`;
+        const pushedIds = JSON.parse(localStorage.getItem(pushedKey) || '[]');
+        const pushedSet = new Set(pushedIds);
+
         let count = 0;
-        const processItems = (items, prefix) => {
+        let newToPush = [];
+
+        const processItems = (items, prefix, titlePrefix) => {
           (items || []).slice(0, 20).forEach(item => {
-            if (!readSet.has(`${prefix}-${item.id}`)) count++;
+            const notifId = `${prefix}-${item.id}`;
+            if (!readSet.has(notifId)) {
+              count++;
+              // Only push if it was created/updated in the last hour to prevent spamming old unread items on first login
+              const isRecent = new Date(item.updated_at || item.created_at).getTime() > Date.now() - 3600000;
+              if (isRecent && !pushedSet.has(notifId)) {
+                newToPush.push({ id: notifId, title: `New ${titlePrefix} Update`, body: `Check your notifications for the latest update regarding your ${titlePrefix.toLowerCase()}.` });
+                pushedSet.add(notifId);
+              }
+            }
           });
         };
         
-        processItems(consultationRes.data, 'consultation');
-        processItems(prescriptionRes.data, 'prescription');
+        processItems(consultationRes.data, 'consultation', 'Consultation');
+        processItems(prescriptionRes.data, 'prescription', 'Prescription');
         
+        if (newToPush.length > 0) {
+          localStorage.setItem(pushedKey, JSON.stringify(Array.from(pushedSet)));
+          if ('Notification' in window && Notification.permission === 'default') {
+            await ensureNotificationPermission();
+          }
+          if ('Notification' in window && Notification.permission === 'granted') {
+            newToPush.forEach(notif => {
+              new Notification(notif.title, { body: notif.body, tag: notif.id });
+            });
+          }
+        }
+
         setUnreadNotifications(count);
       } catch {
         // Silently fail for background check

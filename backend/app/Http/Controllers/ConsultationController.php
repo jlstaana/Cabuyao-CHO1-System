@@ -174,6 +174,36 @@ class ConsultationController extends Controller {
             ? 'Consultation scheduled with an available doctor.'
             : 'No doctor is available for the selected schedule. Your request has been queued for coordination.';
 
+        // Notifications
+        if ($status === 'Pending') {
+            $staffUsers = \App\Models\User::whereIn('role', ['Admin', 'Staff'])->get();
+            foreach ($staffUsers as $staff) {
+                $this->sendActivityAlert(
+                    $staff,
+                    'Pending Consultation Request',
+                    "A patient has requested a consultation, but no doctor was automatically assigned.",
+                    "Patient: {$request->user()->name}\nRequested Specialization: {$data['requested_specialization']}\nSchedule: {$data['scheduled_at']}\nSymptoms: {$data['symptoms']}",
+                    url(config('app.url') . '/consultations')
+                );
+            }
+        } else {
+            // Scheduled
+            $this->sendActivityAlert(
+                $request->user(),
+                'Consultation Scheduled',
+                "Your consultation has been successfully scheduled.",
+                "Doctor: Dr. {$doctor->user->name}\nSchedule: {$data['scheduled_at']}",
+                url(config('app.url') . '/consultation-history')
+            );
+            $this->sendActivityAlert(
+                $doctor->user,
+                'New Consultation Assigned',
+                "A new patient consultation has been automatically assigned to you.",
+                "Patient: {$request->user()->name}\nSchedule: {$data['scheduled_at']}\nSymptoms: {$data['symptoms']}",
+                url(config('app.url') . '/consultations')
+            );
+        }
+
         return response()->json([
             ...$c->load(['doctor.user', 'form', 'vitalSigns'])->toArray(),
             'message' => $message,
@@ -313,6 +343,18 @@ class ConsultationController extends Controller {
             $data['scheduled_at'] = null;
         }
         $c->update($data);
+        
+        $c->load('patient.user');
+        if (in_array($request->status, ['Approved', 'Scheduled', 'Cancelled'])) {
+            $this->sendActivityAlert(
+                $c->patient->user,
+                'Consultation Status Updated',
+                "Your consultation status has been updated to {$request->status}.",
+                "Schedule: " . ($c->scheduled_at ?? 'N/A') . "\nStatus: {$request->status}",
+                url(config('app.url') . '/consultation-history')
+            );
+        }
+
         return response()->json($c);
     }
     public function complete(Request $request, $id) {
@@ -322,6 +364,16 @@ class ConsultationController extends Controller {
             ['consultation_id' => $id],
             ['symptoms' => $request->symptoms, 'diagnosis' => $request->diagnosis, 'notes' => $request->notes]
         );
-        return response()->json($c->load('form', 'prescription.items.medicine'));
+        $c->load('patient.user', 'form', 'prescription.items.medicine');
+
+        $this->sendActivityAlert(
+            $c->patient->user,
+            'Consultation Completed',
+            "Your teleconsultation has been marked as completed by your doctor.",
+            "Diagnosis: {$request->diagnosis}",
+            url(config('app.url') . '/consultation-history')
+        );
+
+        return response()->json($c);
     }
 }
