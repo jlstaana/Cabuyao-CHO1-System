@@ -7,7 +7,29 @@ import toast from 'react-hot-toast';
 import { Pill, Plus, Search, Archive, Pencil, CheckCircle } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 
-const CATEGORIES = ['Analgesic', 'Antibiotic', 'Antihistamine', 'Vitamins', 'Antacid', 'Antidiabetic', 'Antihypertensive', 'Other'];
+const CATEGORIES = [
+  'Analgesic',
+  'Antacid',
+  'Antibiotic',
+  'Antidiabetic',
+  'Antifungal',
+  'Antihistamine',
+  'Antihypertensive',
+  'Cardiology',
+  'Corticosteroid',
+  'Dermatology',
+  'Endocrinology',
+  'Gastroenterology',
+  'Infectious Disease',
+  'NSAID',
+  'Pediatrics',
+  'PhilHealth YAKAP',
+  'PhilHealth GAMOT',
+  'Pulmonology',
+  'Psychiatry',
+  'Vitamin',
+  'Other',
+];
 
 export default function Medicines() {
   const { user } = useAuthStore();
@@ -16,6 +38,7 @@ export default function Medicines() {
   const [loading, setLoading] = useState(true);
   const [medicines, setMedicines] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
   const [editTarget, setEditTarget] = useState(null);
   const [formData, setFormData] = useState({ name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '' });
 
@@ -79,10 +102,11 @@ export default function Medicines() {
     }
   };
 
-  const filtered = medicines.filter(m =>
-    m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (m.category || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filtered = medicines.filter(m => {
+    const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || (m.category || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === 'All' || (m.category || '').includes(categoryFilter);
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="animate-in fade-in duration-500">      <div className="flex justify-between items-center mb-6">
@@ -95,7 +119,7 @@ export default function Medicines() {
       </div>
 
       <div className="bg-surface rounded-2xl shadow-sm border border-border overflow-hidden">
-        <div className="p-4 border-b border-border flex gap-4">
+        <div className="p-4 border-b border-border flex gap-4 flex-col sm:flex-row">
           <div data-tour="page-search" className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light" size={18} />
             <input
@@ -106,6 +130,14 @@ export default function Medicines() {
               className="w-full pl-10 pr-4 py-2 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background focus:bg-surface transition-all"
             />
           </div>
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            className="px-4 py-2 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background focus:bg-surface transition-all sm:w-64"
+          >
+            <option value="All">All Categories</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
         </div>
         <div className="overflow-x-auto">
           <table data-tour="page-list" className="w-full text-left border-collapse">
