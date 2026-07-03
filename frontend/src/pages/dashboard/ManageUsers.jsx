@@ -29,7 +29,8 @@ const SPECIALIZATION_OPTIONS = [
   'Pulmo',
   'Mental',
   'Endo',
-  'Surgery',
+  'Family Medicine',
+  'Dermatology',
 ];
 
 export default function ManageUsers() {

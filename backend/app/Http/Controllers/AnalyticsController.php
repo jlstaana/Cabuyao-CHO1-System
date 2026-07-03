@@ -1,6 +1,6 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\{AuditLog, Consultation, ConsultationForm, Doctor, Medicine, Patient, Prescription, PrescriptionItem};
+use App\Models\{AuditLog, Consultation, ConsultationForm, Doctor, Medicine, Patient, Prescription, PrescriptionItem, User};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -69,7 +69,9 @@ class AnalyticsController extends Controller {
                 'completion_rate' => $totalConsultations ? round(($completedConsultations / $totalConsultations) * 100, 1) : 0,
                 'registered_patients' => Patient::where('archived', false)->count(),
                 'active_doctors' => Doctor::count(),
+                'inactive_users' => User::where('is_active', false)->count(),
                 'active_medicines' => Medicine::where('status', true)->count(),
+                'low_stock_count' => Medicine::where('status', true)->where('stock', '<=', 20)->count(),
                 'prescriptions_issued' => Prescription::count(),
             ],
             'time_based_volume' => $consultationVolume,

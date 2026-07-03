@@ -108,6 +108,16 @@ class MedicineSeeder extends Seeder {
             ['name' => 'Dapagliflozin 10mg', 'category' => 'PhilHealth GAMOT / Antidiabetic', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth GAMOT package. For type 2 diabetes management.', 'status' => true],
             ['name' => 'Budesonide + Formoterol 160mcg/4.5mcg', 'category' => 'PhilHealth GAMOT / Pulmonology', 'dosage_form' => 'Inhaler', 'description' => 'PhilHealth GAMOT package. For asthma and COPD maintenance.', 'status' => true],
             ['name' => 'Cefixime 200mg', 'category' => 'PhilHealth GAMOT / Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'PhilHealth GAMOT package. For susceptible bacterial infections.', 'status' => true],
+            
+            // New Additions: Dermatology & Family Medicine (including PhilHealth YAKAP/Konsulta)
+            ['name' => 'Ketoconazole 2% Cream', 'category' => 'General Medicine / Dermatology -  Antifungal', 'dosage_form' => 'Cream', 'description' => 'For fungal infections like tinea corporis/pedis. Apply once or twice daily.', 'status' => true],
+            ['name' => 'Fusidic Acid 2% Cream', 'category' => 'General Medicine / Dermatology -  Topical Antibiotic', 'dosage_form' => 'Cream', 'description' => 'For skin infections such as impetigo. Apply 3-4 times daily.', 'status' => true],
+            ['name' => 'Clobetasol Propionate 0.05%', 'category' => 'General Medicine / Dermatology -  Corticosteroid', 'dosage_form' => 'Ointment', 'description' => 'High-potency steroid for severe dermatitis/psoriasis. Use short-term only.', 'status' => true],
+            ['name' => 'Benzoyl Peroxide 5% Gel', 'category' => 'General Medicine / Dermatology -  Anti-acne', 'dosage_form' => 'Gel', 'description' => 'For mild to moderate acne vulgaris. Apply thinly once or twice daily.', 'status' => true],
+            ['name' => 'Erythromycin 500mg', 'category' => 'PhilHealth YAKAP / Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. Macrolide antibiotic for susceptible infections.', 'status' => true],
+            ['name' => 'Captopril 25mg', 'category' => 'PhilHealth YAKAP / Antihypertensive', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. ACE inhibitor for hypertension/heart failure.', 'status' => true],
+            ['name' => 'Isosorbide Dinitrate 5mg', 'category' => 'PhilHealth YAKAP / Cardio', 'dosage_form' => 'Sublingual Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For acute angina pectoris.', 'status' => true],
+            ['name' => 'Salbutamol 2mg/5mL', 'category' => 'PhilHealth YAKAP / Pulmonology', 'dosage_form' => 'Syrup', 'description' => 'PhilHealth YAKAP Essential Medicine. Oral bronchodilator for pediatric use.', 'status' => true],
         ];
 
         foreach ($medicines as &$medicine) {

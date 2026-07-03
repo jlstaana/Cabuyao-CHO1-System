@@ -211,6 +211,7 @@ export default function Analytics() {
   const serviceRows = [
     { name: 'Registered Patients', total: summary.registered_patients || 0 },
     { name: 'Active Doctors', total: summary.active_doctors || 0 },
+    { name: 'Inactive Users', total: summary.inactive_users || 0 },
     { name: 'Total Consultations', total: summary.total_consultations || 0 },
     { name: 'Prescriptions Issued', total: summary.prescriptions_issued || 0 },
   ];
@@ -283,7 +284,7 @@ export default function Analytics() {
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} sub="All time" color="emerald" />
-            <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Available in database" color="sky" />
+            <StatCard label="Low Stock Alerts" value={formatNumber(summary.low_stock_count)} sub="Items needing restock" color="amber" />
             <StatCard label="Top Diseases" value={formatNumber((stats.top_diseases || []).length)} sub="Based on diagnoses" color="indigo" />
             <StatCard label="Completed Consults" value={formatNumber(summary.completed_consultations)} sub="Eligible for prescriptions" color="rose" />
           </div>
@@ -311,9 +312,10 @@ export default function Analytics() {
 
       {activeTab === 'utilization' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <StatCard label="Registered Patients" value={formatNumber(summary.registered_patients)} sub="Active patient records" color="indigo" />
             <StatCard label="Active Doctors" value={formatNumber(summary.active_doctors)} sub="Doctor accounts" color="sky" />
+            <StatCard label="Inactive Users" value={formatNumber(summary.inactive_users)} sub="Archived accounts" color="slate" />
             <StatCard label="Total Consults" value={formatNumber(summary.total_consultations)} sub="All-time consultations" color="emerald" />
             <StatCard label="Pending Work" value={formatNumber(summary.pending_consultations)} sub="Open consultations" color="rose" />
           </div>
