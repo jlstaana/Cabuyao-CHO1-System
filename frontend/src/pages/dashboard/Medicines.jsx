@@ -17,7 +17,7 @@ export default function Medicines() {
   const [medicines, setMedicines] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [editTarget, setEditTarget] = useState(null);
-  const [formData, setFormData] = useState({ name: '', category: 'Analgesic', description: '' });
+  const [formData, setFormData] = useState({ name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '' });
 
   const fetchMedicines = async () => {
     try {
@@ -49,7 +49,7 @@ export default function Medicines() {
       await api.post('/medicines', formData);
       toast.success('Medicine added to database!');
       setIsAddModalOpen(false);
-      setFormData({ name: '', category: 'Analgesic', description: '' });
+      setFormData({ name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '' });
       fetchMedicines();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add medicine');
@@ -113,6 +113,8 @@ export default function Medicines() {
               <tr className="bg-background text-text-muted text-sm border-b border-border">
                 <th className="p-4 font-semibold">Medicine Name</th>
                 <th className="p-4 font-semibold">Category</th>
+                <th className="p-4 font-semibold">Stock</th>
+                <th className="p-4 font-semibold">Expiration</th>
                 <th className="p-4 font-semibold">Status</th>
                 {(user?.role === 'Admin' || user?.role === 'Staff') && <th className="p-4 font-semibold text-right">Actions</th>}
               </tr>
@@ -122,6 +124,8 @@ export default function Medicines() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>
                     <td className="p-4"><Skeleton className="h-6 w-40" /></td>
+                    <td className="p-4"><Skeleton className="h-6 w-24" /></td>
+                    <td className="p-4"><Skeleton className="h-6 w-16" /></td>
                     <td className="p-4"><Skeleton className="h-6 w-24" /></td>
                     <td className="p-4"><Skeleton className="h-6 w-16" /></td>
                     {(user?.role === 'Admin' || user?.role === 'Staff') && <td className="p-4"><Skeleton className="h-6 w-24 ml-auto" /></td>}
@@ -141,6 +145,20 @@ export default function Medicines() {
                     </div>
                   </td>
                   <td className="p-4 text-text-muted">{m.category}</td>
+                  <td className="p-4">
+                    <span className={`font-semibold ${m.stock > 10 ? 'text-text' : m.stock > 0 ? 'text-amber-600' : 'text-rose-500'}`}>
+                      {m.stock || 0}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    {m.expiration_date ? (
+                      <span className={`text-sm ${new Date(m.expiration_date) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'text-rose-500 font-semibold' : 'text-text-muted'}`}>
+                        {new Date(m.expiration_date).toLocaleDateString()}
+                      </span>
+                    ) : (
+                      <span className="text-text-light text-sm italic">N/A</span>
+                    )}
+                  </td>
                   <td className="p-4">
                     {m.status ? (
                       <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold"><CheckCircle size={14} /> Active</span>
@@ -192,6 +210,16 @@ export default function Medicines() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Description (optional)</label>
             <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Initial Stock</label>
+              <input type="number" min="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Expiration Date</label>
+              <input type="date" value={formData.expiration_date} onChange={e => setFormData({ ...formData, expiration_date: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
+            </div>
+          </div>
           <div className="pt-4 flex justify-end gap-3">
             <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
             <button type="submit" className="px-5 py-2 bg-emerald-500 text-white font-medium rounded-xl shadow-md hover:bg-emerald-600 transition-colors">Save Medicine</button>
@@ -212,6 +240,16 @@ export default function Medicines() {
               <select value={editTarget.category} onChange={e => setEditTarget({ ...editTarget, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none bg-surface">
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Stock</label>
+                <input type="number" min="0" value={editTarget.stock || 0} onChange={e => setEditTarget({ ...editTarget, stock: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20 bg-surface" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Expiration Date</label>
+                <input type="date" value={editTarget.expiration_date || ''} onChange={e => setEditTarget({ ...editTarget, expiration_date: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20 bg-surface" />
+              </div>
             </div>
             <div className="pt-4 flex justify-end gap-3">
               <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>

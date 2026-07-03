@@ -17,6 +17,8 @@ class MedicineController extends Controller {
             'category' => 'nullable|string',
             'description' => 'nullable|string',
             'dosage_form' => 'nullable|string',
+            'stock' => 'nullable|integer|min:0',
+            'expiration_date' => 'nullable|date',
         ]);
         $m = Medicine::create(array_merge($data, ['status' => true]));
         return response()->json($m, 201);
@@ -29,6 +31,8 @@ class MedicineController extends Controller {
             'description' => 'nullable|string',
             'dosage_form' => 'nullable|string',
             'status' => 'nullable|boolean',
+            'stock' => 'nullable|integer|min:0',
+            'expiration_date' => 'nullable|date',
         ]);
         $m->update($data);
         return response()->json($m);

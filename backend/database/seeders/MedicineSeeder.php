@@ -110,7 +110,33 @@ class MedicineSeeder extends Seeder {
             ['name' => 'Cefixime 200mg', 'category' => 'PhilHealth GAMOT / Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'PhilHealth GAMOT package. For susceptible bacterial infections.', 'status' => true],
         ];
 
-        foreach ($medicines as $medicine) {
+        foreach ($medicines as &$medicine) {
+            // Realistic mock data: 
+            // 80% chance of having good stock (50-500)
+            // 15% chance of low stock (1-20)
+            // 5% chance of out of stock (0)
+            $stockRand = rand(1, 100);
+            if ($stockRand <= 5) {
+                $medicine['stock'] = 0;
+            } elseif ($stockRand <= 20) {
+                $medicine['stock'] = rand(1, 20);
+            } else {
+                $medicine['stock'] = rand(50, 500);
+            }
+
+            // Expiration date:
+            // 5% chance expiring very soon (within 30 days)
+            // 15% chance expiring in 1-6 months
+            // 80% chance expiring in 1-3 years
+            $expRand = rand(1, 100);
+            if ($expRand <= 5) {
+                $medicine['expiration_date'] = now()->addDays(rand(1, 29))->format('Y-m-d');
+            } elseif ($expRand <= 20) {
+                $medicine['expiration_date'] = now()->addMonths(rand(1, 6))->format('Y-m-d');
+            } else {
+                $medicine['expiration_date'] = now()->addYears(rand(1, 3))->addDays(rand(1, 300))->format('Y-m-d');
+            }
+
             Medicine::updateOrCreate(['name' => $medicine['name']], $medicine);
         }
     }

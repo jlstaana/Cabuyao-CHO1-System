@@ -1,6 +1,6 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\{AuditLog, Consultation, Doctor, Medicine, Patient, Prescription, PrescriptionItem};
+use App\Models\{AuditLog, Consultation, ConsultationForm, Doctor, Medicine, Patient, Prescription, PrescriptionItem};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -27,15 +27,22 @@ class AnalyticsController extends Controller {
             ->limit(10)
             ->get();
 
-        $prescQuery = PrescriptionItem::join('prescriptions', 'prescription_items.prescription_id', '=', 'prescriptions.id')
-            ->join('medicines', 'prescription_items.medicine_id', '=', 'medicines.id');
-
-        if ($request->has('medicine_category')) {
-            $prescQuery->where('medicines.category', $request->medicine_category);
+        $topDiseasesQuery = ConsultationForm::whereNotNull('diagnosis');
+        
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $topDiseasesQuery->whereHas('consultation', function($q) use ($request) {
+                $q->whereBetween('created_at', [$request->start_date, $request->end_date]);
+            });
         }
 
-        $topMedicines = $prescQuery->select('medicines.name', 'medicines.category', DB::raw('count(*) as total'))
-            ->groupBy('medicines.name', 'medicines.category')->orderByDesc('total')->limit(10)->get();
+        $topDiseases = $topDiseasesQuery->select('diagnosis', DB::raw('count(*) as total'))
+            ->groupBy('diagnosis')->orderByDesc('total')->limit(10)->get();
+
+        $lowStockMedicines = Medicine::where('status', true)
+            ->orderBy('stock', 'asc')
+            ->limit(10)
+            ->get(['name', 'stock']);
+
         $totalConsultations = (clone $query)->count();
         $completedConsultations = (clone $query)->where('status', 'Completed')->count();
         $pendingConsultations = (clone $query)->whereIn('status', ['Pending', 'Approved', 'Scheduled'])->count();
@@ -68,7 +75,8 @@ class AnalyticsController extends Controller {
             'time_based_volume' => $consultationVolume,
             'consultations_by_status' => $byStatus,
             'consultations_by_doctor' => $byDoctor,
-            'top_medicines' => $topMedicines,
+            'top_diseases' => $topDiseases,
+            'low_stock_medicines' => $lowStockMedicines,
             'recent_logs' => $recentLogs,
         ]);
     }

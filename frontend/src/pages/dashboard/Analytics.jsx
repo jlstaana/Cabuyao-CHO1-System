@@ -17,7 +17,8 @@ const EMPTY_STATS = {
   time_based_volume: [],
   consultations_by_status: [],
   consultations_by_doctor: [],
-  top_medicines: [],
+  top_diseases: [],
+  low_stock_medicines: [],
   recent_logs: [],
 };
 
@@ -80,7 +81,8 @@ function buildReportHtml(stats, generatedAt, generatedBy) {
   const summary = stats.summary || {};
   const statusRows = stats.consultations_by_status.map((row) => ({ Status: row.status, Total: row.total }));
   const doctorRows = stats.consultations_by_doctor.map((row) => ({ Doctor: row.name, Consultations: row.total }));
-  const medicineRows = stats.top_medicines.map((row) => ({ Medicine: row.name, Category: row.category || 'N/A', Prescriptions: row.total }));
+  const diseaseRows = (stats.top_diseases || []).map((row) => ({ Disease: row.diagnosis, Cases: row.total }));
+  const lowStockRows = (stats.low_stock_medicines || []).map((row) => ({ Medicine: row.name, Stock: row.stock }));
   const volumeRows = stats.time_based_volume.map((row) => ({ Date: row.date, Consultations: row.count }));
   const logRows = stats.recent_logs.map((row) => ({
     Date: formatDateTime(row.created_at),
@@ -134,8 +136,11 @@ function buildReportHtml(stats, generatedAt, generatedBy) {
   <h2>Consultations by Doctor</h2>
   <table><thead><tr><th>Doctor</th><th>Consultations</th></tr></thead><tbody>${tableRows(doctorRows, ['Doctor', 'Consultations'])}</tbody></table>
 
-  <h2>Top Prescribed Medicines</h2>
-  <table><thead><tr><th>Medicine</th><th>Category</th><th>Prescriptions</th></tr></thead><tbody>${tableRows(medicineRows, ['Medicine', 'Category', 'Prescriptions'])}</tbody></table>
+  <h2>Top Diagnosed Diseases</h2>
+  <table><thead><tr><th>Disease / Diagnosis</th><th>Total Cases</th></tr></thead><tbody>${tableRows(diseaseRows, ['Disease', 'Cases'])}</tbody></table>
+
+  <h2>Low Stock Medicines</h2>
+  <table><thead><tr><th>Medicine</th><th>Current Stock</th></tr></thead><tbody>${tableRows(lowStockRows, ['Medicine', 'Stock'])}</tbody></table>
 
   <h2>Recent System Activity</h2>
   <table><thead><tr><th>Date</th><th>User</th><th>Role</th><th>Action</th><th>IP</th></tr></thead><tbody>${tableRows(logRows, ['Date', 'User', 'Role', 'Action', 'IP'])}</tbody></table>
@@ -201,11 +206,12 @@ export default function Analytics() {
   };
 
   const doctorMax = maxTotal(stats.consultations_by_doctor);
-  const medicineMax = maxTotal(stats.top_medicines);
+  const diseaseMax = maxTotal(stats.top_diseases || []);
+  const lowStockMax = maxTotal(stats.low_stock_medicines || [], 'stock');
   const serviceRows = [
     { name: 'Registered Patients', total: summary.registered_patients || 0 },
     { name: 'Active Doctors', total: summary.active_doctors || 0 },
-    { name: 'Active Medicines', total: summary.active_medicines || 0 },
+    { name: 'Total Consultations', total: summary.total_consultations || 0 },
     { name: 'Prescriptions Issued', total: summary.prescriptions_issued || 0 },
   ];
   const serviceMax = maxTotal(serviceRows);
@@ -278,16 +284,27 @@ export default function Analytics() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} sub="All time" color="emerald" />
             <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Available in database" color="sky" />
-            <StatCard label="Top Medicine Entries" value={formatNumber(stats.top_medicines.length)} sub="Based on prescriptions" color="indigo" />
+            <StatCard label="Top Diseases" value={formatNumber((stats.top_diseases || []).length)} sub="Based on diagnoses" color="indigo" />
             <StatCard label="Completed Consults" value={formatNumber(summary.completed_consultations)} sub="Eligible for prescriptions" color="rose" />
           </div>
-          <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-            <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><FileText size={16} className="text-emerald-500" /> Most Prescribed Medicines</h3>
-            {stats.top_medicines.length ? (
-              <div className="space-y-3">
-                {stats.top_medicines.map((row) => <BarRow key={`${row.name}-${row.category}`} label={row.name} value={row.total} max={medicineMax} color="bg-emerald-400" />)}
-              </div>
-            ) : <EmptyBlock label="No prescription medicine data yet" />}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
+              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><FileText size={16} className="text-emerald-500" /> Top Diagnosed Diseases</h3>
+              {(stats.top_diseases || []).length ? (
+                <div className="space-y-3">
+                  {stats.top_diseases.map((row) => <BarRow key={row.diagnosis} label={row.diagnosis} value={row.total} max={diseaseMax} color="bg-emerald-400" />)}
+                </div>
+              ) : <EmptyBlock label="No disease diagnosis data yet" />}
+            </div>
+
+            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
+              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><FileText size={16} className="text-amber-500" /> Critical / Low Stock Medicines</h3>
+              {(stats.low_stock_medicines || []).length ? (
+                <div className="space-y-3">
+                  {stats.low_stock_medicines.map((row) => <BarRow key={row.name} label={row.name} value={row.stock} max={Math.max(lowStockMax, 50)} color={row.stock === 0 ? "bg-rose-500" : "bg-amber-400"} />)}
+                </div>
+              ) : <EmptyBlock label="No low stock medicines" />}
+            </div>
           </div>
         </div>
       )}
@@ -297,7 +314,7 @@ export default function Analytics() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Registered Patients" value={formatNumber(summary.registered_patients)} sub="Active patient records" color="indigo" />
             <StatCard label="Active Doctors" value={formatNumber(summary.active_doctors)} sub="Doctor accounts" color="sky" />
-            <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Medicine database" color="emerald" />
+            <StatCard label="Total Consults" value={formatNumber(summary.total_consultations)} sub="All-time consultations" color="emerald" />
             <StatCard label="Pending Work" value={formatNumber(summary.pending_consultations)} sub="Open consultations" color="rose" />
           </div>
           <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
