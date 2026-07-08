@@ -6,7 +6,7 @@ export default function CHOLogo({ to = '/', light = false, compact = false }) {
     <Link to={to} className="flex items-center gap-3">
       <span className={`flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border shadow-sm ${
         light
-          ? 'border-white/30 bg-surface'
+          ? 'border-white/30 bg-white'
           : 'border-sky-100 bg-surface'
       }`}>
         <img

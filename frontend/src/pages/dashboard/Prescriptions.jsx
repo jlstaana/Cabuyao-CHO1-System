@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
-import { FileText, Download, User, Edit, Plus, Trash2, Save } from 'lucide-react';
+import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 import Modal from '../../components/Modal';
 import useAuthStore from '../../store/useAuthStore';
@@ -146,6 +146,9 @@ export default function Prescriptions() {
               </p>
               <p className="text-sm flex items-center gap-2 text-text-muted">
                 <User size={16} className="text-text-light" /> Prescribed By: Dr. {p.doctor?.user?.name || 'Unknown Doctor'}
+              </p>
+              <p className="text-sm flex items-center gap-2 text-text-muted">
+                <Calendar size={16} className="text-text-light" /> Issued On: {new Date(p.created_at).toLocaleDateString()}
               </p>
             </div>
             

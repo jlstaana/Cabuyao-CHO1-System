@@ -325,6 +325,11 @@ export default function Analytics() {
               {serviceRows.map((row) => <BarRow key={row.name} label={row.name} value={row.total} max={serviceMax} color="bg-sky-400" />)}
             </div>
           </div>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <StatCard label="Inactive Medicines" value={formatNumber(summary.inactive_medicines)} sub="Deactivated from inventory" color="slate" />
+            <StatCard label="Archived Patients" value={formatNumber(summary.archived_patients)} sub="Archived health records" color="slate" />
+            <StatCard label="Inactive Staff/Users" value={formatNumber(summary.inactive_users)} sub="Revoked access accounts" color="slate" />
+          </div>
         </div>
       )}
 

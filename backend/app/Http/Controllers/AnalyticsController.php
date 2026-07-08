@@ -71,6 +71,8 @@ class AnalyticsController extends Controller {
                 'active_doctors' => Doctor::count(),
                 'inactive_users' => User::where('is_active', false)->count(),
                 'active_medicines' => Medicine::where('status', true)->count(),
+                'inactive_medicines' => Medicine::where('status', false)->count(),
+                'archived_patients' => Patient::where('archived', true)->count(),
                 'low_stock_count' => Medicine::where('status', true)->where('stock', '<=', 20)->count(),
                 'prescriptions_issued' => Prescription::count(),
             ],

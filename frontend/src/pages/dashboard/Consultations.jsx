@@ -384,6 +384,9 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
                       <button onClick={() => onAccept(c)} className="flex items-center gap-1.5 px-3 py-2 bg-success-bg text-success-text rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
                         <CheckCircle size={15} /> Accept
                       </button>
+                      <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-3 py-2 bg-danger-bg text-danger-text rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
+                        <XCircle size={15} /> Cancel
+                      </button>
                     </>
                   )}
                   {c.status === 'Scheduled' && (
@@ -487,7 +490,11 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
                     <td className="px-5 py-3"><StatusPill status={c.status} /></td>
                     <td className="px-5 py-3 text-right">
                       {c.status === 'Pending' && (
-                        <span className="text-xs text-text-light italic">Doctor-managed</span>
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-3 py-1.5 bg-danger-bg text-danger-text rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors">
+                            <XCircle size={13} /> Cancel
+                          </button>
+                        </div>
                       )}
                       {c.status === 'Scheduled' && (
                         <div className="flex justify-end gap-2">

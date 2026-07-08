@@ -14,6 +14,7 @@ class MedicineController extends Controller {
     public function store(Request $request) {
         $data = $request->validate([
             'name' => 'required|string',
+            'generic_name' => 'nullable|string',
             'category' => 'nullable|string',
             'description' => 'nullable|string',
             'dosage_form' => 'nullable|string',
@@ -27,6 +28,7 @@ class MedicineController extends Controller {
         $m = Medicine::findOrFail($id);
         $data = $request->validate([
             'name' => 'required|string',
+            'generic_name' => 'nullable|string',
             'category' => 'nullable|string',
             'description' => 'nullable|string',
             'dosage_form' => 'nullable|string',

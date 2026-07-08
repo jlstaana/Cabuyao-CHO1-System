@@ -70,6 +70,7 @@ export default function TeleconsultationRoom() {
   const [consultation, setConsultation] = useState(null);
   const [medicines, setMedicines] = useState([]);
   const [prescriptionItems, setPrescriptionItems] = useState([]);
+  const [pastPrescriptions, setPastPrescriptions] = useState([]);
   const [videoQuality, setVideoQuality] = useState(getAdaptiveVideoQuality);
   const [noiseCancellationActive, setNoiseCancellationActive] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
@@ -192,7 +193,14 @@ export default function TeleconsultationRoom() {
         // Fetch specific consultation from the index list (simple workaround since no specific GET /id is set)
         const res = await api.get('/consultations');
         const current = res.data.find(c => c.id === parseInt(id));
-        if (current) setConsultation(current);
+        if (current) {
+          setConsultation(current);
+          if (user?.role === 'Doctor' && current.patient_id) {
+             api.get(`/patients/${current.patient_id}/prescriptions`)
+               .then(pRes => setPastPrescriptions(pRes.data || []))
+               .catch(() => {});
+          }
+        }
       } catch {
         toast.error("Could not load consultation context");
       }
@@ -364,8 +372,8 @@ export default function TeleconsultationRoom() {
     const ctx = canvas.getContext('2d');
     const point = getSignaturePoint(event);
     ctx.lineTo(point.x, point.y);
-    ctx.strokeStyle = '#0f172a';
-    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = '#1e3a8a'; // Fountain pen dark blue ink
+    ctx.lineWidth = 2.0;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
@@ -405,7 +413,7 @@ export default function TeleconsultationRoom() {
           `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`,
           ...rest.map((point) => `L ${point.x.toFixed(1)} ${point.y.toFixed(1)}`),
         ].join(' ');
-        return `<path d="${pathData}" fill="none" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+        return `<path d="${pathData}" fill="none" stroke="#1e3a8a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
       })
       .join('');
 
@@ -446,6 +454,22 @@ export default function TeleconsultationRoom() {
 
   const addPrescriptionItem = () => {
     setPrescriptionItems([...prescriptionItems, { medicine_id: '', dosage: '', frequency: '' }]);
+  };
+
+  const copyPrescriptionItems = (items) => {
+    const newItems = items.map(item => ({
+      medicine_id: String(item.medicine_id),
+      dosage: item.dosage || '',
+      frequency: item.frequency || '',
+    }));
+    if (prescriptionItems.length === 1 && !prescriptionItems[0].medicine_id) {
+      setPrescriptionItems(newItems);
+    } else if (prescriptionItems.length === 0) {
+      setPrescriptionItems(newItems);
+    } else {
+      setPrescriptionItems([...prescriptionItems, ...newItems]);
+    }
+    toast.success('Copied to current prescription list');
   };
 
   const sendChatMessage = async (e) => {
@@ -531,9 +555,9 @@ export default function TeleconsultationRoom() {
             <h3 className="font-semibold text-text flex items-center gap-2 mb-4"><Activity size={18} className="text-sky-500"/> Vital Signs</h3>
             {user.role === 'Patient' ? (
                <form className="space-y-3" onSubmit={saveVitals}>
-                  <input value={vitals.blood_pressure} onChange={e=>setVitals({...vitals, blood_pressure: e.target.value})} placeholder="Blood Pressure (e.g. 120/80)" className="w-full px-4 py-2 rounded-xl border border-border text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" required/>
-                  <input value={vitals.heart_rate} onChange={e=>setVitals({...vitals, heart_rate: e.target.value})} placeholder="Heart Rate (bpm)" className="w-full px-4 py-2 rounded-xl border border-border text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" required/>
-                  <input value={vitals.temperature} onChange={e=>setVitals({...vitals, temperature: e.target.value})} placeholder="Temperature (°C)" className="w-full px-4 py-2 rounded-xl border border-border text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" required/>
+                  <input value={vitals.blood_pressure} onChange={e=>setVitals({...vitals, blood_pressure: e.target.value})} placeholder="Blood Pressure (e.g. 120/80)" className="w-full px-4 py-2 rounded-xl border border-border text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                  <input value={vitals.heart_rate} onChange={e=>setVitals({...vitals, heart_rate: e.target.value})} placeholder="Heart Rate (bpm)" className="w-full px-4 py-2 rounded-xl border border-border text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                  <input value={vitals.temperature} onChange={e=>setVitals({...vitals, temperature: e.target.value})} placeholder="Temperature (°C)" className="w-full px-4 py-2 rounded-xl border border-border text-sm focus:ring-2 focus:ring-sky-500/20 outline-none" />
                   <button type="submit" className="w-full bg-primary-bg text-primary-text font-medium py-2 rounded-xl hover:bg-primary-hover transition-colors text-sm">Submit Live Vitals</button>
                </form>
             ) : (
@@ -595,10 +619,45 @@ export default function TeleconsultationRoom() {
                   <p className="text-xs text-text-muted">Click to upload lab results or imaging</p>
                </div>
             )}
-            <div className="flex gap-2 text-sm text-text-muted">
+             <div className="flex gap-2 text-sm text-text-muted">
                No images uploaded for this session.
             </div>
          </div>
+
+         {/* Prescription History */}
+         {user.role === 'Doctor' && (
+             <div className="bg-surface rounded-2xl p-5 shadow-sm border border-border shrink-0">
+               <h3 className="font-semibold text-text flex items-center gap-2 mb-4"><FileText size={18} className="text-amber-500"/> Patient Prescription History</h3>
+               <div className="max-h-48 overflow-y-auto space-y-3 custom-scrollbar">
+                  {pastPrescriptions.length === 0 ? (
+                    <p className="text-xs text-text-light">No past prescriptions found.</p>
+                  ) : pastPrescriptions.map(p => (
+                    <div key={p.id} className="border border-border p-3 rounded-xl bg-background">
+                      <div className="flex justify-between items-start mb-2">
+                         <div className="text-xs text-text-muted">
+                           <span className="font-semibold text-slate-700">{new Date(p.created_at).toLocaleDateString()}</span>
+                           <br/>By Dr. {p.doctor?.user?.name || 'Unknown'}
+                         </div>
+                         <button 
+                           onClick={() => copyPrescriptionItems(p.items)}
+                           className="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold hover:bg-amber-200 transition-colors"
+                         >
+                           Copy to Current
+                         </button>
+                      </div>
+                      <div className="space-y-1">
+                        {p.items.map((item, idx) => (
+                           <div key={idx} className="text-xs flex items-start gap-1">
+                             <Pill size={12} className="shrink-0 mt-0.5 text-slate-400"/>
+                             <span><span className="font-semibold text-slate-700">{item.medicine?.name}</span> - {item.dosage} ({item.frequency})</span>
+                           </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+               </div>
+             </div>
+          )}
 
          {/* Doctor's Consultation & E-Prescription Form */}
          {user.role === 'Doctor' && (

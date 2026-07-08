@@ -48,6 +48,7 @@ function buildPatientRecords(consultations) {
       dob: patient.dob,
       contact: patient.contact_no || 'N/A',
       address: patient.address || 'N/A',
+      category: patient.category || '',
       medical_history: patient.record?.medical_history || '',
       blood_type: 'N/A',
       allergies: 'N/A',
@@ -141,7 +142,7 @@ export default function PatientRecords() {
   const [editModal, setEditModal] = useState(false);
   const [archiveModal, setArchiveModal] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', dob: '', contact_no: '', address: '', medical_history: '' });
+  const [editForm, setEditForm] = useState({ name: '', dob: '', contact_no: '', address: '', category: '', medical_history: '' });
   const [archiveReason, setArchiveReason] = useState('');
 
   // All hooks must run before any conditional return
@@ -182,6 +183,7 @@ export default function PatientRecords() {
       dob: patient.dob ? String(patient.dob).slice(0, 10) : '',
       contact_no: patient.contact === 'N/A' ? '' : patient.contact || '',
       address: patient.address === 'N/A' ? '' : patient.address || '',
+      category: patient.category || '',
       medical_history: patient.medical_history || '',
     });
     setEditModal(true);
@@ -198,6 +200,7 @@ export default function PatientRecords() {
         dob: updated?.dob || editForm.dob,
         contact: updated?.contact_no || 'N/A',
         address: updated?.address || 'N/A',
+        category: updated?.category || '',
         medical_history: updated?.record?.medical_history || '',
       } : patient));
       toast.success(response.data?.message || 'Patient record updated successfully.');
@@ -248,7 +251,8 @@ export default function PatientRecords() {
 
   const filtered = patients.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.address || '').toLowerCase().includes(searchQuery.toLowerCase())
+    (p.address || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.category || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -373,6 +377,7 @@ export default function PatientRecords() {
                             <InfoChip icon={MapPin}   label="Address"      value={patient.address} />
                             <InfoChip icon={HeartPulse} label="Blood Type" value={patient.blood_type} />
                             <InfoChip icon={AlertCircle} label="Allergies" value={patient.allergies} />
+                            <InfoChip icon={ClipboardList} label="Category" value={patient.category || 'General'} />
                           </div>
                           {patient.medical_history && (
                             <div className="rounded-xl border border-border bg-background px-4 py-3">
@@ -565,6 +570,19 @@ export default function PatientRecords() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
               <textarea rows={2} value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+              <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none bg-surface">
+                <option value="">General</option>
+                <option value="Pediatric">Pediatric</option>
+                <option value="Adult">Adult</option>
+                <option value="Senior Citizen">Senior Citizen</option>
+                <option value="PhilHealth YAKAP">PhilHealth YAKAP</option>
+                <option value="PhilHealth GAMOT">PhilHealth GAMOT</option>
+                <option value="Maternal">Maternal</option>
+                <option value="TB-DOTS">TB-DOTS</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Medical History</label>

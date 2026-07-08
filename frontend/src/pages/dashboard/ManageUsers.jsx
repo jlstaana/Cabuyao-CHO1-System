@@ -141,7 +141,7 @@ export default function ManageUsers() {
   const filtered = users.filter((u) => {
     const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase());
     
-    let matchesRole = false;
+    let matchesRole;
     if (roleFilter === 'All') {
       matchesRole = true;
     } else if (roleFilter === 'Inactive') {

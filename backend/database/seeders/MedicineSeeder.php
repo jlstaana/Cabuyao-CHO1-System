@@ -6,149 +6,100 @@ use App\Models\Medicine;
 class MedicineSeeder extends Seeder {
     public function run(): void {
         $medicines = [
-            ['name' => 'Paracetamol 500mg', 'category' => 'General Medicine / Analgesic', 'dosage_form' => 'Tablet', 'description' => 'For fever and mild pain. Common adult reference: 1 tablet every 4-6 hours as needed; max 4,000mg/day. Adjust for liver disease and alcohol use.', 'status' => true],
-            ['name' => 'Ibuprofen 200mg', 'category' => 'General Medicine / NSAID', 'dosage_form' => 'Tablet', 'description' => 'For pain, inflammation, and fever. Common adult reference: 1-2 tablets every 6-8 hours with food; max OTC 1,200mg/day. Avoid in active ulcer, severe kidney disease, or late pregnancy.', 'status' => true],
-            ['name' => 'Mefenamic Acid 500mg', 'category' => 'General Medicine / NSAID', 'dosage_form' => 'Capsule', 'description' => 'For short-term mild to moderate pain or dysmenorrhea. Common adult reference: 500mg initially, then 250mg every 6 hours as needed; usually no more than 7 days.', 'status' => true],
-            ['name' => 'Aspirin 80mg', 'category' => 'Cardiology / Antiplatelet', 'dosage_form' => 'Tablet', 'description' => 'For antiplatelet therapy when clinically indicated. Common adult reference: 80mg once daily. Avoid in aspirin allergy, active bleeding, and selected ulcer risks.', 'status' => true],
-            ['name' => 'Cetirizine 10mg', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'For allergic rhinitis or urticaria. Common adult reference: 10mg once daily. May cause drowsiness in some patients.', 'status' => true],
-            ['name' => 'Loratadine 10mg', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'For allergies. Common adult reference: 10mg once daily. Usually non-drowsy.', 'status' => true],
-            ['name' => 'Diphenhydramine 25mg', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Capsule', 'description' => 'For acute allergy symptoms or nighttime itching. Common adult reference: 25-50mg every 6-8 hours as needed. Sedating; caution with elderly patients and driving.', 'status' => true],
-            ['name' => 'Salbutamol 100mcg Inhaler', 'category' => 'Pulmonology / Bronchodilator', 'dosage_form' => 'Metered dose inhaler', 'description' => 'For bronchospasm relief. Common reference: 1-2 puffs every 4-6 hours as needed. Review technique and seek urgent care if frequent rescue use is needed.', 'status' => true],
-            ['name' => 'Budesonide 200mcg Inhaler', 'category' => 'Pulmonology / Corticosteroid', 'dosage_form' => 'Dry powder inhaler', 'description' => 'For asthma maintenance when indicated. Common adult reference: 1-2 inhalations twice daily. Rinse mouth after use.', 'status' => true],
-            ['name' => 'Montelukast 10mg', 'category' => 'Pulmonology / Leukotriene Receptor Antagonist', 'dosage_form' => 'Tablet', 'description' => 'For asthma or allergic rhinitis maintenance in selected patients. Common adult reference: 10mg once nightly. Monitor for mood or sleep changes.', 'status' => true],
-            ['name' => 'Guaifenesin 200mg', 'category' => 'General Medicine / Expectorant', 'dosage_form' => 'Tablet', 'description' => 'For productive cough. Common adult reference: 200-400mg every 4 hours as needed with fluids. Evaluate persistent cough or fever.', 'status' => true],
-            ['name' => 'Dextromethorphan 15mg/5mL', 'category' => 'General Medicine / Antitussive', 'dosage_form' => 'Syrup', 'description' => 'For dry cough. Common adult reference: 10-20mg every 4 hours or 30mg every 6-8 hours as needed. Avoid with MAOIs and use caution with serotonergic drugs.', 'status' => true],
-            ['name' => 'Oral Rehydration Salts', 'category' => 'General Medicine / Rehydration', 'dosage_form' => 'Sachet', 'description' => 'For dehydration from diarrhea or vomiting. Mix exactly as directed with clean water; take frequent small sips. Seek care for blood in stool, severe dehydration, or persistent symptoms.', 'status' => true],
-            ['name' => 'Loperamide 2mg', 'category' => 'General Medicine / Gastroenterology -  Antidiarrheal', 'dosage_form' => 'Capsule', 'description' => 'For non-bloody acute diarrhea in adults. Common reference: 4mg initially, then 2mg after each loose stool; max 8mg/day OTC or 16mg/day supervised. Avoid with fever or bloody diarrhea.', 'status' => true],
-            ['name' => 'Omeprazole 20mg', 'category' => 'General Medicine / Gastroenterology -  PPI', 'dosage_form' => 'Capsule', 'description' => 'For GERD, dyspepsia, or ulcer therapy when indicated. Common adult reference: 20mg once daily before breakfast. Reassess long-term use.', 'status' => true],
-            ['name' => 'Pantoprazole 40mg', 'category' => 'General Medicine / Gastroenterology -  PPI', 'dosage_form' => 'Tablet', 'description' => 'For acid-related disease. Common adult reference: 40mg once daily before meals; duration depends on diagnosis.', 'status' => true],
-            ['name' => 'Aluminum Hydroxide + Magnesium Hydroxide', 'category' => 'General Medicine / Gastroenterology -  Antacid', 'dosage_form' => 'Suspension', 'description' => 'For occasional heartburn or hyperacidity. Common adult reference: 10-20mL after meals and at bedtime as needed. Separate from other medicines by at least 2 hours.', 'status' => true],
-            ['name' => 'Metoclopramide 10mg', 'category' => 'General Medicine / Gastroenterology -  Antiemetic', 'dosage_form' => 'Tablet', 'description' => 'For nausea/vomiting when appropriate. Common adult reference: 10mg up to three times daily before meals; short-term use preferred. Avoid in bowel obstruction and monitor neurologic effects.', 'status' => true],
-            ['name' => 'Amoxicillin 500mg', 'category' => 'General Medicine / Infectious Disease -  Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'For susceptible bacterial infections only. Common adult reference varies by infection, often 500mg every 8 hours or 875mg every 12 hours. Confirm allergy history and local guidance.', 'status' => true],
-            ['name' => 'Co-Amoxiclav 625mg', 'category' => 'General Medicine / Infectious Disease -  Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'For selected bacterial infections. Common adult reference: 625mg every 8 hours with food. Dose and duration must match infection type and renal function.', 'status' => true],
-            ['name' => 'Azithromycin 500mg', 'category' => 'General Medicine / Infectious Disease -  Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'For selected respiratory, skin, or atypical infections. Common adult reference: 500mg once daily for 3 days or 500mg day 1 then 250mg days 2-5. Use only when indicated.', 'status' => true],
-            ['name' => 'Cefalexin 500mg', 'category' => 'General Medicine / Infectious Disease -  Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'For susceptible skin, soft tissue, or urinary infections. Common adult reference: 500mg every 6-12 hours depending on indication. Check beta-lactam allergy history.', 'status' => true],
-            ['name' => 'Ciprofloxacin 500mg', 'category' => 'General Medicine / Infectious Disease -  Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'For selected infections where benefits outweigh risks. Common adult reference: 500mg every 12 hours depending on indication. Avoid unnecessary use; caution with tendon, QT, and pregnancy risks.', 'status' => true],
-            ['name' => 'Metronidazole 500mg', 'category' => 'General Medicine / Infectious Disease -  Antiprotozoal-Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'For anaerobic or protozoal infections when indicated. Common adult regimens vary; often 500mg every 8-12 hours. Avoid alcohol during therapy and for at least 48-72 hours after.', 'status' => true],
-            ['name' => 'Clotrimazole 1% Cream', 'category' => 'General Medicine / Dermatology -  Antifungal', 'dosage_form' => 'Cream', 'description' => 'For superficial fungal skin infections. Common reference: apply thinly twice daily for 2-4 weeks and continue briefly after symptoms clear.', 'status' => true],
-            ['name' => 'Mupirocin 2% Ointment', 'category' => 'General Medicine / Dermatology -  Topical Antibiotic', 'dosage_form' => 'Ointment', 'description' => 'For localized bacterial skin infection when indicated. Common reference: apply thinly 2-3 times daily for up to 5-10 days. Reassess spreading or systemic infection.', 'status' => true],
-            ['name' => 'Hydrocortisone 1% Cream', 'category' => 'General Medicine / Dermatology -  Topical Corticosteroid', 'dosage_form' => 'Cream', 'description' => 'For mild inflammatory skin conditions. Common reference: apply thinly 1-2 times daily for a short course. Avoid eyes, infected skin, and prolonged unsupervised use.', 'status' => true],
-            ['name' => 'Permethrin 5% Cream', 'category' => 'General Medicine / Dermatology -  Antiparasitic', 'dosage_form' => 'Cream', 'description' => 'For scabies when diagnosed. Common reference: apply neck down overnight for 8-14 hours, then wash off; repeat in 7 days if needed. Treat close contacts and linens.', 'status' => true],
-            ['name' => 'Metformin 500mg', 'category' => 'Endocrinology / Antidiabetic', 'dosage_form' => 'Tablet', 'description' => 'For type 2 diabetes. Common adult starting reference: 500mg once or twice daily with meals, titrate as tolerated. Check renal function and GI tolerance.', 'status' => true],
-            ['name' => 'Gliclazide 80mg', 'category' => 'Endocrinology / Antidiabetic', 'dosage_form' => 'Tablet', 'description' => 'For type 2 diabetes when indicated. Common adult reference: 40-80mg daily with breakfast, titrate carefully. Counsel on hypoglycemia risk.', 'status' => true],
-            ['name' => 'Glimepiride 2mg', 'category' => 'Endocrinology / Antidiabetic', 'dosage_form' => 'Tablet', 'description' => 'For type 2 diabetes. Common adult starting reference: 1-2mg once daily with breakfast. Monitor glucose and hypoglycemia risk.', 'status' => true],
-            ['name' => 'Amlodipine 5mg', 'category' => 'Cardiology / Antihypertensive', 'dosage_form' => 'Tablet', 'description' => 'For hypertension or angina. Common adult reference: 5mg once daily; may titrate to 10mg daily. Monitor edema and blood pressure response.', 'status' => true],
-            ['name' => 'Losartan 50mg', 'category' => 'Cardiology / Antihypertensive', 'dosage_form' => 'Tablet', 'description' => 'For hypertension or renal protection in selected patients. Common adult reference: 50mg once daily. Monitor kidney function and potassium; avoid pregnancy.', 'status' => true],
-            ['name' => 'Enalapril 10mg', 'category' => 'Cardiology / ACE Inhibitor', 'dosage_form' => 'Tablet', 'description' => 'For hypertension or heart failure when indicated. Common adult reference: 5-10mg once or twice daily, titrate. Monitor cough, angioedema, kidney function, and potassium.', 'status' => true],
-            ['name' => 'Metoprolol Tartrate 50mg', 'category' => 'Cardiology / Beta Blocker', 'dosage_form' => 'Tablet', 'description' => 'For selected hypertension, angina, or rate control indications. Common adult reference varies, often 25-50mg twice daily. Monitor pulse, BP, asthma/COPD caution.', 'status' => true],
-            ['name' => 'Hydrochlorothiazide 25mg', 'category' => 'Cardiology / Diuretic', 'dosage_form' => 'Tablet', 'description' => 'For hypertension or edema when indicated. Common adult reference: 12.5-25mg once daily. Monitor electrolytes, renal function, and uric acid risk.', 'status' => true],
-            ['name' => 'Atorvastatin 20mg', 'category' => 'Cardiology / Lipid-Lowering', 'dosage_form' => 'Tablet', 'description' => 'For dyslipidemia or cardiovascular risk reduction. Common adult reference: 10-20mg once daily, adjust by lipid goals and risk. Review liver disease and pregnancy contraindication.', 'status' => true],
-            ['name' => 'Simvastatin 20mg', 'category' => 'Cardiology / Lipid-Lowering', 'dosage_form' => 'Tablet', 'description' => 'For dyslipidemia. Common adult reference: 20mg nightly. Check interaction risks and muscle symptoms.', 'status' => true],
-            ['name' => 'Ferrous Sulfate 325mg', 'category' => 'General Medicine / Hematology -  Iron Supplement', 'dosage_form' => 'Tablet', 'description' => 'For iron deficiency anemia when confirmed or likely. Common adult reference: 1 tablet once daily or every other day; take away from calcium if possible. May darken stool.', 'status' => true],
-            ['name' => 'Folic Acid 5mg', 'category' => 'General Medicine / OB-GYN -  Vitamin', 'dosage_form' => 'Tablet', 'description' => 'For folate deficiency or pregnancy supplementation when indicated. Common adult reference: 5mg once daily for treatment; pregnancy prevention doses may differ by risk.', 'status' => true],
-            ['name' => 'Calcium Carbonate 500mg', 'category' => 'General Medicine / Mineral Supplement', 'dosage_form' => 'Tablet', 'description' => 'For calcium supplementation when indicated. Common adult reference: 500mg elemental calcium once or twice daily with meals. Separate from iron and some antibiotics.', 'status' => true],
-            ['name' => 'Vitamin B Complex', 'category' => 'General Medicine / Vitamin', 'dosage_form' => 'Tablet', 'description' => 'For vitamin B supplementation when clinically appropriate. Common adult reference: 1 tablet once daily. Verify formulation and indication.', 'status' => true],
-            ['name' => 'Ascorbic Acid 500mg', 'category' => 'General Medicine / Vitamin', 'dosage_form' => 'Tablet', 'description' => 'Vitamin C supplement. Common adult reference: 500mg once daily. Use caution with recurrent kidney stones or renal disease.', 'status' => true],
-            ['name' => 'Multivitamins + Minerals', 'category' => 'General Medicine / Vitamin', 'dosage_form' => 'Tablet', 'description' => 'General nutritional supplement. Common adult reference: 1 tablet once daily with food. Not a substitute for disease-specific therapy.', 'status' => true],
-            ['name' => 'Carbocisteine 500mg', 'category' => 'Pulmonology / Mucolytic', 'dosage_form' => 'Capsule', 'description' => 'For thick respiratory secretions. Common adult reference: 500mg three times daily, then reduce as symptoms improve. Encourage hydration.', 'status' => true],
-            ['name' => 'Acetylcysteine 600mg', 'category' => 'Pulmonology / Mucolytic', 'dosage_form' => 'Sachet', 'description' => 'For mucus clearance in selected respiratory conditions. Common adult reference: 600mg once daily dissolved in water. Use caution in asthma if bronchospasm occurs.', 'status' => true],
-            ['name' => 'Phenylephrine 10mg', 'category' => 'General Medicine / ENT -  Decongestant', 'dosage_form' => 'Tablet', 'description' => 'For nasal congestion. Common adult reference: 10mg every 4 hours as needed. Use caution or avoid in uncontrolled hypertension, heart disease, or hyperthyroidism.', 'status' => true],
-            ['name' => 'Fluticasone Nasal Spray 50mcg', 'category' => 'General Medicine / ENT -  Nasal Corticosteroid', 'dosage_form' => 'Nasal spray', 'description' => 'For allergic rhinitis. Common adult reference: 1-2 sprays per nostril once daily. Aim away from nasal septum and use consistently.', 'status' => true],
-            ['name' => 'Chlorhexidine 0.12% Mouthwash', 'category' => 'General Medicine / Dental -  Antiseptic', 'dosage_form' => 'Mouthwash', 'description' => 'For short-term oral antisepsis when indicated. Common adult reference: rinse 15mL for 30 seconds twice daily, then spit. Avoid eating/drinking briefly after use.', 'status' => true],
-            ['name' => 'Artificial Tears', 'category' => 'General Medicine / Ophthalmology -  Lubricant', 'dosage_form' => 'Eye drops', 'description' => 'For dry eye symptoms. Common reference: 1-2 drops in affected eye as needed. Seek evaluation for eye pain, vision change, or injury.', 'status' => true],
-            ['name' => 'Sodium Chloride 0.9% Nasal Drops', 'category' => 'General Medicine / ENT -  Nasal Saline', 'dosage_form' => 'Nasal drops', 'description' => 'For nasal dryness or congestion support. Common reference: 1-2 drops per nostril as needed. Safe supportive option for many patients.', 'status' => true],
-            ['name' => 'Povidone-Iodine 10% Solution', 'category' => 'General Medicine / Wound Care -  Antiseptic', 'dosage_form' => 'Topical solution', 'description' => 'For skin antisepsis and minor wound care. Apply externally as directed. Avoid deep puncture wounds, extensive burns, and iodine allergy without clinician review.', 'status' => true],
-            ['name' => 'Silver Sulfadiazine 1% Cream', 'category' => 'General Medicine / Wound Care -  Burn Treatment', 'dosage_form' => 'Cream', 'description' => 'For selected burn wound care. Common reference: apply thin layer once or twice daily after cleaning. Avoid sulfa allergy and use caution in pregnancy or infants.', 'status' => true],
-            ['name' => 'Hyoscine Butylbromide 10mg', 'category' => 'General Medicine / Gastroenterology -  Antispasmodic', 'dosage_form' => 'Tablet', 'description' => 'For abdominal cramping when appropriate. Common adult reference: 10-20mg up to four times daily as needed. Avoid in narrow-angle glaucoma and some urinary retention risks.', 'status' => true],
-            ['name' => 'Lagundi (Ascof) 600mg', 'category' => 'Pulmonology / Herbal Cough', 'dosage_form' => 'Tablet', 'description' => 'For relief of cough due to common cold or flu. Common adult reference: 1 tablet 3-4 times daily.', 'status' => true],
-            ['name' => 'Lagundi (Ascof) 300mg/5mL', 'category' => 'Pulmonology / Herbal Cough', 'dosage_form' => 'Syrup', 'description' => 'For pediatric cough. Common reference: 5mL 3-4 times daily for older kids.', 'status' => true],
-            ['name' => 'Ambroxol 30mg', 'category' => 'Pulmonology / Mucolytic', 'dosage_form' => 'Tablet', 'description' => 'For clearing thick phlegm. Common adult reference: 30mg three times daily.', 'status' => true],
-            ['name' => 'Ambroxol 15mg/5mL', 'category' => 'Pulmonology / Mucolytic', 'dosage_form' => 'Syrup', 'description' => 'For pediatric cough with thick phlegm. Dose by weight.', 'status' => true],
-            ['name' => 'Butamirate Citrate 50mg', 'category' => 'Pulmonology / Antitussive', 'dosage_form' => 'Tablet', 'description' => 'For dry, non-productive cough. Common adult reference: 50mg 2-3 times daily.', 'status' => true],
-            ['name' => 'Erdosteine 300mg', 'category' => 'Pulmonology / Mucolytic', 'dosage_form' => 'Capsule', 'description' => 'For acute/chronic respiratory diseases. Common adult reference: 300mg twice daily.', 'status' => true],
-            ['name' => 'Oseltamivir 75mg', 'category' => 'General Medicine / Infectious Disease -  Antiviral', 'dosage_form' => 'Capsule', 'description' => 'For influenza (flu) treatment. Common adult reference: 75mg twice daily for 5 days.', 'status' => true],
-            ['name' => 'Cefuroxime 500mg', 'category' => 'General Medicine / Infectious Disease -  Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'For respiratory tract infections. Common adult reference: 500mg twice daily.', 'status' => true],
-            ['name' => 'Doxycycline 100mg', 'category' => 'General Medicine / Infectious Disease -  Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'For leptospirosis prophylaxis or treatment. Common adult reference: 100mg twice daily or 200mg once a week depending on indication. DO NOT give to pregnant women or children under 8.', 'status' => true],
-            ['name' => 'Paracetamol 250mg/5mL', 'category' => 'General Medicine / Pediatrics -  Analgesic', 'dosage_form' => 'Syrup', 'description' => 'For pediatric fever/pain (e.g. Dengue, flu). Dose strictly by weight.', 'status' => true],
-            ['name' => 'Ibuprofen 100mg/5mL', 'category' => 'General Medicine / Pediatrics -  NSAID', 'dosage_form' => 'Syrup', 'description' => 'For pediatric fever/pain. Avoid in Dengue.', 'status' => true],
-            ['name' => 'Celecoxib 200mg', 'category' => 'General Medicine / NSAID', 'dosage_form' => 'Capsule', 'description' => 'For acute pain or osteoarthritis. Common adult reference: 200mg once or twice daily.', 'status' => true],
-            ['name' => 'Naproxen 500mg', 'category' => 'General Medicine / NSAID', 'dosage_form' => 'Tablet', 'description' => 'For acute pain/gout. Common adult reference: 500mg initially, then 250mg every 8 hours.', 'status' => true],
-            ['name' => 'Domperidone 10mg', 'category' => 'General Medicine / Gastroenterology -  Antiemetic', 'dosage_form' => 'Tablet', 'description' => 'For nausea/vomiting. Common adult reference: 10mg up to 3 times daily before meals.', 'status' => true],
-            ['name' => 'Racecadotril 100mg', 'category' => 'General Medicine / Gastroenterology -  Antidiarrheal', 'dosage_form' => 'Capsule', 'description' => 'For acute diarrhea. Common adult reference: 100mg three times daily.', 'status' => true],
-            ['name' => 'Bacillus Clausii 2 billion spores', 'category' => 'General Medicine / Gastroenterology -  Probiotic', 'dosage_form' => 'Vial', 'description' => 'For diarrhea/flora restoration (Erceflora). Common reference: 1-2 vials/day.', 'status' => true],
-            ['name' => 'Zinc Sulfate 27.5mg/mL', 'category' => 'General Medicine / Pediatrics -  Mineral', 'dosage_form' => 'Drops', 'description' => 'For pediatric diarrhea support.', 'status' => true],
-            ['name' => 'Zinc Gluconate 10mg/5mL', 'category' => 'General Medicine / Pediatrics -  Mineral', 'dosage_form' => 'Syrup', 'description' => 'For pediatric diarrhea support.', 'status' => true],
-            ['name' => 'Pedialyte', 'category' => 'General Medicine / Pediatrics -  Rehydration', 'dosage_form' => 'Solution', 'description' => 'Ready-to-drink oral rehydration for diarrhea/vomiting.', 'status' => true],
-            ['name' => 'Calamine Lotion', 'category' => 'General Medicine / Dermatology -  Anti-itch', 'dosage_form' => 'Lotion', 'description' => 'For insect bites, rashes, chickenpox itch.', 'status' => true],
-            ['name' => 'Mometasone Furoate 0.1%', 'category' => 'General Medicine / Dermatology -  Corticosteroid', 'dosage_form' => 'Cream', 'description' => 'For severe dermatitis or eczema.', 'status' => true],
-            ['name' => 'Betamethasone Valerate 0.1%', 'category' => 'General Medicine / Dermatology -  Corticosteroid', 'dosage_form' => 'Cream', 'description' => 'For inflammatory skin conditions.', 'status' => true],
-            ['name' => 'Salmeterol + Fluticasone 25/250', 'category' => 'Pulmonology / Bronchodilator-Corticosteroid', 'dosage_form' => 'Inhaler', 'description' => 'Maintenance for asthma/COPD.', 'status' => true],
-            ['name' => 'Ipratropium + Salbutamol', 'category' => 'Pulmonology / Bronchodilator', 'dosage_form' => 'Nebule', 'description' => 'For acute asthma/COPD exacerbations via nebulizer.', 'status' => true],
-            ['name' => 'Montelukast 5mg', 'category' => 'General Medicine / Pediatrics -  Leukotriene Receptor Antagonist', 'dosage_form' => 'Chewable Tablet', 'description' => 'For pediatric asthma/allergic rhinitis maintenance.', 'status' => true],
-            ['name' => 'Montelukast 4mg', 'category' => 'General Medicine / Pediatrics -  Leukotriene Receptor Antagonist', 'dosage_form' => 'Granules', 'description' => 'For toddler asthma/allergic rhinitis maintenance.', 'status' => true],
-            ['name' => 'Levocetirizine 5mg', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'For allergic rhinitis/urticaria. Non-drowsy.', 'status' => true],
-            ['name' => 'Fexofenadine 120mg', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'For allergic rhinitis.', 'status' => true],
-            ['name' => 'Bilastine 20mg', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'For allergic rhinitis and urticaria.', 'status' => true],
-            ['name' => 'Co-Amoxiclav 250mg/5mL', 'category' => 'General Medicine / Pediatrics -  Antibiotic', 'dosage_form' => 'Suspension', 'description' => 'For pediatric bacterial infections. Dose strictly by weight.', 'status' => true],
+            // General Medicine / Analgesic
+            ['name' => 'Biogesic 500mg', 'generic_name' => 'Paracetamol', 'category' => 'General Medicine / Analgesic', 'dosage_form' => 'Tablet', 'description' => 'For fever and mild pain.', 'status' => true],
+            ['name' => 'Tempra 250mg/5mL', 'generic_name' => 'Paracetamol', 'category' => 'General Medicine / Pediatrics - Analgesic', 'dosage_form' => 'Syrup', 'description' => 'Pediatric fever and pain relief.', 'status' => true],
+            ['name' => 'Advil 200mg', 'generic_name' => 'Ibuprofen', 'category' => 'General Medicine / NSAID', 'dosage_form' => 'Softgel', 'description' => 'For pain, inflammation, and fever.', 'status' => true],
+            ['name' => 'Medicol Advance 400mg', 'generic_name' => 'Ibuprofen', 'category' => 'General Medicine / NSAID', 'dosage_form' => 'Softgel', 'description' => 'For severe headache and body pain.', 'status' => true],
+            ['name' => 'Ponstan 500mg', 'generic_name' => 'Mefenamic Acid', 'category' => 'General Medicine / NSAID', 'dosage_form' => 'Tablet', 'description' => 'For short-term mild to moderate pain or dysmenorrhea.', 'status' => true],
+            ['name' => 'Celebrex 200mg', 'generic_name' => 'Celecoxib', 'category' => 'General Medicine / NSAID', 'dosage_form' => 'Capsule', 'description' => 'For acute pain or osteoarthritis.', 'status' => true],
+            ['name' => 'Flanax 275mg', 'generic_name' => 'Naproxen Sodium', 'category' => 'General Medicine / NSAID', 'dosage_form' => 'Tablet', 'description' => 'For muscle pain and arthritis.', 'status' => true],
 
-            // Psychiatric / Mental Health Medicines
-            ['name' => 'Sertraline 50mg', 'category' => 'Psychiatry / SSRI', 'dosage_form' => 'Tablet', 'description' => 'For depression and anxiety disorders. Common reference: 50mg once daily.', 'status' => true],
-            ['name' => 'Escitalopram 10mg', 'category' => 'Psychiatry / SSRI', 'dosage_form' => 'Tablet', 'description' => 'For depression and generalized anxiety. Common reference: 10mg once daily.', 'status' => true],
-            ['name' => 'Fluoxetine 20mg', 'category' => 'Psychiatry / SSRI', 'dosage_form' => 'Capsule', 'description' => 'For depression, OCD, or panic disorder. Common reference: 20mg once daily in the morning.', 'status' => true],
-            ['name' => 'Quetiapine 25mg', 'category' => 'Psychiatry / Atypical Antipsychotic', 'dosage_form' => 'Tablet', 'description' => 'For mood stabilization or sleep support in selected cases. Common reference: 25mg nightly.', 'status' => true],
-            ['name' => 'Clonazepam 2mg', 'category' => 'Psychiatry / Benzodiazepine', 'dosage_form' => 'Tablet', 'description' => 'For severe acute anxiety or seizure disorder. strictly prescription only.', 'status' => true],
-            
-            // PhilHealth YAKAP / GAMOT Essential Medicines
-            ['name' => 'Cotrimoxazole 800mg/160mg', 'category' => 'PhilHealth YAKAP / Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For urinary tract and respiratory infections.', 'status' => true],
-            ['name' => 'Nitrofurantoin 100mg', 'category' => 'PhilHealth YAKAP / Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'PhilHealth YAKAP Essential Medicine. For uncomplicated urinary tract infections.', 'status' => true],
-            ['name' => 'Clarithromycin 500mg', 'category' => 'PhilHealth YAKAP / Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For respiratory and skin infections.', 'status' => true],
-            ['name' => 'Prednisone 5mg', 'category' => 'PhilHealth YAKAP / Corticosteroid', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For inflammation and severe allergies.', 'status' => true],
-            ['name' => 'Chlorphenamine 4mg', 'category' => 'PhilHealth YAKAP / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For allergic reactions and rhinitis.', 'status' => true],
-            ['name' => 'Clopidogrel 75mg', 'category' => 'PhilHealth GAMOT / Antiplatelet', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth GAMOT package. For heart conditions and stroke prevention.', 'status' => true],
-            ['name' => 'Dapagliflozin 10mg', 'category' => 'PhilHealth GAMOT / Antidiabetic', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth GAMOT package. For type 2 diabetes management.', 'status' => true],
-            ['name' => 'Budesonide + Formoterol 160mcg/4.5mcg', 'category' => 'PhilHealth GAMOT / Pulmonology', 'dosage_form' => 'Inhaler', 'description' => 'PhilHealth GAMOT package. For asthma and COPD maintenance.', 'status' => true],
-            ['name' => 'Cefixime 200mg', 'category' => 'PhilHealth GAMOT / Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'PhilHealth GAMOT package. For susceptible bacterial infections.', 'status' => true],
-            
-            // New Additions: Dermatology & Family Medicine (including PhilHealth YAKAP/Konsulta)
-            ['name' => 'Ketoconazole 2% Cream', 'category' => 'General Medicine / Dermatology -  Antifungal', 'dosage_form' => 'Cream', 'description' => 'For fungal infections like tinea corporis/pedis. Apply once or twice daily.', 'status' => true],
-            ['name' => 'Fusidic Acid 2% Cream', 'category' => 'General Medicine / Dermatology -  Topical Antibiotic', 'dosage_form' => 'Cream', 'description' => 'For skin infections such as impetigo. Apply 3-4 times daily.', 'status' => true],
-            ['name' => 'Clobetasol Propionate 0.05%', 'category' => 'General Medicine / Dermatology -  Corticosteroid', 'dosage_form' => 'Ointment', 'description' => 'High-potency steroid for severe dermatitis/psoriasis. Use short-term only.', 'status' => true],
-            ['name' => 'Benzoyl Peroxide 5% Gel', 'category' => 'General Medicine / Dermatology -  Anti-acne', 'dosage_form' => 'Gel', 'description' => 'For mild to moderate acne vulgaris. Apply thinly once or twice daily.', 'status' => true],
-            ['name' => 'Erythromycin 500mg', 'category' => 'PhilHealth YAKAP / Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. Macrolide antibiotic for susceptible infections.', 'status' => true],
-            ['name' => 'Captopril 25mg', 'category' => 'PhilHealth YAKAP / Antihypertensive', 'dosage_form' => 'Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. ACE inhibitor for hypertension/heart failure.', 'status' => true],
-            ['name' => 'Isosorbide Dinitrate 5mg', 'category' => 'PhilHealth YAKAP / Cardio', 'dosage_form' => 'Sublingual Tablet', 'description' => 'PhilHealth YAKAP Essential Medicine. For acute angina pectoris.', 'status' => true],
-            ['name' => 'Salbutamol 2mg/5mL', 'category' => 'PhilHealth YAKAP / Pulmonology', 'dosage_form' => 'Syrup', 'description' => 'PhilHealth YAKAP Essential Medicine. Oral bronchodilator for pediatric use.', 'status' => true],
+            // Allergies / Antihistamine
+            ['name' => 'Zyrtec 10mg', 'generic_name' => 'Cetirizine', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'For allergic rhinitis or urticaria.', 'status' => true],
+            ['name' => 'Virlix 10mg', 'generic_name' => 'Cetirizine', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'For allergies.', 'status' => true],
+            ['name' => 'Claritin 10mg', 'generic_name' => 'Loratadine', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'Non-drowsy allergy relief.', 'status' => true],
+            ['name' => 'Benadryl 25mg', 'generic_name' => 'Diphenhydramine', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Capsule', 'description' => 'For acute allergy symptoms.', 'status' => true],
+            ['name' => 'Allerta 10mg', 'generic_name' => 'Loratadine', 'category' => 'General Medicine / Antihistamine', 'dosage_form' => 'Tablet', 'description' => 'For allergies and rhinitis.', 'status' => true],
+
+            // Pulmonology / Cough & Cold
+            ['name' => 'Ventolin Inhaler 100mcg', 'generic_name' => 'Salbutamol', 'category' => 'Pulmonology / Bronchodilator', 'dosage_form' => 'Inhaler', 'description' => 'For bronchospasm relief.', 'status' => true],
+            ['name' => 'Symbicort 160/4.5mcg', 'generic_name' => 'Budesonide + Formoterol', 'category' => 'Pulmonology / Inhaler', 'dosage_form' => 'Inhaler', 'description' => 'Asthma and COPD maintenance.', 'status' => true],
+            ['name' => 'Singulair 10mg', 'generic_name' => 'Montelukast', 'category' => 'Pulmonology / Leukotriene', 'dosage_form' => 'Tablet', 'description' => 'Asthma maintenance.', 'status' => true],
+            ['name' => 'Robitussin Expectorant', 'generic_name' => 'Guaifenesin', 'category' => 'General Medicine / Expectorant', 'dosage_form' => 'Syrup', 'description' => 'For productive cough.', 'status' => true],
+            ['name' => 'Solmux 500mg', 'generic_name' => 'Carbocisteine', 'category' => 'Pulmonology / Mucolytic', 'dosage_form' => 'Capsule', 'description' => 'Melts sticky phlegm.', 'status' => true],
+            ['name' => 'Ascof Forte 600mg', 'generic_name' => 'Lagundi', 'category' => 'Pulmonology / Herbal Cough', 'dosage_form' => 'Tablet', 'description' => 'Herbal relief for cough.', 'status' => true],
+            ['name' => 'Fluimucil 600mg', 'generic_name' => 'Acetylcysteine', 'category' => 'Pulmonology / Mucolytic', 'dosage_form' => 'Sachet', 'description' => 'For mucus clearance.', 'status' => true],
+
+            // Gastroenterology
+            ['name' => 'Erceflora 2 Billion', 'generic_name' => 'Bacillus Clausii', 'category' => 'Gastroenterology / Probiotic', 'dosage_form' => 'Vial', 'description' => 'Probiotic for diarrhea.', 'status' => true],
+            ['name' => 'Imodium 2mg', 'generic_name' => 'Loperamide', 'category' => 'Gastroenterology / Antidiarrheal', 'dosage_form' => 'Capsule', 'description' => 'For acute diarrhea.', 'status' => true],
+            ['name' => 'Losec 20mg', 'generic_name' => 'Omeprazole', 'category' => 'Gastroenterology / PPI', 'dosage_form' => 'Capsule', 'description' => 'For GERD and ulcers.', 'status' => true],
+            ['name' => 'Kremil-S', 'generic_name' => 'Aluminum Hydroxide + Magnesium Hydroxide', 'category' => 'Gastroenterology / Antacid', 'dosage_form' => 'Tablet', 'description' => 'For hyperacidity.', 'status' => true],
+            ['name' => 'Motilium 10mg', 'generic_name' => 'Domperidone', 'category' => 'Gastroenterology / Antiemetic', 'dosage_form' => 'Tablet', 'description' => 'For nausea and vomiting.', 'status' => true],
+
+            // Antibiotics & Infectious Disease
+            ['name' => 'Amoxil 500mg', 'generic_name' => 'Amoxicillin', 'category' => 'Infectious Disease / Antibiotic', 'dosage_form' => 'Capsule', 'description' => 'For susceptible bacterial infections.', 'status' => true],
+            ['name' => 'Augmentin 625mg', 'generic_name' => 'Co-Amoxiclav', 'category' => 'Infectious Disease / Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'For severe bacterial infections.', 'status' => true],
+            ['name' => 'Zithromax 500mg', 'generic_name' => 'Azithromycin', 'category' => 'Infectious Disease / Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'For respiratory infections.', 'status' => true],
+            ['name' => 'Cipro 500mg', 'generic_name' => 'Ciprofloxacin', 'category' => 'Infectious Disease / Antibiotic', 'dosage_form' => 'Tablet', 'description' => 'For urinary and systemic infections.', 'status' => true],
+            ['name' => 'Flagyl 500mg', 'generic_name' => 'Metronidazole', 'category' => 'Infectious Disease / Antiprotozoal', 'dosage_form' => 'Tablet', 'description' => 'For anaerobic infections.', 'status' => true],
+
+            // Cardiology & Hypertension
+            ['name' => 'Norvasc 5mg', 'generic_name' => 'Amlodipine', 'category' => 'Cardiology / Antihypertensive', 'dosage_form' => 'Tablet', 'description' => 'For hypertension.', 'status' => true],
+            ['name' => 'Cozaar 50mg', 'generic_name' => 'Losartan', 'category' => 'Cardiology / Antihypertensive', 'dosage_form' => 'Tablet', 'description' => 'For hypertension.', 'status' => true],
+            ['name' => 'Lipitor 20mg', 'generic_name' => 'Atorvastatin', 'category' => 'Cardiology / Lipid-Lowering', 'dosage_form' => 'Tablet', 'description' => 'For high cholesterol.', 'status' => true],
+            ['name' => 'Neobloc 50mg', 'generic_name' => 'Metoprolol', 'category' => 'Cardiology / Beta Blocker', 'dosage_form' => 'Tablet', 'description' => 'For rate control and hypertension.', 'status' => true],
+
+            // Diabetes / Endocrinology
+            ['name' => 'Glucophage 500mg', 'generic_name' => 'Metformin', 'category' => 'Endocrinology / Antidiabetic', 'dosage_form' => 'Tablet', 'description' => 'For type 2 diabetes.', 'status' => true],
+            ['name' => 'Diamicron 80mg', 'generic_name' => 'Gliclazide', 'category' => 'Endocrinology / Antidiabetic', 'dosage_form' => 'Tablet', 'description' => 'For type 2 diabetes.', 'status' => true],
+            ['name' => 'Forxiga 10mg', 'generic_name' => 'Dapagliflozin', 'category' => 'Endocrinology / Antidiabetic', 'dosage_form' => 'Tablet', 'description' => 'For diabetes management.', 'status' => true],
+
+            // Vitamins & Minerals
+            ['name' => 'Centrum Advance', 'generic_name' => 'Multivitamins + Minerals', 'category' => 'Vitamins', 'dosage_form' => 'Tablet', 'description' => 'Daily multivitamin.', 'status' => true],
+            ['name' => 'Poten-Cee 500mg', 'generic_name' => 'Ascorbic Acid', 'category' => 'Vitamins', 'dosage_form' => 'Tablet', 'description' => 'Vitamin C supplement.', 'status' => true],
+            ['name' => 'Neurobion', 'generic_name' => 'Vitamin B Complex', 'category' => 'Vitamins', 'dosage_form' => 'Tablet', 'description' => 'For nerve health.', 'status' => true],
+            ['name' => 'Hemarate FA', 'generic_name' => 'Ferrous Sulfate + Folic Acid', 'category' => 'Vitamins', 'dosage_form' => 'Tablet', 'description' => 'For anemia and pregnancy.', 'status' => true],
+            ['name' => 'Caltrate Plus', 'generic_name' => 'Calcium + Vitamin D', 'category' => 'Vitamins', 'dosage_form' => 'Tablet', 'description' => 'Bone health supplement.', 'status' => true],
+
+            // Dermatology
+            ['name' => 'Canesten 1%', 'generic_name' => 'Clotrimazole', 'category' => 'Dermatology / Antifungal', 'dosage_form' => 'Cream', 'description' => 'For fungal infections.', 'status' => true],
+            ['name' => 'Bactroban 2%', 'generic_name' => 'Mupirocin', 'category' => 'Dermatology / Antibiotic', 'dosage_form' => 'Ointment', 'description' => 'For skin infections.', 'status' => true],
+            ['name' => 'Dermovate', 'generic_name' => 'Clobetasol Propionate', 'category' => 'Dermatology / Corticosteroid', 'dosage_form' => 'Ointment', 'description' => 'High-potency topical steroid.', 'status' => true]
         ];
 
         foreach ($medicines as &$medicine) {
             // Realistic mock data: 
-            // 80% chance of having good stock (50-500)
-            // 15% chance of low stock (1-20)
-            // 5% chance of out of stock (0)
+            // 70% chance of having good stock (50-300)
+            // 20% chance of low stock (1-15) - triggering low stock warnings
+            // 10% chance of out of stock (0) - triggering out of stock warnings
             $stockRand = rand(1, 100);
-            if ($stockRand <= 5) {
+            if ($stockRand <= 10) {
                 $medicine['stock'] = 0;
-            } elseif ($stockRand <= 20) {
-                $medicine['stock'] = rand(1, 20);
+            } elseif ($stockRand <= 30) {
+                $medicine['stock'] = rand(1, 15);
             } else {
-                $medicine['stock'] = rand(50, 500);
+                $medicine['stock'] = rand(50, 300);
             }
 
             // Expiration date:
-            // 5% chance expiring very soon (within 30 days)
-            // 15% chance expiring in 1-6 months
-            // 80% chance expiring in 1-3 years
+            // 15% chance expiring very soon (within 30 days) -> triggering expiration warnings
+            // 25% chance expiring in 1-6 months
+            // 60% chance expiring in 1-3 years
             $expRand = rand(1, 100);
-            if ($expRand <= 5) {
+            if ($expRand <= 15) {
                 $medicine['expiration_date'] = now()->addDays(rand(1, 29))->format('Y-m-d');
-            } elseif ($expRand <= 20) {
+            } elseif ($expRand <= 40) {
                 $medicine['expiration_date'] = now()->addMonths(rand(1, 6))->format('Y-m-d');
             } else {
                 $medicine['expiration_date'] = now()->addYears(rand(1, 3))->addDays(rand(1, 300))->format('Y-m-d');
             }
 
-            Medicine::updateOrCreate(['name' => $medicine['name']], $medicine);
+            Medicine::updateOrCreate(
+                ['name' => $medicine['name']], 
+                $medicine
+            );
         }
     }
 }
-

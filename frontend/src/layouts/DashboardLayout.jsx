@@ -6,9 +6,9 @@ import CHOLogo from '../components/CHOLogo';
 import SEO from '../components/SEO';
 import OnboardingTutorial from '../components/OnboardingTutorial';
 import {
-  LogOut, Home, Users, FileText, Bell, Menu, X, Pill,
-  BarChart2, ClipboardList, Stethoscope, ShieldCheck,
-  HeartPulse, ImagePlus, Clock, UserCircle, HelpCircle, Sun, Moon,
+  LogOut, Users, Bell, Menu, X,
+  Stethoscope, ShieldCheck,
+  UserCircle, HelpCircle, Sun, Moon,
 } from 'lucide-react';
 import useThemeStore from '../store/useThemeStore';
 

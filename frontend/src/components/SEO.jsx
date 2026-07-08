@@ -1,9 +1,12 @@
 import { Helmet } from 'react-helmet-async';
 
 const titleToEmoji = {
+  'overview': '📊',
   'dashboard': '📊',
   'analytics': '📈',
   'report': '📈',
+  'history': '🕒',
+  'room': '💻',
   'consultation': '🩺',
   'telehealth': '💻',
   'patient record': '📋',
@@ -22,7 +25,10 @@ const titleToEmoji = {
   'notification': '🔔',
   'add record': '📝',
   'walk-in': '🏥',
-  'onboarding': '👋'
+  'onboarding': '👋',
+  'login': '🔐',
+  'register': '📝',
+  'home': '🏥',
 };
 
 export default function SEO({ title, description, name, type }) {

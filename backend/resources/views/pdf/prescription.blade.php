@@ -6,30 +6,30 @@
     <title>E-Prescription</title>
     <style>
         @page {
-            margin: 14px 18px;
+            margin: 20px 25px;
         }
 
         body {
             font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
             color: #111827;
-            line-height: 1.28;
+            line-height: 1.25;
             margin: 0;
             padding: 0;
             background-color: #ffffff;
         }
 
         .container {
-            width: 90%;
-            margin: 0 auto;
-            padding: 14px 18px;
+            width: 100%;
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
-            border: 1px solid #cbd5e1;
+            /* removed border to give more of a document feel rather than a boxed feel */
         }
 
         .header {
-            border-bottom: 3px solid #0369a1;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
+            border-bottom: 2px solid #0369a1;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
             text-align: center;
         }
 
@@ -44,7 +44,7 @@
         }
 
         .logo-cell {
-            width: 96px;
+            width: 100px;
             text-align: center;
         }
 
@@ -53,21 +53,21 @@
         }
 
         .header-logo {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             object-fit: contain;
         }
 
         .seal-fallback {
-            width: 58px;
-            height: 58px;
+            width: 76px;
+            height: 76px;
             border: 2px solid #0369a1;
             border-radius: 50%;
             color: #075985;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: bold;
             line-height: 1.2;
-            padding-top: 14px;
+            padding-top: 24px;
             box-sizing: border-box;
             text-align: center;
             text-transform: uppercase;
@@ -75,24 +75,26 @@
 
         .header .republic {
             color: #475569;
-            font-size: 11px;
+            font-size: 10px;
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.5px;
         }
 
         .header h1 {
-            color: #075985;
-            margin: 0;
-            font-size: 21px;
+            color: #000000;
+            margin: 2px 0;
+            font-size: 18px;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.7px;
+            letter-spacing: 1px;
         }
 
         .header h2 {
-            color: #0f172a;
-            margin: 1px 0 2px 0;
-            font-size: 13px;
+            color: #0369a1;
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            font-weight: bold;
             text-transform: uppercase;
         }
 
@@ -180,6 +182,7 @@
             margin-top: 4px;
             margin-bottom: 10px;
             font-size: 12px;
+            table-layout: fixed;
         }
 
         .medicines-table th {
@@ -199,11 +202,14 @@
             border: 1px solid #e2e8f0;
             vertical-align: top;
             text-align: left;
+            word-wrap: break-word;
         }
 
-        .medicines-table tr,
-        .instructions,
-        .footer {
+        .medicines-table tr {
+            page-break-inside: avoid;
+        }
+        
+        .instructions, .footer {
             page-break-inside: avoid;
         }
 
@@ -265,18 +271,20 @@
 
         .signature-space {
             width: 180px;
-            height: 24px;
-            margin: 0 auto 3px auto;
+            height: 40px;
+            line-height: 40px;
+            margin: 0 auto 0 auto;
             border-bottom: 1px solid #000;
             text-align: center;
         }
 
         .signature-image {
-            width: 60px;
-            height: auto;
-            max-height: 18px;
-            margin: 0 auto;
-            display: block;
+            width: auto;
+            max-height: 38px;
+            max-width: 170px;
+            display: inline-block;
+            vertical-align: bottom;
+            margin-bottom: -1px;
         }
 
         .doctor-name {
@@ -346,8 +354,7 @@
                         <h1>CITY OF CABUYAO</h1>
                         <p class="republic">Province of Laguna</p>
 
-                        <h1>Office of the City Health Doctor</h1>
-
+                        <h2>Office of the City Health Officer</h2>
                     </td>
                     <td class="logo-cell">
                         @if(file_exists($choLogoPath))
@@ -416,7 +423,12 @@
                 @foreach($prescription->items as $item)
                     <tr>
                         <td>
-                            <div class="medicine-name">{{ optional($item->medicine)->name ?? 'Medicine unavailable' }}</div>
+                            <div class="medicine-name">
+                                {{ optional($item->medicine)->name ?? 'Medicine unavailable' }}
+                                @if(optional($item->medicine)->generic_name)
+                                    <span style="font-weight: normal; font-size: 11px; color: #475569;">({{ optional($item->medicine)->generic_name }})</span>
+                                @endif
+                            </div>
                             <div class="medicine-desc">
                                 {{ optional($item->medicine)->category ?? 'General Medicine' }}
                                 @if(optional($item->medicine)->dosage_form)
@@ -467,8 +479,7 @@
         </div>
 
         <div class="small-note">
-            This document was generated electronically and is valid without a wet signature when verified through
-            Cabuyao CHO-I records.
+            This electronically signed document is officially verified by the Cabuyao CHO-I Telehealth System.
         </div>
     </div>
 </body>

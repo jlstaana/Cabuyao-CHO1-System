@@ -19,6 +19,14 @@ class PatientController extends Controller {
     public function history(Request $request) {
         return response()->json($request->user()->patient->consultations()->with('doctor.user', 'prescription.items.medicine')->get());
     }
+    public function prescriptions(Request $request, Patient $patient) {
+        if (!in_array($request->user()->role, ['Admin', 'Staff', 'Doctor'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        return response()->json(
+            $patient->prescriptions()->with('items.medicine', 'doctor.user', 'patient.user')->latest('created_at')->get()
+        );
+    }
     public function updateRecord(Request $request, Patient $patient) {
         if (!in_array($request->user()->role, ['Admin', 'Staff'])) {
             return response()->json(['message' => 'Only Health Officers or Admins can update patient records.'], 403);
@@ -29,6 +37,7 @@ class PatientController extends Controller {
             'dob' => 'nullable|date|before:tomorrow',
             'contact_no' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:1000',
+            'category' => 'nullable|string|max:255',
             'medical_history' => 'nullable|string|max:5000',
         ]);
 
@@ -42,6 +51,7 @@ class PatientController extends Controller {
                     'dob' => optional($patient->dob)->toDateString(),
                     'contact_no' => $patient->contact_no,
                     'address' => $patient->address,
+                    'category' => $patient->category,
                     'medical_history' => $patient->record?->medical_history,
                 ],
                 'updated_by' => $request->user()->id,
@@ -52,6 +62,7 @@ class PatientController extends Controller {
                 'dob' => $data['dob'] ?? null,
                 'contact_no' => $data['contact_no'] ?? null,
                 'address' => $data['address'] ?? null,
+                'category' => $data['category'] ?? null,
             ]);
 
             PatientRecord::updateOrCreate(
@@ -103,6 +114,7 @@ class PatientController extends Controller {
                     'dob' => optional($patient->dob)->toDateString(),
                     'contact_no' => $patient->contact_no,
                     'address' => $patient->address,
+                    'category' => $patient->category,
                     'medical_history' => $patient->record?->medical_history,
                     'archived' => $patient->archived,
                     'archive_reason' => $data['reason'],

@@ -40,7 +40,8 @@ export default function Medicines() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [editTarget, setEditTarget] = useState(null);
-  const [formData, setFormData] = useState({ name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '' });
+  const [formData, setFormData] = useState({ name: '', generic_name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '' });
+  const [expiryThreshold] = useState(() => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
   const fetchMedicines = async () => {
     try {
@@ -72,7 +73,7 @@ export default function Medicines() {
       await api.post('/medicines', formData);
       toast.success('Medicine added to database!');
       setIsAddModalOpen(false);
-      setFormData({ name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '' });
+      setFormData({ name: '', generic_name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '' });
       fetchMedicines();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add medicine');
@@ -103,7 +104,7 @@ export default function Medicines() {
   };
 
   const filtered = medicines.filter(m => {
-    const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || (m.category || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || (m.generic_name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (m.category || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === 'All' || (m.category || '').includes(categoryFilter);
     return matchesSearch && matchesCategory;
   });
@@ -166,12 +167,13 @@ export default function Medicines() {
               ) : filtered.length === 0 ? (
                 <tr><td colSpan={user?.role === 'Admin' || user?.role === 'Staff' ? 4 : 3} className="p-8 text-center text-text-light">No medicines found.</td></tr>
               ) : filtered.map(m => (
-                <tr key={m.id} className="hover:bg-background/50 transition-colors group">
+                  <tr key={m.id} className="hover:bg-background/50 transition-colors group">
                   <td className="p-4">
                     <div className="flex items-center gap-3 font-medium text-text">
                       <div className="w-8 h-8 rounded-lg bg-success-bg text-emerald-600 flex items-center justify-center shrink-0"><Pill size={16} /></div>
                       <div>
                         <p>{m.name}</p>
+                        {m.generic_name && <p className="text-xs text-text-muted italic">{m.generic_name}</p>}
                         {m.description && <p className="text-xs text-text-light font-normal">{m.description}</p>}
                       </div>
                     </div>
@@ -184,7 +186,7 @@ export default function Medicines() {
                   </td>
                   <td className="p-4">
                     {m.expiration_date ? (
-                      <span className={`text-sm ${new Date(m.expiration_date) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'text-rose-500 font-semibold' : 'text-text-muted'}`}>
+                      <span className={`text-sm ${expiryThreshold && new Date(m.expiration_date) < expiryThreshold ? 'text-rose-500 font-semibold' : 'text-text-muted'}`}>
                         {new Date(m.expiration_date).toLocaleDateString()}
                       </span>
                     ) : (
@@ -228,9 +230,15 @@ export default function Medicines() {
       {/* Add Medicine Modal */}
       <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Add New Medicine">
         <form data-tour="page-form" onSubmit={handleAdd} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Generic / Brand Name</label>
-            <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Brand Name</label>
+              <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Generic Name</label>
+              <input value={formData.generic_name} onChange={e => setFormData({ ...formData, generic_name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
@@ -263,9 +271,15 @@ export default function Medicines() {
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Medicine">
         {editTarget && (
           <form onSubmit={handleEdit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Medicine Name</label>
-              <input required value={editTarget.name} onChange={e => setEditTarget({ ...editTarget, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Brand Name</label>
+                <input required value={editTarget.name} onChange={e => setEditTarget({ ...editTarget, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Generic Name</label>
+                <input value={editTarget.generic_name || ''} onChange={e => setEditTarget({ ...editTarget, generic_name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>

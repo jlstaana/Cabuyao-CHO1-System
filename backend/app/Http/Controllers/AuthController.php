@@ -66,7 +66,7 @@ class AuthController extends Controller {
 
     public function register(Request $request) {
         $request->merge(['email' => strtolower(trim((string) $request->email))]);
-        $request->validate(['name' => 'required', 'email' => 'required|email', 'password' => 'required|min:8', 'dob' => 'required|date', 'contact_no' => 'required']);
+        $request->validate(['name' => 'required', 'email' => 'required|email', 'password' => 'required|min:8', 'dob' => 'required|date', 'contact_no' => 'required', 'category' => 'nullable|string|max:255']);
         $existingUser = User::where('email', $request->email)->first();
         if ($existingUser) {
             if ($existingUser->role === 'Patient' && !$existingUser->is_active && is_null($existingUser->email_verified_at)) {
@@ -83,7 +83,7 @@ class AuthController extends Controller {
             throw ValidationException::withMessages(['email' => ['Email is already registered.']]);
         }
         $user = User::create(['name' => $request->name, 'email' => $request->email, 'password' => Hash::make($request->password), 'role' => 'Patient', 'first_login' => true, 'is_active' => false]);
-        Patient::create(['user_id' => $user->id, 'dob' => $request->dob, 'contact_no' => $request->contact_no, 'address' => $request->address ?? '']);
+        Patient::create(['user_id' => $user->id, 'dob' => $request->dob, 'contact_no' => $request->contact_no, 'address' => $request->address ?? '', 'category' => $request->category]);
         $code = $this->createVerificationCode($user);
         $this->sendVerificationCode($user, $code);
         AuditLog::create(['user_id' => $user->id, 'action' => 'Register', 'ip_address' => $request->ip()]);

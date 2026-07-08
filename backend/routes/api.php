@@ -20,9 +20,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Patient Profile & History
     Route::get('/patients/profile', [PatientController::class, 'profile']);
     Route::put('/patients/profile', [PatientController::class, 'updateProfile']);
+    Route::get('/patients/{patient}/record', [PatientController::class, 'record']);
     Route::put('/patients/{patient}/record', [PatientController::class, 'updateRecord'])->middleware('role:Admin,Staff');
     Route::post('/patients/{patient}/archive', [PatientController::class, 'archiveRecord'])->middleware('role:Admin,Staff');
     Route::get('/patients/history', [PatientController::class, 'history']);
+    Route::get('/patients/{patient}/prescriptions', [PatientController::class, 'prescriptions']);
     Route::get('/doctor/profile', [DoctorController::class, 'profile']);
     Route::put('/doctor/profile', [DoctorController::class, 'updateProfile']);
     Route::put('/doctor/availability', [DoctorController::class, 'updateAvailability']);

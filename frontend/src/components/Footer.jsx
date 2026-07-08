@@ -21,13 +21,18 @@ export default function Footer({ className = '' }) {
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/15 bg-surface/10 px-3 py-1 text-xs font-semibold text-sky-100 backdrop-blur">
-                  <HeartPulse size={14} />
-                  CHO-1 Cabuyao
+              <div className="absolute bottom-4 left-4 right-4 flex items-center gap-4">
+                <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-white/20 bg-white p-0.5 shadow-lg shrink-0">
+                  <img src="/cho1-logo.png" alt="CHO Logo" className="h-full w-full object-contain" />
                 </div>
-                <h2 className="text-xl font-bold text-white">Cabuyao City Health Office</h2>
-                <p className="mt-1 text-sm text-slate-200">Telehealth services, patient records, and digital care coordination.</p>
+                <div>
+                  <div className="mb-1.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-surface/10 px-3 py-1 text-xs font-semibold text-sky-100 backdrop-blur">
+                    <HeartPulse size={14} />
+                    CHO-1 Cabuyao
+                  </div>
+                  <h2 className="text-xl font-bold text-white">Cabuyao City Health Office</h2>
+                  <p className="mt-0.5 text-sm text-slate-200">Telehealth services, patient records, and digital care coordination.</p>
+                </div>
               </div>
             </div>
           </div>
