@@ -1,51 +1,54 @@
-# Cabuyao City Health Office (CHO 1) Teleconsultation System
+# 🏥 Cabuyao CHO-1 Telehealth & Health Information Management System
 
-A comprehensive, web-based teleconsultation and health information management system developed for the Cabuyao City Health Office. This platform bridges the gap between healthcare professionals and patients, enabling secure remote medical consultations, digital prescriptions, and robust patient record management.
+![System Status](https://img.shields.io/badge/Status-Active_Development-brightgreen)
+![Laravel](https://img.shields.io/badge/Backend-Laravel_10-red)
+![React](https://img.shields.io/badge/Frontend-React_19_(Vite)-blue)
+![Database](https://img.shields.io/badge/Database-SQLite-blue)
+
+A modern, comprehensive web-based **Teleconsultation, E-Prescription, and Descriptive Analytics** platform designed exclusively for the Cabuyao City Health Office (CHO-1). This system bridges the healthcare accessibility gap by enabling secure remote medical consultations, robust patient record management, and data-driven administrative analytics.
+
+---
 
 ## 🌟 Key Features
 
-### 👩‍⚕️ Teleconsultation & Scheduling
-- **Smart Doctor Assignment:** Patients can view doctor availability schedules and explicitly request consultations with specific doctors based on specialization (e.g., General Medicine, Cardiology, Pulmonology, etc.).
-- **Live Video Consultations:** Integrated high-quality, secure WebRTC video calling directly within the browser for scheduled appointments.
-- **Doctor Availability Management:** Doctors can configure their schedules, specifying working days, working hours, slot capacity, and their employment type (Resident vs. Visiting).
+### 👩‍⚕️ Telehealth & Virtual Consultations
+- **Smart Doctor Matching:** Patients can view doctor schedules and explicitly request consultations by specialization (e.g., General Medicine, Cardiology, Pulmonology).
+- **Secure WebRTC Video:** Real-time, browser-native high-quality video calling for scheduled appointments.
+- **Dynamic Availability:** Doctors can configure active working days, shift hours, and capacity caps (Resident vs. Visiting Doctor profiles).
+
+### 📝 Advanced E-Prescription System (New!)
+- **Canvas-based E-Signatures:** Doctors generate realistic fountain-pen signatures digitally.
+- **Government-Standard PDFs:** Automated generation of A5-sized E-Prescriptions using `barryvdh/dompdf` matching official government layouts.
+- **PhilHealth YAKAP Integration:** A pre-loaded, realistic database of 142 essential medicines complete with stock tracking, expiration warnings, and generic names.
 
 ### 🏥 Patient Health Records (PHR)
-- **Decoupled Medical Gallery:** Patients have a global, persistent medical gallery to upload X-Rays, Lab Results, and Medical Certificates prior to or independent of consultations.
-- **Vital Signs Tracking:** Dedicated module for patients to log and monitor their vital signs (Blood Pressure, Heart Rate, Temperature, Respiratory, SpO2, Weight) over time.
+- **Decoupled Medical Gallery:** Patients maintain a persistent, global medical gallery for X-Rays, Lab Results, and Medical Certificates.
+- **Vital Signs Tracking:** Monitor critical health metrics (Blood Pressure, Heart Rate, SpO2, Temperature, Respiratory Rate, Weight) longitudinally.
 
-### 💊 E-Prescription Management
-- **Digital Prescriptions:** Doctors can seamlessly generate E-Prescriptions with digital signatures post-consultation.
-- **Medicine Database:** Centralized inventory of available medicines, pre-populated with **PhilHealth YAKAP** and **GAMOT** program essential medicines.
+### 📊 Descriptive Analytics & Reports (New!)
+- **Admin Insights Dashboard:** Real-time descriptive analytics on consultation volume, user demographics, and system usage.
+- **Archive Tracking:** Deep mapping of inactive/archived items (e.g., archived patients, inactive users, expired medicines) to ensure strict data auditing.
 
 ### 🔐 Security & Access Control
-- **Role-Based Access Control (RBAC):** Distinct dashboards and permissions for **Admin**, **Staff**, **Doctor**, and **Patient** roles.
-- **Two-Factor Authentication (2FA):** Secure Email OTP (One-Time Password) verification required during login and registration.
-- **Account Lifecycle Management:** Admins can securely archive, suspend, or reactivate user accounts. 
-
-### 📊 Dashboard & Analytics
-- **Admin Analytics:** Comprehensive reporting on consultation volume, user demographics, and system usage.
-- **Real-Time Notifications:** Dynamic, real-time alert system to keep doctors and patients updated on consultation statuses and new messages.
-
-### 🧭 User Experience & Onboarding
-- **Comprehensive Guided Tutorial:** A step-by-step interactive walkthrough that automatically navigates new accounts from the Dashboard through all major features (Teleconsultations, Records, Vital Signs) and non-functional settings (Profile, Notifications) based on their specific role.
+- **Role-Based Access Control (RBAC):** Strict middleware gating for **Admin**, **Staff**, **Doctor**, and **Patient** roles.
+- **Two-Factor Authentication (2FA):** Secure Email OTP (One-Time Password) required during login and registration.
+- **Hardened Architecture:** Protected against N+1 database querying bottlenecks and strictly validates to prevent Mass Assignment vulnerabilities.
 
 ---
 
 ## 🛠️ Technology Stack
 
-**Frontend:**
-- React (Vite)
-- Tailwind CSS (Styling & Responsive Design)
-- Zustand (State Management)
-- React Router (Navigation)
-- Lucide React (Icons)
-- WebRTC / Daily.co API (Video Conferencing)
+**Frontend Framework:**
+- **React 19** via **Vite** (with Enforced HMR Polling for blazing fast dev)
+- **Tailwind CSS v4** (Modern, responsive utility-first styling)
+- **Zustand** (Lightning-fast state management)
+- **Lucide React** (Consistent UI iconography)
 
-**Backend:**
-- Laravel (PHP Framework)
-- SQLite / MySQL (Database)
-- Laravel Sanctum (API Authentication & Token Management)
-- RESTful API Architecture
+**Backend Architecture:**
+- **Laravel 10** (PHP 8.2+)
+- **Laravel Sanctum** (Stateful API Authentication)
+- **DomPDF** (Server-side PDF rendering for prescriptions)
+- **SQLite / MySQL** (Database layer)
 
 ---
 
@@ -57,27 +60,53 @@ A comprehensive, web-based teleconsultation and health information management sy
 - Composer
 
 ### Backend Setup
-1. Navigate to the `backend` directory: `cd backend`
-2. Install dependencies: `composer install`
-3. Copy the environment file: `cp .env.example .env`
-4. Generate application key: `php artisan key:generate`
-5. Configure your database (defaults to SQLite) and mail (SMTP) settings in `.env`.
-6. Run database migrations and seeders: `php artisan migrate:fresh --seed`
-7. Start the local server: `php artisan serve`
+1. Navigate to the backend directory: 
+   ```bash
+   cd backend
+   ```
+2. Install PHP dependencies: 
+   ```bash
+   composer install
+   ```
+3. Copy environment variables: 
+   ```bash
+   cp .env.example .env
+   ```
+4. Generate the application key: 
+   ```bash
+   php artisan key:generate
+   ```
+5. Run migrations and the comprehensive mock data seeders: 
+   ```bash
+   php artisan migrate:fresh --seed
+   ```
+6. Start the API server: 
+   ```bash
+   php artisan serve
+   ```
 
-### Default Credentials
-After running the database seeders, you can access the system using the permanent default admin account:
+### Default Admin Credentials
+*Use this account to access the administrative analytics and user management dashboard.*
 - **Email:** `admin@cabuyao.gov.ph`
 - **Password:** `password123`
 
 ### Frontend Setup
-1. Navigate to the `frontend` directory: `cd frontend`
-2. Install dependencies: `npm install`
-3. Configure the environment variables (e.g., API URL) in `.env`.
-4. Start the development server: `npm run dev`
-
+1. Navigate to the frontend directory: 
+   ```bash
+   cd frontend
+   ```
+2. Install JS dependencies: 
+   ```bash
+   npm install
+   ```
+3. Start the Vite development server (Hot Module Replacement enabled): 
+   ```bash
+   npm run dev
+   ```
 
 ---
 
-## 👥 Contributors
-Developed as a Capstone Project to modernize public healthcare access in Cabuyao City.
+## 👥 Development & Contributions
+Developed as a Capstone Project to modernize public healthcare infrastructure and digital coordination for Cabuyao City.
+
+*Built with ❤️ for the Cabuyao community.*
