@@ -133,12 +133,12 @@ class ConsultationController extends Controller {
             'doctor_id' => 'nullable|integer|exists:doctors,id',
             'symptoms' => 'required|string|max:2000',
             'notes' => 'nullable|string|max:2000',
-            'vitals' => 'required|array',
+            'vitals' => 'nullable|array',
             'vitals.height' => 'nullable|string|max:50',
             'vitals.weight' => 'nullable|string|max:50',
-            'vitals.blood_pressure' => 'required|string|max:50',
-            'vitals.heart_rate' => 'required|string|max:50',
-            'vitals.temperature' => 'required|string|max:50',
+            'vitals.blood_pressure' => 'nullable|string|max:50',
+            'vitals.heart_rate' => 'nullable|string|max:50',
+            'vitals.temperature' => 'nullable|string|max:50',
             'vitals.respiratory' => 'nullable|string|max:50',
             'vitals.oxygen' => 'nullable|string|max:50',
         ]);
@@ -165,10 +165,15 @@ class ConsultationController extends Controller {
             'notes' => $data['notes'] ?? null,
         ]);
 
-        VitalSign::create([
-            'consultation_id' => $c->id,
-            ...array_filter($data['vitals'], fn ($value) => $value !== null && $value !== ''),
-        ]);
+        if (!empty($data['vitals'])) {
+            $filteredVitals = array_filter($data['vitals'], fn ($value) => $value !== null && $value !== '');
+            if (!empty($filteredVitals)) {
+                VitalSign::create([
+                    'consultation_id' => $c->id,
+                    ...$filteredVitals,
+                ]);
+            }
+        }
 
         $message = $doctor
             ? 'Consultation scheduled with an available doctor.'
