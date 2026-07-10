@@ -253,7 +253,7 @@ class ConsultationController extends Controller {
         }
 
         $data = $request->validate([
-            'message' => 'required|string|max:1000',
+            'message' => 'required|string|max:65000',
         ]);
 
         $message = ConsultationMessage::create([

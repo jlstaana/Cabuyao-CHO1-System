@@ -4,7 +4,7 @@ import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
-import { KeyRound, LockKeyhole, LogIn } from 'lucide-react';
+import { KeyRound, LockKeyhole, LogIn, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const { register, handleSubmit } = useForm();
@@ -15,7 +15,7 @@ export default function Login() {
   const [resetCode, setResetCode] = useState('');
   const [resetPassword, setResetPassword] = useState('');
   const [resetPasswordConfirmation, setResetPasswordConfirmation] = useState('');
-
+  const [showPassword, setShowPassword] = useState(false);
 
   const submitLogin = async (email, password) => {
     await login(email.trim().toLowerCase(), password);
@@ -143,25 +143,35 @@ export default function Login() {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
-            <input
-              type="password"
-              value={resetPassword}
-              onChange={(event) => setResetPassword(event.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
-              required
-              minLength="8"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={resetPassword}
+                onChange={(event) => setResetPassword(event.target.value)}
+                className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
+                required
+                minLength="8"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
-            <input
-              type="password"
-              value={resetPasswordConfirmation}
-              onChange={(event) => setResetPasswordConfirmation(event.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
-              required
-              minLength="8"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={resetPasswordConfirmation}
+                onChange={(event) => setResetPasswordConfirmation(event.target.value)}
+                className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
+                required
+                minLength="8"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <button disabled={loading || resetCode.length !== 6} className="w-full bg-sky-500 text-white py-3 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-lg dark:shadow-none shadow-sky-200 disabled:opacity-70">
             {loading ? 'Updating...' : 'Update Password'}
@@ -203,12 +213,17 @@ export default function Login() {
               Forgot password?
             </button>
           </div>
-          <input 
-            type="password"
-            {...register('password', { required: true })} 
-            className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
-            placeholder="••••••••"
-          />
+          <div className="relative">
+            <input 
+              type={showPassword ? "text" : "password"}
+              {...register('password', { required: true })} 
+              className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
+              placeholder="••••••••"
+            />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
         <button 
           disabled={loading}
