@@ -93,8 +93,8 @@ export default function Landing() {
             style={{ animationDelay: `${index * 6}s` }}
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-white dark:from-background via-white/90 dark:via-background/90 to-white/40 dark:to-background/40 md:via-white/80 md:dark:via-background/80 md:to-white/20 md:dark:to-background/20" />
-        <div className="absolute inset-0 bg-gradient-to-b from-sky-50/80 dark:from-sky-950/40 via-surface/20 dark:via-background/20 to-background dark:to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 dark:from-background via-white/70 dark:via-background/90 to-transparent dark:to-background/40 md:via-white/60 md:dark:via-background/80 md:to-transparent md:dark:to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-sky-50/50 dark:from-sky-950/40 via-transparent dark:via-background/20 to-background dark:to-background" />
       </div>
 
       <nav className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border">
@@ -115,32 +115,32 @@ export default function Landing() {
       </nav>
 
       <main className="relative z-10">
-        <section className="container mx-auto flex min-h-[calc(100vh-72px)] flex-col justify-center px-6 pb-16 pt-16 md:flex-row md:items-center">
-          <div className="max-w-2xl space-y-8 md:w-1/2">
+        <section className="container mx-auto flex min-h-[calc(100vh-72px)] flex-col justify-center px-6 py-8 md:py-12 md:flex-row md:items-center">
+          <div className="max-w-2xl space-y-5 md:w-1/2">
             <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-surface/80 px-4 py-2 text-sm font-semibold text-primary-text shadow-sm backdrop-blur">
               <ShieldCheck size={16} />
               Cabuyao Health Office Portal
             </div>
-            <div className="space-y-5">
-              <h1 className="text-5xl font-bold leading-tight text-slate-900 dark:text-zinc-50 md:text-6xl">
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold leading-tight text-slate-900 dark:text-zinc-50 md:text-5xl">
                 Care that begins <br />
                 <span className="bg-gradient-to-r from-sky-500 to-indigo-500 bg-clip-text text-transparent">with your needs.</span>
               </h1>
-              <p className="max-w-xl text-lg leading-relaxed text-text-muted">
+              <p className="max-w-xl text-base md:text-lg leading-relaxed text-text-muted">
                 Book online consultations, share vital details, and receive follow-up care from your local CHO-I team through a secure patient portal designed for convenience and trust.
               </p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 dark:bg-zinc-100 px-8 py-3.5 font-medium text-white dark:text-zinc-900 shadow-xl dark:shadow-none transition-colors hover:bg-slate-800 dark:hover:bg-zinc-200">
+            <div className="flex flex-col gap-3 sm:flex-row pb-2">
+              <Link to="/register" className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 dark:bg-zinc-100 px-8 py-3 font-medium text-white dark:text-zinc-900 shadow-xl dark:shadow-none transition-colors hover:bg-slate-800 dark:hover:bg-zinc-200">
                 <Users size={18} />
                 Get Started
               </Link>
             </div>
             <div className="grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
               {portalStats.map((stat) => (
-                <div key={stat.label} className="rounded-lg border border-white/70 bg-surface/80 p-4 shadow-sm backdrop-blur transition-colors duration-300 hover:bg-primary-bg hover:border-sky-200">
-                  <p className="text-2xl font-black text-primary-text">{stat.value}</p>
-                  <p className="mt-1 text-sm font-medium leading-snug text-text-muted">{stat.label}</p>
+                <div key={stat.label} className="rounded-lg border border-white/70 bg-surface/80 p-3 md:p-4 shadow-sm backdrop-blur transition-colors duration-300 hover:bg-primary-bg hover:border-sky-200">
+                  <p className="text-lg md:text-xl font-black text-primary-text">{stat.value}</p>
+                  <p className="mt-1 text-xs md:text-sm font-medium leading-snug text-text-muted">{stat.label}</p>
                 </div>
               ))}
             </div>

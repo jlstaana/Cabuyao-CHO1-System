@@ -1,18 +1,17 @@
 import { Link } from 'react-router-dom';
 import { Clock, ExternalLink, HeartPulse, MapPin, Phone, ShieldCheck } from 'lucide-react';
-
-const choImageUrl = 'https://streetviewpixels-pa.googleapis.com/v1/thumbnail?cb_client=maps_sv.tactile.gps&h=300&panoid=49-fPsmDpzFK2lmfKnjRZQ&pitch=0&thumbfov=100&w=480&yaw=89.954445';
+import heroBg from '../assets/hero.png';
 
 export default function Footer({ className = '' }) {
   return (
-    <footer className={`border-t border-border bg-slate-950 text-text-light opacity-60 ${className}`}>
+    <footer className={`border-t border-border bg-slate-950 text-text-light ${className}`}>
       <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-7 lg:grid-cols-[1.15fr_1fr_0.9fr]">
         <div className="space-y-4">
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/30">
             <div className="relative h-24 md:h-28">
               <div className="absolute inset-0 bg-gradient-to-br from-sky-900 via-slate-900 to-emerald-900" />
               <img
-                src={choImageUrl}
+                src={heroBg}
                 alt="City Health Office-1 Cabuyao"
                 className="absolute inset-0 h-full w-full object-cover opacity-80"
                 loading="lazy"
@@ -71,10 +70,10 @@ export default function Footer({ className = '' }) {
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-white">Portal</h3>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-1">
-            <Link to="/" className="font-medium text-text-light opacity-60 transition-colors hover:text-sky-300">Home</Link>
-            <Link to="/login" className="font-medium text-text-light opacity-60 transition-colors hover:text-sky-300">Login</Link>
-            <Link to="/register" className="font-medium text-text-light opacity-60 transition-colors hover:text-sky-300">Register</Link>
-            <Link to="/dashboard" className="font-medium text-text-light opacity-60 transition-colors hover:text-sky-300">Dashboard</Link>
+            <Link to="/" className="font-medium text-text-light transition-colors hover:text-sky-300">Home</Link>
+            <Link to="/login" className="font-medium text-text-light transition-colors hover:text-sky-300">Login</Link>
+            <Link to="/register" className="font-medium text-text-light transition-colors hover:text-sky-300">Register</Link>
+            <Link to="/dashboard" className="font-medium text-text-light transition-colors hover:text-sky-300">Dashboard</Link>
           </div>
 
           <div className="mt-5 rounded-2xl border border-white/10 bg-surface/[0.03] p-4">
