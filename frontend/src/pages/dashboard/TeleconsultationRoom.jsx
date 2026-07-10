@@ -68,6 +68,13 @@ export default function TeleconsultationRoom() {
   const [micActive, setMicActive] = useState(true);
   const [cameraActive, setCameraActive] = useState(true);
   const [consultation, setConsultation] = useState(null);
+  
+  // WebRTC State
+  const [remoteStream, setRemoteStream] = useState(null);
+  const pcRef = useRef(null);
+  const processedSignals = useRef(new Set());
+  const iceCandidateQueue = useRef([]);
+  const remoteVideoRef = useRef(null);
   const [medicines, setMedicines] = useState([]);
   const [prescriptionItems, setPrescriptionItems] = useState([]);
   const [pastPrescriptions, setPastPrescriptions] = useState([]);
@@ -93,6 +100,43 @@ export default function TeleconsultationRoom() {
   const signatureCanvasRef = useRef(null);
   const signatureDrawingRef = useRef(false);
   const signatureStrokesRef = useRef([]);
+
+  const sendSignal = useCallback(async (payload) => {
+    try {
+      await api.post(`/consultations/${id}/messages`, {
+        message: `[WEBRTC_SIGNAL]${JSON.stringify(payload)}`
+      });
+    } catch (err) {
+      console.error('Failed to send signal', err);
+    }
+  }, [id]);
+
+  const processWebRTCSignal = useCallback(async (signal) => {
+    if (!pcRef.current) return false;
+    try {
+      if (signal.type === 'offer' || signal.type === 'answer') {
+        await pcRef.current.setRemoteDescription(new RTCSessionDescription(signal.offer || signal.answer));
+        if (signal.type === 'offer') {
+          const answer = await pcRef.current.createAnswer();
+          await pcRef.current.setLocalDescription(answer);
+          sendSignal({ type: 'answer', answer });
+        }
+        while (iceCandidateQueue.current.length > 0) {
+          const candidate = iceCandidateQueue.current.shift();
+          await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error);
+        }
+      } else if (signal.type === 'candidate') {
+        if (pcRef.current.remoteDescription) {
+          await pcRef.current.addIceCandidate(new RTCIceCandidate(signal.candidate));
+        } else {
+          iceCandidateQueue.current.push(signal.candidate);
+        }
+      }
+    } catch (err) {
+      console.error("WebRTC Error:", err);
+    }
+    return true;
+  }, [sendSignal]);
 
   const stopAudioProcessing = useCallback(() => {
     if (noiseGateFrameRef.current) {
@@ -226,7 +270,24 @@ export default function TeleconsultationRoom() {
     const fetchMessages = async () => {
       try {
         const res = await api.get(`/consultations/${id}/messages`);
-        if (active) setChatMessages(res.data || []);
+        const allMsgs = res.data || [];
+        const chatMsgs = [];
+        
+        for (const msg of allMsgs) {
+          if (msg.message.startsWith('[WEBRTC_SIGNAL]')) {
+            const signalStr = msg.message.replace('[WEBRTC_SIGNAL]', '');
+            if (!processedSignals.current.has(msg.id) && msg.sender_id !== user?.id) {
+              const success = await processWebRTCSignal(JSON.parse(signalStr));
+              if (success) {
+                processedSignals.current.add(msg.id);
+              }
+            }
+          } else {
+            chatMsgs.push(msg);
+          }
+        }
+        
+        if (active) setChatMessages(chatMsgs);
       } catch {
         // Chat polling is intentionally quiet so the room is not interrupted.
       }
@@ -237,7 +298,7 @@ export default function TeleconsultationRoom() {
       active = false;
       clearInterval(interval);
     };
-  }, [id]);
+  }, [id, processWebRTCSignal, user?.id]);
 
   useEffect(() => {
     const chatList = chatListRef.current;
@@ -299,6 +360,37 @@ export default function TeleconsultationRoom() {
             videoRef.current.srcObject = stream;
           }
         }, 100);
+
+        // Setup WebRTC PeerConnection
+        const pc = new RTCPeerConnection({
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+          ]
+        });
+
+        pc.onicecandidate = (event) => {
+          if (event.candidate) {
+            sendSignal({ type: 'candidate', candidate: event.candidate });
+          }
+        };
+
+        pc.ontrack = (event) => {
+          setRemoteStream(event.streams[0]);
+        };
+
+        stream.getTracks().forEach(track => {
+          pc.addTrack(track, stream);
+        });
+
+        pcRef.current = pc;
+
+        // The Patient initiates the WebRTC call (sends the initial offer)
+        if (user.role === 'Patient') {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          sendSignal({ type: 'offer', offer });
+        }
       } catch (err) {
         toast.error("Camera/Microphone access denied or not found.");
         console.error(err);
@@ -308,6 +400,15 @@ export default function TeleconsultationRoom() {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
       stopAudioProcessing();
+
+      if (pcRef.current) {
+        pcRef.current.close();
+        pcRef.current = null;
+      }
+      setRemoteStream(null);
+      iceCandidateQueue.current = [];
+      processedSignals.current.clear();
+
       setCallActive(false);
       navigate('/consultations');
       toast('Call ended');
@@ -489,6 +590,12 @@ export default function TeleconsultationRoom() {
     }
   };
 
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream, callActive]);
+
   return (
     <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-8rem)] gap-6 animate-in fade-in duration-500">      {/* Video Call Area */}
       <div data-tour="page-video" className="flex-1 min-h-[70vh] lg:min-h-0 bg-slate-900 rounded-3xl overflow-hidden relative shadow-2xl flex flex-col border border-slate-800">
@@ -518,19 +625,36 @@ export default function TeleconsultationRoom() {
              </button>
            ) : (
              <>
-               <video 
-                 ref={videoRef} 
-                 autoPlay 
-                 playsInline 
-                 muted 
-                 className={`w-full h-full object-cover ${cameraActive ? 'opacity-100' : 'opacity-0'}`}
-                 style={{ transform: 'scaleX(-1)' }} // Mirror camera
-               />
-               {!cameraActive && <div className="absolute inset-0 flex items-center justify-center text-text-muted">Camera Disabled</div>}
+               {/* Remote Video (Full Screen) */}
+               {remoteStream ? (
+                 <video 
+                   ref={remoteVideoRef}
+                   autoPlay 
+                   playsInline 
+                   className="w-full h-full object-cover"
+                 />
+               ) : (
+                 <div className="absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-800">
+                   Waiting for remote user to connect...
+                 </div>
+               )}
                
-               <div className="absolute bottom-6 right-6 w-32 h-48 bg-slate-700 rounded-2xl border-2 border-white/20 shadow-2xl overflow-hidden flex items-center justify-center">
-                  <span className="text-xs text-white/50 px-3 text-center">Remote video connects through the telehealth service</span>
+               {/* Local Video (Picture-in-Picture) */}
+               <div className={`absolute bottom-6 right-6 w-32 h-48 bg-slate-900 rounded-2xl border-2 border-white/20 shadow-2xl overflow-hidden flex items-center justify-center transition-all duration-300 ${cameraActive ? 'opacity-100' : 'opacity-0'}`}>
+                 <video 
+                   ref={videoRef} 
+                   autoPlay 
+                   playsInline 
+                   muted 
+                   className="w-full h-full object-cover"
+                   style={{ transform: 'scaleX(-1)' }} // Mirror camera
+                 />
                </div>
+               {!cameraActive && (
+                 <div className="absolute bottom-6 right-6 w-32 h-48 bg-slate-900 rounded-2xl border-2 border-white/20 shadow-2xl flex items-center justify-center text-text-muted text-xs text-center px-2">
+                   Camera Disabled
+                 </div>
+               )}
              </>
            )}
         </div>
