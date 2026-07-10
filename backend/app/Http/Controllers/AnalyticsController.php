@@ -9,6 +9,8 @@ class AnalyticsController extends Controller {
         $query = Consultation::query();
         if ($request->has('start_date') && $request->has('end_date')) {
             $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
+        } else {
+            $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
         }
         if ($request->has('doctor_id')) {
             $query->where('doctor_id', $request->doctor_id);
@@ -38,10 +40,20 @@ class AnalyticsController extends Controller {
         $topDiseases = $topDiseasesQuery->select('diagnosis', DB::raw('count(*) as total'))
             ->groupBy('diagnosis')->orderByDesc('total')->limit(10)->get();
 
-        $lowStockMedicines = Medicine::where('status', true)
-            ->orderBy('stock', 'asc')
-            ->limit(10)
-            ->get(['name', 'stock']);
+        $activeMedicines = Medicine::with('batches')->where('status', true)->get();
+        
+        $lowStockMedicines = $activeMedicines->filter(function ($medicine) {
+            return $medicine->total_stock <= 20;
+        })->sortBy('total_stock')->take(10)->map(function ($medicine) {
+            return [
+                'name' => $medicine->name,
+                'stock' => $medicine->total_stock,
+            ];
+        })->values();
+
+        $lowStockCount = $activeMedicines->filter(function ($medicine) {
+            return $medicine->total_stock <= 20;
+        })->count();
 
         $totalConsultations = (clone $query)->count();
         $completedConsultations = (clone $query)->where('status', 'Completed')->count();
@@ -61,6 +73,13 @@ class AnalyticsController extends Controller {
                 ];
             });
 
+        $prescriptionsQuery = Prescription::query();
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $prescriptionsQuery->whereBetween('created_at', [$request->start_date, $request->end_date]);
+        } else {
+            $prescriptionsQuery->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
+        }
+
         return response()->json([
             'summary' => [
                 'total_consultations' => $totalConsultations,
@@ -73,8 +92,8 @@ class AnalyticsController extends Controller {
                 'active_medicines' => Medicine::where('status', true)->count(),
                 'inactive_medicines' => Medicine::where('status', false)->count(),
                 'archived_patients' => Patient::where('archived', true)->count(),
-                'low_stock_count' => Medicine::where('status', true)->where('stock', '<=', 20)->count(),
-                'prescriptions_issued' => Prescription::count(),
+                'low_stock_count' => $lowStockCount,
+                'prescriptions_issued' => $prescriptionsQuery->count(),
             ],
             'time_based_volume' => $consultationVolume,
             'consultations_by_status' => $byStatus,

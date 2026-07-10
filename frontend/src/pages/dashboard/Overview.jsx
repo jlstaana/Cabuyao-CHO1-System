@@ -67,8 +67,11 @@ function EmptyPanel({ label }) {
 function VolumePanel({ stats }) {
   const max = Math.max(...stats.time_based_volume.map((row) => Number(row.count || 0)), 1);
   return (
-    <div className="lg:col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6">
-      <h3 className="font-semibold text-text mb-4">Consultation Volume Trends</h3>
+    <div className="lg:col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col">
+      <div className="mb-5">
+        <h3 className="font-semibold text-text">Consultation Volume Trends</h3>
+        <p className="text-xs text-text-light mt-1">Number of consultation requests over the past 7 active days. Provides an overview of patient influx.</p>
+      </div>
       {stats.time_based_volume.length === 0 ? <EmptyPanel label="No consultation volume yet" /> : (
         <div className="space-y-3">
           {stats.time_based_volume.slice(-7).map((row) => (
@@ -88,8 +91,11 @@ function VolumePanel({ stats }) {
 
 function RecentActivity({ stats }) {
   return (
-    <div className="bg-surface rounded-2xl shadow-sm border border-border p-6">
-      <h3 className="font-semibold text-text mb-4">Recent Activity</h3>
+    <div className="bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col">
+      <div className="mb-5">
+        <h3 className="font-semibold text-text">Recent Activity</h3>
+        <p className="text-xs text-text-light mt-1">Latest system actions tracked for auditing purposes.</p>
+      </div>
       <div className="space-y-4">
         {stats.recent_logs?.length ? stats.recent_logs.slice(0, 4).map((log, index) => (
           <ActivityItem
@@ -104,11 +110,17 @@ function RecentActivity({ stats }) {
   );
 }
 
-function ConsultationQueue({ consultations }) {
+function ConsultationQueue({ consultations, className = "lg:col-span-2" }) {
   const rows = consultations.filter((c) => ['Pending', 'Scheduled'].includes(c.status)).slice(0, 5);
   return (
-    <div data-tour="page-list" className="lg:col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6">
-      <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><Stethoscope size={16} className="text-sky-500" /> Consultation Queue</h3>
+    <div data-tour="page-list" className={`${className} bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col`}>
+      <div className="mb-5 flex items-start gap-3">
+        <div className="p-2 bg-sky-100 text-sky-600 rounded-lg"><Stethoscope size={18} /></div>
+        <div>
+          <h3 className="font-semibold text-text">Consultation Queue</h3>
+          <p className="text-xs text-text-light mt-0.5">Patients currently waiting for or scheduled for a teleconsultation.</p>
+        </div>
+      </div>
       <div className="space-y-3">
         {rows.length === 0 ? <p className="text-sm text-text-light">No pending or scheduled consultations.</p> : rows.map((c) => (
           <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-background transition-colors">
@@ -138,9 +150,9 @@ function AdminOverview({ user, stats }) {
         <PageTitle icon={ShieldCheck} title="Health Officer Dashboard" description={`Welcome, ${user?.name}. Here's the current system overview.`} iconClassName="bg-primary-bg text-primary-text" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} icon={Activity} color="text-sky-500" bg="bg-primary-hover" />
+        <StatCard label="Monthly Consultations" value={formatNumber(summary.total_consultations)} icon={Activity} color="text-sky-500" bg="bg-primary-hover" />
         <StatCard label="Active Patients" value={formatNumber(summary.registered_patients)} icon={Users} color="text-indigo-500" bg="bg-indigo-100" />
-        <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-emerald-500" bg="bg-emerald-100" />
+        <StatCard label="Monthly Prescriptions" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-emerald-500" bg="bg-emerald-100" />
         <StatCard label="Completion Rate" value={`${summary.completion_rate || 0}%`} icon={TrendingUp} color="text-rose-500" bg="bg-rose-100" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -155,7 +167,13 @@ function AdminOverview({ user, stats }) {
 function QuickActions({ admin = false, patient = false }) {
   return (
     <div data-tour="page-actions" className="bg-surface rounded-2xl shadow-sm border border-border p-6">
-      <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><ShieldCheck size={16} className="text-sky-500" /> Quick Actions</h3>
+      <div className="mb-5 flex items-start gap-3">
+        <div className="p-2 bg-primary-bg text-primary-text rounded-lg"><ShieldCheck size={18} /></div>
+        <div>
+          <h3 className="font-semibold text-text">Quick Actions</h3>
+          <p className="text-xs text-text-light mt-0.5">Frequently used tools and shortcuts.</p>
+        </div>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {admin && <QuickLink to="/users" icon={Users} label="Manage Users" color="text-primary-text" bg="bg-primary-bg" />}
         <QuickLink to="/medicines" icon={Pill} label="Medicine List" color="text-success-text" bg="bg-success-bg" />
@@ -163,6 +181,38 @@ function QuickActions({ admin = false, patient = false }) {
         <QuickLink to="/consultations" icon={ClipboardList} label="Consultations" color="text-rose-700" bg="bg-danger-bg" />
         {patient && <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700" bg="bg-danger-bg" />}
         {patient && <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-warning-text" bg="bg-warning-bg" />}
+      </div>
+    </div>
+  );
+}
+
+function DoctorToDoList({ consultations }) {
+  const tasks = [];
+  consultations.filter(c => c.status === 'Pending').forEach(c => {
+    tasks.push({ id: `p-${c.id}`, text: `Review pending request from ${c.patient?.user?.name || 'Patient'}`, type: 'pending', link: '/consultations' });
+  });
+  consultations.filter(c => c.status === 'Scheduled' && isToday(c.scheduled_at)).forEach(c => {
+    tasks.push({ id: `s-${c.id}`, text: `Consultation with ${c.patient?.user?.name || 'Patient'} today`, type: 'scheduled', link: '/consultations' });
+  });
+
+  return (
+    <div className="bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col">
+      <div className="mb-5 flex items-start gap-3">
+        <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><CheckCircle size={18} /></div>
+        <div>
+          <h3 className="font-semibold text-text">To-Do List</h3>
+          <p className="text-xs text-text-light mt-0.5">Actionable items requiring your attention.</p>
+        </div>
+      </div>
+      <div className="space-y-3 flex-1">
+        {tasks.length === 0 ? <EmptyPanel label="You're all caught up!" /> : tasks.slice(0, 5).map(t => (
+          <Link key={t.id} to={t.link} className="flex items-start gap-3 p-3 rounded-xl border border-border hover:bg-background transition-colors group">
+            <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${t.type === 'pending' ? 'border-amber-400' : 'border-sky-400'}`}>
+               <div className={`w-2 h-2 rounded-full hidden group-hover:block ${t.type === 'pending' ? 'bg-amber-400' : 'bg-sky-400'}`} />
+            </div>
+            <p className="text-sm font-medium text-text group-hover:text-primary-text transition-colors">{t.text}</p>
+          </Link>
+        ))}
       </div>
     </div>
   );
@@ -183,9 +233,13 @@ function DoctorOverview({ user, consultations, prescriptions }) {
         <StatCard label="Prescriptions Issued" value={prescriptions.length} icon={FileText} color="text-indigo-500" bg="bg-indigo-100" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <ConsultationQueue consultations={consultations} />
-        <div className="bg-surface rounded-2xl shadow-sm border border-border p-6">
-          <h3 className="font-semibold text-text mb-4">Quick Actions</h3>
+        <DoctorToDoList consultations={consultations} />
+        <ConsultationQueue consultations={consultations} className="lg:col-span-1" />
+        <div className="bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col">
+          <div className="mb-5">
+            <h3 className="font-semibold text-text">Quick Actions</h3>
+            <p className="text-xs text-text-light mt-0.5">Frequently used tools and shortcuts.</p>
+          </div>
           <div className="space-y-3">
             <QuickLink to="/consultations" icon={Video} label="Start Teleconsultation" color="text-brand-text" bg="bg-brand-bg" />
             <QuickLink to="/prescriptions" icon={FileText} label="Create E-Prescription" color="text-success-text" bg="bg-success-bg" />
@@ -213,8 +267,11 @@ function PatientOverview({ user, consultations, prescriptions }) {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <ConsultationQueue consultations={consultations} />
-        <div className="bg-surface rounded-2xl shadow-sm border border-border p-6">
-          <h3 className="font-semibold text-text mb-4">Quick Actions</h3>
+        <div className="bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col">
+          <div className="mb-5">
+            <h3 className="font-semibold text-text">Quick Actions</h3>
+            <p className="text-xs text-text-light mt-0.5">Frequently used tools and shortcuts.</p>
+          </div>
           <div className="space-y-3">
             <QuickLink to="/consultations" icon={Video} label="Request Teleconsult" color="text-primary-text" bg="bg-primary-bg" />
             <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700" bg="bg-danger-bg" />

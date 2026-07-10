@@ -8,39 +8,94 @@ import { Pill, Plus, Search, Archive, Pencil, CheckCircle } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 
 const CATEGORIES = [
-  'Analgesic',
-  'Antacid',
-  'Antibiotic',
-  'Antidiabetic',
-  'Antifungal',
-  'Antihistamine',
-  'Antihypertensive',
-  'Cardiology',
-  'Corticosteroid',
-  'Dermatology',
-  'Endocrinology',
-  'Gastroenterology',
-  'Infectious Disease',
-  'NSAID',
-  'Pediatrics',
-  'PhilHealth YAKAP',
-  'PhilHealth GAMOT',
-  'Pulmonology',
-  'Psychiatry',
-  'Vitamin',
-  'Other',
+  'Analgesic', 'Antacid', 'Antibiotic', 'Antidiabetic', 'Antifungal',
+  'Antihistamine', 'Antihypertensive', 'Cardiology', 'Corticosteroid',
+  'Dermatology', 'Endocrinology', 'Gastroenterology', 'Infectious Disease',
+  'NSAID', 'Pediatrics', 'PhilHealth YAKAP', 'PhilHealth GAMOT',
+  'Pulmonology', 'Psychiatry', 'Vitamin', 'Other',
 ];
+
+function BatchManager({ medicine, fetchMedicines }) {
+  const [batches, setBatches] = useState(medicine.batches || []);
+  const [newBatch, setNewBatch] = useState({ batch_number: '', stock: 0, expiration_date: '' });
+
+  const addBatch = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post(`/medicines/${medicine.id}/batches`, newBatch);
+      setBatches(res.data.batches);
+      setNewBatch({ batch_number: '', stock: 0, expiration_date: '' });
+      toast.success('Batch added');
+      fetchMedicines(); // update main list total_stock
+    } catch (err) {
+      toast.error('Failed to add batch');
+    }
+  };
+
+  const deleteBatch = async (batchId) => {
+    if (!window.confirm("Delete this batch?")) return;
+    try {
+      const res = await api.delete(`/medicines/${medicine.id}/batches/${batchId}`);
+      setBatches(res.data.batches);
+      toast.success('Batch deleted');
+      fetchMedicines();
+    } catch {
+      toast.error('Failed to delete batch');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-background rounded-xl p-4 border border-border">
+        <h4 className="font-medium text-sm text-text mb-3">Existing Batches</h4>
+        <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+          {batches.length === 0 ? <p className="text-sm text-text-light">No batches recorded.</p> : batches.map(b => (
+            <div key={b.id} className="flex justify-between items-center p-3 bg-surface rounded-lg border border-border">
+              <div>
+                <p className="text-sm font-semibold text-text">Batch No: {b.batch_number}</p>
+                <p className="text-xs text-text-light">Exp: {new Date(b.expiration_date).toLocaleDateString()} • Stock: {b.stock}</p>
+              </div>
+              <button onClick={() => deleteBatch(b.id)} className="text-rose-500 hover:text-rose-700 text-xs font-semibold px-2 py-1 rounded bg-danger-bg">Delete</button>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h4 className="font-medium text-sm text-text mb-3">Add New Batch</h4>
+        <form onSubmit={addBatch} className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Batch No.</label>
+              <input required type="text" value={newBatch.batch_number} onChange={e=>setNewBatch({...newBatch, batch_number: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface" placeholder="e.g. BATCH-01" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Stock</label>
+              <input required type="number" min="1" value={newBatch.stock} onChange={e=>setNewBatch({...newBatch, stock: parseInt(e.target.value) || 0})} className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Exp Date</label>
+              <input required type="date" value={newBatch.expiration_date} onChange={e=>setNewBatch({...newBatch, expiration_date: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface" />
+            </div>
+          </div>
+          <button type="submit" className="w-full py-2 bg-emerald-50 text-emerald-600 font-semibold rounded-lg hover:bg-emerald-100 transition-colors text-sm">Add Batch</button>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 export default function Medicines() {
   const { user } = useAuthStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isBatchesModalOpen, setIsBatchesModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [medicines, setMedicines] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [editTarget, setEditTarget] = useState(null);
-  const [formData, setFormData] = useState({ name: '', generic_name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '' });
+  const [batchTarget, setBatchTarget] = useState(null);
+  const [formData, setFormData] = useState({ name: '', generic_name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '', batch_number: '' });
   const [expiryThreshold] = useState(() => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
   const fetchMedicines = async () => {
@@ -73,7 +128,7 @@ export default function Medicines() {
       await api.post('/medicines', formData);
       toast.success('Medicine added to database!');
       setIsAddModalOpen(false);
-      setFormData({ name: '', generic_name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '' });
+      setFormData({ name: '', generic_name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '', batch_number: '' });
       fetchMedicines();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add medicine');
@@ -110,7 +165,8 @@ export default function Medicines() {
   });
 
   return (
-    <div className="animate-in fade-in duration-500">      <div className="flex justify-between items-center mb-6">
+    <div className="animate-in fade-in duration-500">
+      <div className="flex justify-between items-center mb-6">
         <PageTitle icon={Pill} title="Medicine Database" description="View and manage available medicines for e-prescriptions." iconClassName="bg-success-bg text-emerald-600" />
         {(user?.role === 'Admin' || user?.role === 'Staff') && (
           <button data-tour="page-primary-action" onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl hover:bg-emerald-600 transition-colors shadow-sm font-medium">
@@ -146,8 +202,8 @@ export default function Medicines() {
               <tr className="bg-background text-text-muted text-sm border-b border-border">
                 <th className="p-4 font-semibold">Medicine Name</th>
                 <th className="p-4 font-semibold">Category</th>
-                <th className="p-4 font-semibold">Stock</th>
-                <th className="p-4 font-semibold">Expiration</th>
+                <th className="p-4 font-semibold">Total Stock</th>
+                <th className="p-4 font-semibold">Expiration / Batch</th>
                 <th className="p-4 font-semibold">Status</th>
                 {(user?.role === 'Admin' || user?.role === 'Staff') && <th className="p-4 font-semibold text-right">Actions</th>}
               </tr>
@@ -159,13 +215,13 @@ export default function Medicines() {
                     <td className="p-4"><Skeleton className="h-6 w-40" /></td>
                     <td className="p-4"><Skeleton className="h-6 w-24" /></td>
                     <td className="p-4"><Skeleton className="h-6 w-16" /></td>
-                    <td className="p-4"><Skeleton className="h-6 w-24" /></td>
+                    <td className="p-4"><Skeleton className="h-6 w-32" /></td>
                     <td className="p-4"><Skeleton className="h-6 w-16" /></td>
-                    {(user?.role === 'Admin' || user?.role === 'Staff') && <td className="p-4"><Skeleton className="h-6 w-24 ml-auto" /></td>}
+                    {(user?.role === 'Admin' || user?.role === 'Staff') && <td className="p-4"><Skeleton className="h-6 w-32 ml-auto" /></td>}
                   </tr>
                 ))
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={user?.role === 'Admin' || user?.role === 'Staff' ? 4 : 3} className="p-8 text-center text-text-light">No medicines found.</td></tr>
+                <tr><td colSpan={user?.role === 'Admin' || user?.role === 'Staff' ? 6 : 5} className="p-8 text-center text-text-light">No medicines found.</td></tr>
               ) : filtered.map(m => (
                   <tr key={m.id} className="hover:bg-background/50 transition-colors group">
                   <td className="p-4">
@@ -180,17 +236,30 @@ export default function Medicines() {
                   </td>
                   <td className="p-4 text-text-muted">{m.category}</td>
                   <td className="p-4">
-                    <span className={`font-semibold ${m.stock > 10 ? 'text-text' : m.stock > 0 ? 'text-amber-600' : 'text-rose-500'}`}>
-                      {m.stock || 0}
+                    <span className={`font-semibold ${m.total_stock > 10 ? 'text-text' : m.total_stock > 0 ? 'text-amber-600' : 'text-rose-500'}`}>
+                      {m.total_stock || 0}
                     </span>
                   </td>
                   <td className="p-4">
-                    {m.expiration_date ? (
-                      <span className={`text-sm ${expiryThreshold && new Date(m.expiration_date) < expiryThreshold ? 'text-rose-500 font-semibold' : 'text-text-muted'}`}>
-                        {new Date(m.expiration_date).toLocaleDateString()}
-                      </span>
+                    {m.batches && m.batches.length > 0 ? (
+                      <div>
+                        {(() => {
+                           const activeBatches = m.batches.filter(b => b.stock > 0).sort((a,b) => new Date(a.expiration_date) - new Date(b.expiration_date));
+                           if (activeBatches.length === 0) return <span className="text-text-light text-sm italic">Out of Stock</span>;
+                           const nearest = activeBatches[0];
+                           return (
+                             <>
+                               <span className={`text-sm block ${expiryThreshold && new Date(nearest.expiration_date) < expiryThreshold ? 'text-rose-500 font-semibold' : 'text-text-muted'}`}>
+                                 Exp: {new Date(nearest.expiration_date).toLocaleDateString()}
+                               </span>
+                               <span className="text-xs text-text-light font-medium mt-0.5 block">Batch No: {nearest.batch_number}</span>
+                               {activeBatches.length > 1 && <span className="text-xs text-sky-500 mt-1 block">+{activeBatches.length - 1} more batches</span>}
+                             </>
+                           );
+                        })()}
+                      </div>
                     ) : (
-                      <span className="text-text-light text-sm italic">N/A</span>
+                      <span className="text-text-light text-sm italic">No batches</span>
                     )}
                   </td>
                   <td className="p-4">
@@ -203,6 +272,12 @@ export default function Medicines() {
                   {(user?.role === 'Admin' || user?.role === 'Staff') && (
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => { setBatchTarget(m); setIsBatchesModalOpen(true); }}
+                          className="text-emerald-600 hover:text-emerald-800 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-1"
+                        >
+                          <Pill size={14} /> Batches
+                        </button>
                         <button
                           onClick={() => { setEditTarget({ ...m }); setIsEditModalOpen(true); }}
                           className="text-primary-text hover:text-sky-800 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-bg transition-colors flex items-center gap-1"
@@ -250,14 +325,21 @@ export default function Medicines() {
             <label className="block text-sm font-medium text-slate-700 mb-1">Description (optional)</label>
             <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Initial Stock</label>
-              <input type="number" min="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Expiration Date</label>
-              <input type="date" value={formData.expiration_date} onChange={e => setFormData({ ...formData, expiration_date: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
+          <div className="border-t border-border pt-4 mt-4">
+            <h4 className="text-sm font-semibold text-text mb-3">Initial Batch (Optional)</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Batch No.</label>
+                <input type="text" value={formData.batch_number} onChange={e => setFormData({ ...formData, batch_number: e.target.value })} placeholder="e.g. BATCH-01" className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Initial Stock</label>
+                <input type="number" min="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Expiration Date</label>
+                <input type="date" value={formData.expiration_date} onChange={e => setFormData({ ...formData, expiration_date: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
+              </div>
             </div>
           </div>
           <div className="pt-4 flex justify-end gap-3">
@@ -268,7 +350,7 @@ export default function Medicines() {
       </Modal>
 
       {/* Edit Medicine Modal */}
-      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Medicine">
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Medicine Info">
         {editTarget && (
           <form onSubmit={handleEdit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -287,21 +369,23 @@ export default function Medicines() {
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Stock</label>
-                <input type="number" min="0" value={editTarget.stock || 0} onChange={e => setEditTarget({ ...editTarget, stock: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20 bg-surface" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Expiration Date</label>
-                <input type="date" value={editTarget.expiration_date || ''} onChange={e => setEditTarget({ ...editTarget, expiration_date: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20 bg-surface" />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+              <input value={editTarget.description || ''} onChange={e => setEditTarget({ ...editTarget, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
             </div>
+            <p className="text-xs text-text-light italic">Note: To edit stock and expiration dates, please use the "Manage Batches" button.</p>
             <div className="pt-4 flex justify-end gap-3">
               <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
               <button type="submit" className="px-5 py-2 bg-sky-500 text-white font-medium rounded-xl hover:bg-sky-600 transition-colors">Update Medicine</button>
             </div>
           </form>
+        )}
+      </Modal>
+
+      {/* Manage Batches Modal */}
+      <Modal isOpen={isBatchesModalOpen} onClose={() => { setIsBatchesModalOpen(false); fetchMedicines(); }} title={`Manage Batches: ${batchTarget?.name}`}>
+        {batchTarget && (
+           <BatchManager medicine={batchTarget} fetchMedicines={fetchMedicines} />
         )}
       </Modal>
     </div>

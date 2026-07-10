@@ -253,11 +253,10 @@ export default function Analytics() {
 
       {activeTab === 'consultations' && (
         <div data-tour="page-stats" className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} sub="All records" color="sky" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard label="Monthly Consultations" value={formatNumber(summary.total_consultations)} sub="This month" color="sky" />
             <StatCard label="Completed" value={formatNumber(getStatusTotal(stats, 'Completed'))} sub={`${summary.completion_rate || 0}% completion`} color="emerald" />
             <StatCard label="Scheduled" value={formatNumber(getStatusTotal(stats, 'Scheduled'))} sub="Upcoming sessions" color="indigo" />
-            <StatCard label="Pending / In Review" value={formatNumber(summary.pending_consultations)} sub="Needs action" color="rose" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
@@ -283,7 +282,7 @@ export default function Analytics() {
       {activeTab === 'prescriptions' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} sub="All time" color="emerald" />
+            <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} sub="This month" color="emerald" />
             <StatCard label="Low Stock Alerts" value={formatNumber(summary.low_stock_count)} sub="Items needing restock" color="amber" />
             <StatCard label="Top Diseases" value={formatNumber((stats.top_diseases || []).length)} sub="Based on diagnoses" color="indigo" />
             <StatCard label="Completed Consults" value={formatNumber(summary.completed_consultations)} sub="Eligible for prescriptions" color="rose" />
@@ -313,10 +312,10 @@ export default function Analytics() {
       {activeTab === 'utilization' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <StatCard label="Registered Patients" value={formatNumber(summary.registered_patients)} sub="Active patient records" color="indigo" />
-            <StatCard label="Active Doctors" value={formatNumber(summary.active_doctors)} sub="Doctor accounts" color="sky" />
-            <StatCard label="Inactive Users" value={formatNumber(summary.inactive_users)} sub="Archived accounts" color="slate" />
-            <StatCard label="Total Consults" value={formatNumber(summary.total_consultations)} sub="All-time consultations" color="emerald" />
+            <StatCard label="Registered Patients" value={formatNumber(summary.registered_patients)} sub="Individuals fully registered for health tracking" color="indigo" />
+            <StatCard label="Active Doctors" value={formatNumber(summary.active_doctors)} sub="Medical officers currently available for teleconsultations" color="sky" />
+            <StatCard label="Inactive Users" value={formatNumber(summary.inactive_users)} sub="Suspended or archived accounts due to inactivity or policy" color="slate" />
+            <StatCard label="Monthly Consults" value={formatNumber(summary.total_consultations)} sub="This month" color="emerald" />
             <StatCard label="Pending Work" value={formatNumber(summary.pending_consultations)} sub="Open consultations" color="rose" />
           </div>
           <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
@@ -325,11 +324,7 @@ export default function Analytics() {
               {serviceRows.map((row) => <BarRow key={row.name} label={row.name} value={row.total} max={serviceMax} color="bg-sky-400" />)}
             </div>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            <StatCard label="Inactive Medicines" value={formatNumber(summary.inactive_medicines)} sub="Deactivated from inventory" color="slate" />
-            <StatCard label="Archived Patients" value={formatNumber(summary.archived_patients)} sub="Archived health records" color="slate" />
-            <StatCard label="Inactive Staff/Users" value={formatNumber(summary.inactive_users)} sub="Revoked access accounts" color="slate" />
-          </div>
+
         </div>
       )}
 
