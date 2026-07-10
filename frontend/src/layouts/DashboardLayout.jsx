@@ -383,7 +383,7 @@ export default function DashboardLayout() {
         </aside>
 
         {/* Main Content Area */}
-        <main data-tour="main-content" className="flex-1 overflow-y-auto bg-background relative p-4 md:p-8">
+        <main data-tour="main-content" className="flex-1 min-w-0 overflow-y-auto bg-background relative p-4 md:p-8">
           <Outlet />
         </main>
       </div>

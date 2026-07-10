@@ -87,14 +87,15 @@ export default function ConsultationHistory() {
       {/* Summary stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Sessions',     value: total,     color: 'text-primary-text',     bg: 'bg-primary-bg',     border: 'border-sky-100' },
-          { label: 'Completed',          value: completed, color: 'text-emerald-600', bg: 'bg-success-bg', border: 'border-success-border' },
-          { label: 'Cancelled',          value: history.filter(c => c.status === 'Cancelled').length, color: 'text-text-muted', bg: 'bg-background', border: 'border-border' },
-          { label: 'Prescriptions',      value: history.filter(c => c.prescription_id).length, color: 'text-indigo-600', bg: 'bg-brand-bg', border: 'border-brand-border' },
+          { label: 'Total Sessions',     value: total,     color: 'text-primary-text',     bg: 'bg-primary-bg',     border: 'border-sky-100', sub: 'All logged consultations' },
+          { label: 'Completed',          value: completed, color: 'text-emerald-600', bg: 'bg-success-bg', border: 'border-success-border', sub: 'Successfully finished' },
+          { label: 'Cancelled',          value: history.filter(c => c.status === 'Cancelled').length, color: 'text-text-muted', bg: 'bg-background', border: 'border-border', sub: 'Discontinued requests' },
+          { label: 'Prescriptions',      value: history.filter(c => c.prescription_id).length, color: 'text-indigo-600', bg: 'bg-brand-bg', border: 'border-brand-border', sub: 'Received documents' },
         ].map((s) => (
           <div key={s.label} className={`rounded-2xl border p-5 ${s.bg} ${s.border}`}>
             <p className={`text-3xl font-black ${s.color}`}>{s.value}</p>
             <p className="text-xs text-text-muted font-medium mt-1">{s.label}</p>
+            <p className="text-[10px] mt-0.5 opacity-60 uppercase tracking-wide text-slate-500">{s.sub}</p>
           </div>
         ))}
       </div>
