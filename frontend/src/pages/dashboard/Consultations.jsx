@@ -311,13 +311,14 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       {/* Summary strip */}
       <div data-tour="page-stats" className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Pending',   value: pending.length,   color: 'bg-warning-bg border-amber-200 text-warning-text' },
-          { label: 'Scheduled', value: scheduled.length, color: 'bg-primary-bg border-sky-200 text-primary-text' },
-          { label: 'Completed', value: completed.length, color: 'bg-success-bg border-emerald-200 text-success-text' },
+          { label: 'Pending',   value: pending.length,   color: 'bg-warning-bg border-amber-200 text-warning-text', sub: 'Needs review' },
+          { label: 'Scheduled', value: scheduled.length, color: 'bg-primary-bg border-sky-200 text-primary-text', sub: 'Upcoming' },
+          { label: 'Completed', value: completed.length, color: 'bg-success-bg border-emerald-200 text-success-text', sub: 'Finished' },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-4 text-center ${s.color}`}>
             <p className="text-3xl font-black">{s.value}</p>
             <p className="text-xs font-semibold mt-1 opacity-80">{s.label}</p>
+            <p className="text-[10px] mt-0.5 opacity-60 uppercase tracking-wide">{s.sub}</p>
           </div>
         ))}
       </div>
@@ -426,12 +427,18 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
     <div className="space-y-6">
       {/* Stats */}
       <div data-tour="page-stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {['Pending','Scheduled','Completed','Cancelled'].map(s => {
-          const cfg = STATUS[s];
+        {[
+          { status: 'Pending', sub: 'Awaiting assignment' },
+          { status: 'Scheduled', sub: 'Upcoming sessions' },
+          { status: 'Completed', sub: 'Successfully finished' },
+          { status: 'Cancelled', sub: 'Discontinued requests' }
+        ].map(s => {
+          const cfg = STATUS[s.status];
           return (
-            <div key={s} className={`rounded-2xl border p-4 ${cfg.pill} bg-opacity-40`}>
-              <p className="text-2xl font-black">{consultations.filter(c => c.status === s).length}</p>
-              <p className="text-xs font-semibold mt-1 opacity-80">{s}</p>
+            <div key={s.status} className={`rounded-2xl border p-4 ${cfg.pill} bg-opacity-40`}>
+              <p className="text-2xl font-black">{consultations.filter(c => c.status === s.status).length}</p>
+              <p className="text-xs font-semibold mt-1 opacity-80">{s.status}</p>
+              <p className="text-[10px] mt-0.5 opacity-60 uppercase tracking-wide">{s.sub}</p>
             </div>
           );
         })}

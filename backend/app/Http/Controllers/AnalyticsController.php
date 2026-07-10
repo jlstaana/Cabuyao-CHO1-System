@@ -8,15 +8,15 @@ class AnalyticsController extends Controller {
     public function stats(Request $request) {
         $query = Consultation::query();
         if ($request->has('start_date') && $request->has('end_date')) {
-            $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
+            $query->whereBetween('consultations.created_at', [$request->start_date, $request->end_date]);
         } else {
-            $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
+            $query->whereBetween('consultations.created_at', [now()->startOfMonth(), now()->endOfMonth()]);
         }
         if ($request->has('doctor_id')) {
             $query->where('doctor_id', $request->doctor_id);
         }
 
-        $consultationVolume = (clone $query)->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
+        $consultationVolume = (clone $query)->select(DB::raw('DATE(consultations.created_at) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')->orderBy('date')->get();
 
         $byStatus = (clone $query)->select('status', DB::raw('count(*) as total'))->groupBy('status')->get();
@@ -33,7 +33,7 @@ class AnalyticsController extends Controller {
         
         if ($request->has('start_date') && $request->has('end_date')) {
             $topDiseasesQuery->whereHas('consultation', function($q) use ($request) {
-                $q->whereBetween('created_at', [$request->start_date, $request->end_date]);
+                $q->whereBetween('consultations.created_at', [$request->start_date, $request->end_date]);
             });
         }
 

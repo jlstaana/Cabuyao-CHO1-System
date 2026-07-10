@@ -70,36 +70,52 @@ class MedicineSeeder extends Seeder {
         ];
 
         foreach ($medicines as &$medicine) {
-            // Realistic mock data: 
-            // 70% chance of having good stock (50-300)
-            // 20% chance of low stock (1-15) - triggering low stock warnings
-            // 10% chance of out of stock (0) - triggering out of stock warnings
             $stockRand = rand(1, 100);
+            $stock = 0;
             if ($stockRand <= 10) {
-                $medicine['stock'] = 0;
+                $stock = 0;
             } elseif ($stockRand <= 30) {
-                $medicine['stock'] = rand(1, 15);
+                $stock = rand(1, 15);
             } else {
-                $medicine['stock'] = rand(50, 300);
+                $stock = rand(50, 300);
             }
 
-            // Expiration date:
-            // 15% chance expiring very soon (within 30 days) -> triggering expiration warnings
-            // 25% chance expiring in 1-6 months
-            // 60% chance expiring in 1-3 years
             $expRand = rand(1, 100);
             if ($expRand <= 15) {
-                $medicine['expiration_date'] = now()->addDays(rand(1, 29))->format('Y-m-d');
+                $expDate = now()->addDays(rand(1, 29))->format('Y-m-d');
             } elseif ($expRand <= 40) {
-                $medicine['expiration_date'] = now()->addMonths(rand(1, 6))->format('Y-m-d');
+                $expDate = now()->addMonths(rand(1, 6))->format('Y-m-d');
             } else {
-                $medicine['expiration_date'] = now()->addYears(rand(1, 3))->addDays(rand(1, 300))->format('Y-m-d');
+                $expDate = now()->addYears(rand(1, 3))->addDays(rand(1, 300))->format('Y-m-d');
             }
 
-            Medicine::updateOrCreate(
+            $medicineData = [
+                'name' => $medicine['name'],
+                'generic_name' => $medicine['generic_name'],
+                'category' => $medicine['category'],
+                'dosage_form' => $medicine['dosage_form'],
+                'description' => $medicine['description'],
+                'status' => $medicine['status']
+            ];
+
+            $m = Medicine::updateOrCreate(
                 ['name' => $medicine['name']], 
-                $medicine
+                $medicineData
             );
+            
+            if ($stock > 0 && $m->batches()->count() === 0) {
+                // Create a couple of batches
+                $m->batches()->create([
+                    'batch_number' => 'LOT-' . rand(100000, 999999),
+                    'stock' => ceil($stock / 2),
+                    'expiration_date' => $expDate
+                ]);
+                $m->batches()->create([
+                    'batch_number' => 'PH' . rand(1000, 9999) . 'X',
+                    'stock' => floor($stock / 2),
+                    'expiration_date' => now()->addYears(rand(1, 4))->format('Y-m-d')
+                ]);
+            }
         }
     }
 }
