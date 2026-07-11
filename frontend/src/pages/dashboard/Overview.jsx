@@ -151,10 +151,10 @@ function AdminOverview({ user, stats }) {
         <PageTitle icon={ShieldCheck} title="Health Officer Dashboard" description={`Welcome, ${user?.name}. Here's the current system overview.`} iconClassName="bg-primary-bg text-primary-text" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Monthly Consultations" value={formatNumber(summary.total_consultations)} icon={Activity} color="text-sky-500" bg="bg-primary-hover" sub="Total requests this month" />
-        <StatCard label="Active Patients" value={formatNumber(summary.registered_patients)} icon={Users} color="text-indigo-500" bg="bg-indigo-100" sub="Registered individuals" />
-        <StatCard label="Monthly Prescriptions" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-emerald-500" bg="bg-emerald-100" sub="Issued this month" />
-        <StatCard label="Completion Rate" value={`${summary.completion_rate || 0}%`} icon={TrendingUp} color="text-rose-500" bg="bg-rose-100" sub="Completed vs Total Requests" />
+        <StatCard label="Total Patients" value={formatNumber(summary.registered_patients)} icon={Users} color="text-indigo-500" bg="bg-indigo-100" sub="Registered individuals" />
+        <StatCard label="Total Doctors" value={formatNumber(summary.active_doctors)} icon={Activity} color="text-sky-500" bg="bg-primary-hover" sub="Active healthcare providers" />
+        <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} icon={ClipboardList} color="text-emerald-500" bg="bg-emerald-100" sub="All recorded sessions" />
+        <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-rose-500" bg="bg-rose-100" sub="Generated prescriptions" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <VolumePanel stats={stats} />
@@ -222,23 +222,15 @@ function DoctorToDoList({ consultations }) {
 function DoctorOverview({ user, consultations, prescriptions }) {
   const pending = consultations.filter((c) => c.status === 'Pending').length;
   const scheduledToday = consultations.filter((c) => c.status === 'Scheduled' && isToday(c.scheduled_at)).length;
-  const completedToday = consultations.filter((c) => c.status === 'Completed' && isToday(c.updated_at)).length;
-  
-  const totalAssigned = consultations.filter(c => c.status !== 'Pending' && c.status !== 'Cancelled').length;
-  const completedTotal = consultations.filter(c => c.status === 'Completed').length;
-  const completionRate = totalAssigned > 0 ? Math.round((completedTotal / totalAssigned) * 100) : 0;
-
   return (
     <>
       <header className="mb-8">
         <PageTitle icon={Stethoscope} title={`Good day, Dr. ${(user?.name?.split(' ')[0] || '').replace(/^Dr\.\s*/i, '')}!`} description="Here's your consultation overview." iconClassName="bg-success-bg text-emerald-600" />
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
-        <StatCard label="Pending Requests" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" sub="Needs review" />
-        <StatCard label="Scheduled Today" value={scheduledToday} icon={Calendar} color="text-sky-500" bg="bg-primary-hover" sub="Upcoming sessions" />
-        <StatCard label="Completed Today" value={completedToday} icon={CheckCircle} color="text-emerald-500" bg="bg-emerald-100" sub="Successfully finished" />
-        <StatCard label="Prescriptions" value={prescriptions.length} icon={FileText} color="text-indigo-500" bg="bg-indigo-100" sub="Total generated" />
-        <StatCard label="Completion Rate" value={`${completionRate}%`} icon={TrendingUp} color="text-rose-500" bg="bg-rose-100" sub="Completed vs Total Requests" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <StatCard label="Patient Queue" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" sub="Pending requests needing review" />
+        <StatCard label="Scheduled Consultations" value={scheduledToday} icon={Calendar} color="text-sky-500" bg="bg-primary-hover" sub="Upcoming sessions for today" />
+        <StatCard label="Recent Prescriptions" value={prescriptions.length} icon={FileText} color="text-indigo-500" bg="bg-indigo-100" sub="Total generated prescriptions" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <DoctorToDoList consultations={consultations} />
@@ -265,20 +257,17 @@ function PatientOverview({ user, consultations, prescriptions }) {
   const vitalEntries = consultations.filter((c) => c.vital_signs || c.vitalSigns).length;
   
   const totalRequests = consultations.length;
-  const completedRequests = consultations.filter((c) => c.status === 'Completed').length;
-  const completionRate = totalRequests > 0 ? Math.round((completedRequests / totalRequests) * 100) : 0;
 
   return (
     <>
       <header className="mb-8">
         <PageTitle icon={HeartPulse} title={`Hello, ${user?.name?.split(' ')[0]}!`} description="Here's your health summary and upcoming activities." iconClassName="bg-danger-bg text-danger-text" />
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
-        <StatCard label="Consultations" value={totalRequests} icon={Stethoscope} color="text-sky-500" bg="bg-primary-hover" sub="Total requests" />
-        <StatCard label="Prescriptions" value={prescriptions.length} icon={FileText} color="text-emerald-500" bg="bg-emerald-100" sub="Saved records" />
-        <StatCard label="Vital Sign Entries" value={vitalEntries} icon={HeartPulse} color="text-rose-500" bg="bg-rose-100" sub="Health logs" />
-        <StatCard label="Upcoming Visit" value={upcoming?.scheduled_at ? new Date(upcoming.scheduled_at).toLocaleDateString() : 'None'} icon={Calendar} color="text-indigo-500" bg="bg-indigo-100" sub="Next schedule" />
-        <StatCard label="Completion Rate" value={`${completionRate}%`} icon={TrendingUp} color="text-emerald-600" bg="bg-emerald-100" sub="Completed requests" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard label="Total Consultations" value={totalRequests} icon={Stethoscope} color="text-sky-500" bg="bg-primary-hover" sub="Consultation history" />
+        <StatCard label="E-Prescriptions" value={prescriptions.length} icon={FileText} color="text-emerald-500" bg="bg-emerald-100" sub="Generated prescriptions" />
+        <StatCard label="Vital Sign Records" value={vitalEntries} icon={HeartPulse} color="text-rose-500" bg="bg-rose-100" sub="Recorded health logs" />
+        <StatCard label="Upcoming Appointment" value={upcoming?.scheduled_at ? new Date(upcoming.scheduled_at).toLocaleDateString() : 'None'} icon={Calendar} color="text-indigo-500" bg="bg-indigo-100" sub="Scheduled consultation" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <ConsultationQueue consultations={consultations} />

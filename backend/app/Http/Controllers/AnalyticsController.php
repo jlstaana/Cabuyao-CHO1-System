@@ -44,12 +44,14 @@ class AnalyticsController extends Controller {
         
         $lowStockMedicines = $activeMedicines->filter(function ($medicine) {
             return $medicine->total_stock <= 20;
-        })->sortBy('total_stock')->take(10)->map(function ($medicine) {
+        })->groupBy(function($medicine) {
+            return $medicine->category ?: 'Uncategorized';
+        })->map(function ($group, $category) {
             return [
-                'name' => $medicine->name,
-                'stock' => $medicine->total_stock,
+                'category' => $category,
+                'count' => $group->count()
             ];
-        })->values();
+        })->sortByDesc('count')->values();
 
         $lowStockCount = $activeMedicines->filter(function ($medicine) {
             return $medicine->total_stock <= 20;
@@ -58,6 +60,7 @@ class AnalyticsController extends Controller {
         $totalConsultations = (clone $query)->count();
         $completedConsultations = (clone $query)->where('status', 'Completed')->count();
         $pendingConsultations = (clone $query)->whereIn('status', ['Pending', 'Approved', 'Scheduled'])->count();
+
         $recentLogs = AuditLog::with('user:id,name,role')
             ->latest()
             ->limit(20)

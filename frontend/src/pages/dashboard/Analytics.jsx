@@ -82,7 +82,7 @@ function buildReportHtml(stats, generatedAt, generatedBy) {
   const statusRows = stats.consultations_by_status.map((row) => ({ Status: row.status, Total: row.total }));
   const doctorRows = stats.consultations_by_doctor.map((row) => ({ Doctor: row.name, Consultations: row.total }));
   const diseaseRows = (stats.top_diseases || []).map((row) => ({ Disease: row.diagnosis, Cases: row.total }));
-  const lowStockRows = (stats.low_stock_medicines || []).map((row) => ({ Medicine: row.name, Stock: row.stock }));
+  const lowStockRows = (stats.low_stock_medicines || []).map((row) => ({ Category: row.category, 'Low Stock Count': row.count }));
   const volumeRows = stats.time_based_volume.map((row) => ({ Date: row.date, Consultations: row.count }));
   const logRows = stats.recent_logs.map((row) => ({
     Date: formatDateTime(row.created_at),
@@ -123,7 +123,7 @@ function buildReportHtml(stats, generatedAt, generatedBy) {
   <div class="summary">
     <div class="card"><div class="label">Total Consultations</div><div class="value">${formatNumber(summary.total_consultations)}</div></div>
     <div class="card"><div class="label">Completed</div><div class="value">${formatNumber(summary.completed_consultations)}</div></div>
-    <div class="card"><div class="label">Completion Rate</div><div class="value">${summary.completion_rate || 0}%</div></div>
+    <div class="card"><div class="label">Pending</div><div class="value">${formatNumber(summary.pending_consultations)}</div></div>
     <div class="card"><div class="label">Prescriptions Issued</div><div class="value">${formatNumber(summary.prescriptions_issued)}</div></div>
   </div>
 
@@ -139,8 +139,8 @@ function buildReportHtml(stats, generatedAt, generatedBy) {
   <h2>Top Diagnosed Diseases</h2>
   <table><thead><tr><th>Disease / Diagnosis</th><th>Total Cases</th></tr></thead><tbody>${tableRows(diseaseRows, ['Disease', 'Cases'])}</tbody></table>
 
-  <h2>Low Stock Medicines</h2>
-  <table><thead><tr><th>Medicine</th><th>Current Stock</th></tr></thead><tbody>${tableRows(lowStockRows, ['Medicine', 'Stock'])}</tbody></table>
+  <h2>Low Stock Alerts by Category</h2>
+  <table><thead><tr><th>Medicine Category</th><th>Count</th></tr></thead><tbody>${tableRows(lowStockRows, ['Category', 'Low Stock Count'])}</tbody></table>
 
   <h2>Recent System Activity</h2>
   <table><thead><tr><th>Date</th><th>User</th><th>Role</th><th>Action</th><th>IP</th></tr></thead><tbody>${tableRows(logRows, ['Date', 'User', 'Role', 'Action', 'IP'])}</tbody></table>
@@ -207,7 +207,7 @@ export default function Analytics() {
 
   const doctorMax = maxTotal(stats.consultations_by_doctor);
   const diseaseMax = maxTotal(stats.top_diseases || []);
-  const lowStockMax = maxTotal(stats.low_stock_medicines || [], 'stock');
+  const lowStockMax = maxTotal(stats.low_stock_medicines || []);
   const serviceRows = [
     { name: 'Registered Patients', total: summary.registered_patients || 0 },
     { name: 'Active Doctors', total: summary.active_doctors || 0 },
@@ -255,7 +255,7 @@ export default function Analytics() {
         <div data-tour="page-stats" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatCard label="Monthly Consultations" value={formatNumber(summary.total_consultations)} sub="This month" color="sky" />
-            <StatCard label="Completed" value={formatNumber(getStatusTotal(stats, 'Completed'))} sub={`${summary.completion_rate || 0}% completion`} color="emerald" />
+            <StatCard label="Completed" value={formatNumber(getStatusTotal(stats, 'Completed'))} sub="Successfully finished" color="emerald" />
             <StatCard label="Scheduled" value={formatNumber(getStatusTotal(stats, 'Scheduled'))} sub="Upcoming sessions" color="indigo" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -298,12 +298,12 @@ export default function Analytics() {
             </div>
 
             <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><FileText size={16} className="text-amber-500" /> Critical / Low Stock Medicines</h3>
+              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><FileText size={16} className="text-amber-500" /> Low Stock Alerts by Category</h3>
               {(stats.low_stock_medicines || []).length ? (
                 <div className="space-y-3">
-                  {stats.low_stock_medicines.map((row) => <BarRow key={row.name} label={row.name} value={row.stock} max={Math.max(lowStockMax, 50)} color={row.stock === 0 ? "bg-rose-500" : "bg-amber-400"} />)}
+                  {stats.low_stock_medicines.map((row) => <BarRow key={row.category} label={row.category} value={row.count} max={lowStockMax} color="bg-amber-400" />)}
                 </div>
-              ) : <EmptyBlock label="No low stock medicines" />}
+              ) : <EmptyBlock label="No low stock alerts" />}
             </div>
           </div>
         </div>
