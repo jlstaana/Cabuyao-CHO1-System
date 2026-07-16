@@ -211,7 +211,6 @@ export default function Analytics() {
   const serviceRows = [
     { name: 'Registered Patients', total: summary.registered_patients || 0 },
     { name: 'Active Doctors', total: summary.active_doctors || 0 },
-    { name: 'Inactive Users', total: summary.inactive_users || 0 },
     { name: 'Total Consultations', total: summary.total_consultations || 0 },
     { name: 'Prescriptions Issued', total: summary.prescriptions_issued || 0 },
   ];
@@ -314,7 +313,6 @@ export default function Analytics() {
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <StatCard label="Registered Patients" value={formatNumber(summary.registered_patients)} sub="Individuals fully registered for health tracking" color="indigo" />
             <StatCard label="Active Doctors" value={formatNumber(summary.active_doctors)} sub="Medical officers currently available for teleconsultations" color="sky" />
-            <StatCard label="Inactive Users" value={formatNumber(summary.inactive_users)} sub="Suspended or archived accounts due to inactivity or policy" color="slate" />
             <StatCard label="Monthly Consults" value={formatNumber(summary.total_consultations)} sub="This month" color="emerald" />
             <StatCard label="Pending Work" value={formatNumber(summary.pending_consultations)} sub="Open consultations" color="rose" />
           </div>
