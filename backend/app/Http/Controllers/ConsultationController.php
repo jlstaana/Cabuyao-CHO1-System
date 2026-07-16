@@ -166,11 +166,11 @@ class ConsultationController extends Controller {
         ]);
 
         if (!empty($data['vitals'])) {
-            $filteredVitals = array_filter($data['vitals'], fn ($value) => $value !== null && $value !== '');
-            if (!empty($filteredVitals)) {
+            if (array_filter($data['vitals'])) {
                 VitalSign::create([
                     'consultation_id' => $c->id,
-                    ...$filteredVitals,
+                    'patient_id' => $request->user()->patient->id,
+                    ...array_filter($data['vitals'], fn ($value) => $value !== null && $value !== ''),
                 ]);
             }
         }
@@ -230,7 +230,10 @@ class ConsultationController extends Controller {
             'oxygen' => 'nullable|string|max:50',
         ]);
 
-        $v = VitalSign::updateOrCreate(['consultation_id' => $id], $data);
+        $v = VitalSign::updateOrCreate(
+            ['consultation_id' => $id], 
+            array_merge($data, ['patient_id' => $consultation->patient_id])
+        );
         return response()->json($v);
     }
     public function messages(Request $request, $id) {
