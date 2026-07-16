@@ -109,7 +109,7 @@ class DoctorController extends Controller
             ->where('scheduled_at', '>=', now()->startOfDay())
             ->orderBy('scheduled_at')
             ->get(['scheduled_at'])
-            ->each(function (Consultation $consultation) use ($doctor, &$bookings) {
+            ->each(function (Consultation $consultation) use ($doctor, &$bookings, $capacity) {
                 $scheduledAt = $consultation->scheduled_at;
                 $day = $scheduledAt->format('l');
                 $time = $scheduledAt->format('H:i:s');
