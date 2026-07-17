@@ -70,7 +70,7 @@ function VolumePanel({ stats }) {
   return (
     <div className="lg:col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col">
       <div className="mb-5">
-        <h3 className="font-semibold text-text">Consultation Volume Trends</h3>
+        <h3 className="font-semibold text-text">7-Day Consultation Trend</h3>
         <p className="text-xs text-text-light mt-1">Number of consultation requests over the past 7 active days. Provides an overview of patient influx.</p>
       </div>
       {stats.time_based_volume.length === 0 ? <EmptyPanel label="No consultation volume yet" /> : (
