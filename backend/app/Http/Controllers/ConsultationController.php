@@ -169,6 +169,7 @@ class ConsultationController extends Controller {
             $filteredVitals = array_filter($data['vitals'], fn ($value) => $value !== null && $value !== '');
             if (!empty($filteredVitals)) {
                 VitalSign::create([
+                    'patient_id' => $request->user()->patient->id,
                     'consultation_id' => $c->id,
                     ...$filteredVitals,
                 ]);
@@ -230,6 +231,7 @@ class ConsultationController extends Controller {
             'oxygen' => 'nullable|string|max:50',
         ]);
 
+        $data['patient_id'] = $consultation->patient_id;
         $v = VitalSign::updateOrCreate(['consultation_id' => $id], $data);
         return response()->json($v);
     }
