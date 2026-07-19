@@ -123,7 +123,7 @@ function buildReportHtml(stats, generatedAt, generatedBy) {
   <div class="summary">
     <div class="card"><div class="label">Total Consultations</div><div class="value">${formatNumber(summary.total_consultations)}</div></div>
     <div class="card"><div class="label">Completed</div><div class="value">${formatNumber(summary.completed_consultations)}</div></div>
-    <div class="card"><div class="label">Pending</div><div class="value">${formatNumber(summary.pending_consultations)}</div></div>
+    <div class="card"><div class="label">Reminders</div><div class="value">${formatNumber(summary.pending_consultations)}</div></div>
     <div class="card"><div class="label">Prescriptions Issued</div><div class="value">${formatNumber(summary.prescriptions_issued)}</div></div>
   </div>
 
@@ -314,7 +314,7 @@ export default function Analytics() {
             <StatCard label="Registered Patients" value={formatNumber(summary.registered_patients)} sub="Individuals fully registered for health tracking" color="indigo" />
             <StatCard label="Active Doctors" value={formatNumber(summary.active_doctors)} sub="Medical officers currently available for teleconsultations" color="sky" />
             <StatCard label="Monthly Consults" value={formatNumber(summary.total_consultations)} sub="This month" color="emerald" />
-            <StatCard label="Pending Work" value={formatNumber(summary.pending_consultations)} sub="Open consultations" color="rose" />
+            <StatCard label="Reminders" value={formatNumber(summary.pending_consultations)} sub="Pending to-do items for doctors" color="rose" />
           </div>
           <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
             <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><BarChart2 size={16} className="text-sky-500" /> System Utilization</h3>
