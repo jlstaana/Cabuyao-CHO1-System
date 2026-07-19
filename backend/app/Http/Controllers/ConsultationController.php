@@ -235,6 +235,22 @@ class ConsultationController extends Controller {
             ['consultation_id' => $id], 
             array_merge($data, ['patient_id' => $consultation->patient_id])
         );
+
+        $vitalsSummary = [];
+        if (!empty($data['blood_pressure'])) $vitalsSummary[] = "BP: {$data['blood_pressure']} mmHg";
+        if (!empty($data['heart_rate']))     $vitalsSummary[] = "HR: {$data['heart_rate']} bpm";
+        if (!empty($data['temperature']))    $vitalsSummary[] = "Temp: {$data['temperature']}°C";
+        if (!empty($data['respiratory']))    $vitalsSummary[] = "RR: {$data['respiratory']}/min";
+        if (!empty($data['oxygen']))         $vitalsSummary[] = "SpO2: {$data['oxygen']}%";
+        if (!empty($data['weight']))         $vitalsSummary[] = "Weight: {$data['weight']} kg";
+
+        \App\Models\AuditLog::create([
+            'user_id'     => $request->user()->id,
+            'action'      => 'Vital Signs Recorded',
+            'description' => "Recorded vital signs for Teleconsultation CN-" . str_pad($id, 6, '0', STR_PAD_LEFT) . ': ' . (implode(', ', $vitalsSummary) ?: 'Initial reading'),
+            'ip_address'  => $request->ip(),
+        ]);
+
         return response()->json($v);
     }
     public function messages(Request $request, $id) {

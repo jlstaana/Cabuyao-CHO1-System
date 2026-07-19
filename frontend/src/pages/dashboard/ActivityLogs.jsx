@@ -4,7 +4,7 @@ import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import PageTitle from '../../components/PageTitle';
-import { ShieldCheck, Search, X, Filter, Monitor, AlertTriangle, CheckCircle, LogIn, LogOut, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Search, X, Filter, Monitor, AlertTriangle, CheckCircle, LogIn, LogOut, RefreshCw, ChevronLeft, ChevronRight, HeartPulse } from 'lucide-react';
 
 const ACTION_ICONS = {
   'login':       { icon: LogIn,        color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -15,11 +15,13 @@ const ACTION_ICONS = {
   'system':      { icon: Monitor,      color: 'text-sky-600',     bg: 'bg-sky-50'     },
   'backup':      { icon: Monitor,      color: 'text-sky-600',     bg: 'bg-sky-50'     },
   'health':      { icon: Monitor,      color: 'text-sky-600',     bg: 'bg-sky-50'     },
+  'vitals':      { icon: HeartPulse,   color: 'text-rose-600',    bg: 'bg-rose-50'    },
   'default':     { icon: CheckCircle,  color: 'text-violet-600',  bg: 'bg-violet-50'  },
 };
 
 function getActionMeta(action = '') {
   const key = action.toLowerCase();
+  if (key.includes('vital'))    return ACTION_ICONS.vitals;
   if (key.includes('login') && !key.includes('failed'))    return ACTION_ICONS.login;
   if (key.includes('logout'))   return ACTION_ICONS.logout;
   if (key.includes('failed') || key.includes('unauthorized')) return ACTION_ICONS.failed;
@@ -244,7 +246,39 @@ export default function ActivityLogs() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-xs text-text-muted max-w-xs">{log.description ?? '—'}</td>
+                    <td className="px-4 py-3 text-xs text-text-muted max-w-sm">
+                      <div>{log.description ?? '—'}</div>
+                      {/* Formatted Vital Signs Pills */}
+                      {log.action === 'Vital Signs Recorded' && log.description && (
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {log.description.includes('BP:') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                              🩸 {log.description.match(/BP:\s*([^\s,]+(?:\s*mmHg)?)/i)?.[0] || 'BP'}
+                            </span>
+                          )}
+                          {log.description.includes('HR:') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                              ❤️ {log.description.match(/HR:\s*([^\s,]+(?:\s*bpm)?)/i)?.[0] || 'HR'}
+                            </span>
+                          )}
+                          {log.description.includes('Temp:') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                              🌡️ {log.description.match(/Temp:\s*([^\s,]+(?:\s*°C)?)/i)?.[0] || 'Temp'}
+                            </span>
+                          )}
+                          {(log.description.includes('SpO2:') || log.description.includes('Oxygen:')) && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              🫁 {log.description.match(/(?:SpO2|Oxygen):\s*([^\s,]+(?:\s*%)?)/i)?.[0] || 'SpO2'}
+                            </span>
+                          )}
+                          {log.description.includes('Weight:') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                              ⚖️ {log.description.match(/Weight:\s*([^\s,]+(?:\s*kg)?)/i)?.[0] || 'Weight'}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-xs font-mono text-text-muted">{log.ip_address ?? '—'}</td>
                   </tr>
                 );

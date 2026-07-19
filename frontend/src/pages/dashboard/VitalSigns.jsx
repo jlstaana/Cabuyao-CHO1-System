@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
-import { HeartPulse, Thermometer, Wind, Activity, Plus, Clock, TrendingUp, AlertCircle } from 'lucide-react';
+import { HeartPulse, Thermometer, Wind, Activity, Plus, Clock, TrendingUp, AlertCircle, Search, User, Filter } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 
 const VITAL_FIELDS = [
@@ -26,6 +26,8 @@ const COLOR_MAP = {
 function mapVitalHistory(vitals) {
   return vitals.map((v) => ({
     id: v.id,
+    patientId: v.patient_id,
+    patientName: v.patient?.user?.name || 'Patient',
     date: new Date(v.created_at).toLocaleString(),
     blood_pressure: v.blood_pressure || '',
     heart_rate: v.heart_rate || '',
@@ -38,79 +40,202 @@ function mapVitalHistory(vitals) {
 
 export default function VitalSigns() {
   const { user } = useAuthStore();
+  const isPatient = user?.role === 'Patient';
+
   const [form, setForm] = useState({ blood_pressure: '', heart_rate: '', temperature: '', respiratory: '', oxygen: '', weight: '' });
+  const [selectedPatientId, setSelectedPatientId] = useState('');
   const [history, setHistory] = useState([]);
+  const [patientOptions, setPatientOptions] = useState([]);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
+  // Fetch data on load
   useEffect(() => {
-    if (user?.role !== 'Patient') return;
     let isActive = true;
-    api.get('/vitals')
-      .then((res) => {
-        if (isActive) {
-          setHistory(mapVitalHistory(res.data || []));
-        }
-      })
-      .catch(() => {
-        if (isActive) setHistory([]);
-      });
-    return () => { isActive = false; };
-  }, [user]);
+    setLoading(true);
 
-  // Guard: Patients only
-  if (user?.role !== 'Patient') {
-    return (
-      <div className="p-8 text-center text-text-muted bg-surface rounded-2xl shadow-sm border border-border">
-        This page is only accessible to patients.
-      </div>
-    );
-  }
+    if (isPatient) {
+      api.get('/vitals')
+        .then((res) => {
+          if (isActive) {
+            setHistory(mapVitalHistory(res.data || []));
+          }
+        })
+        .catch(() => { if (isActive) setHistory([]); })
+        .finally(() => { if (isActive) setLoading(false); });
+    } else {
+      // Doctor / Admin / Staff: fetch all vitals and build patient list from consultations / vitals
+      Promise.all([
+        api.get('/vitals'),
+        api.get('/consultations').catch(() => ({ data: [] })),
+      ]).then(([vitalsRes, consultsRes]) => {
+        if (!isActive) return;
+
+        const vitalsList = vitalsRes.data || [];
+        const mapped = mapVitalHistory(vitalsList);
+        setHistory(mapped);
+
+        // Build list of unique patients
+        const patientMap = new Map();
+
+        vitalsList.forEach(v => {
+          if (v.patient_id && v.patient?.user?.name) {
+            patientMap.set(v.patient_id, { id: v.patient_id, name: v.patient.user.name });
+          }
+        });
+
+        (consultsRes.data || []).forEach(c => {
+          if (c.patient_id && c.patient?.user?.name) {
+            patientMap.set(c.patient_id, { id: c.patient_id, name: c.patient.user.name });
+          }
+        });
+
+        const pts = Array.from(patientMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+        setPatientOptions(pts);
+        if (pts.length > 0 && !selectedPatientId) {
+          setSelectedPatientId(pts[0].id);
+        }
+      }).catch(() => {
+        if (isActive) setHistory([]);
+      }).finally(() => {
+        if (isActive) setLoading(false);
+      });
+    }
+
+    return () => { isActive = false; };
+  }, [user, isPatient]);
+
+  // Filtered patient list for doctor dropdown search
+  const filteredPatients = useMemo(() => {
+    const q = patientSearch.trim().toLowerCase();
+    if (!q) return patientOptions;
+    return patientOptions.filter(p => p.name.toLowerCase().includes(q));
+  }, [patientOptions, patientSearch]);
+
+  // Filtered history based on selected patient or search
+  const displayHistory = useMemo(() => {
+    if (isPatient) return history;
+    if (!selectedPatientId || selectedPatientId === 'ALL') return history;
+    return history.filter(h => String(h.patientId) === String(selectedPatientId));
+  }, [history, selectedPatientId, isPatient]);
+
+  const latest = displayHistory[0];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Check at least one field filled
-    if (!Object.values(form).some((v) => v.trim() !== '')) {
+    if (!Object.values(form).some((v) => String(v).trim() !== '')) {
       toast.error('Please enter at least one vital sign value.');
       return;
     }
+
+    if (!isPatient && (!selectedPatientId || selectedPatientId === 'ALL')) {
+      toast.error('Please select a specific patient to record vital signs.');
+      return;
+    }
+
     setSaving(true);
     try {
-      const response = await api.post('/vitals', form);
+      const payload = isPatient ? form : { ...form, patient_id: selectedPatientId };
+      const response = await api.post('/vitals', payload);
       const newVital = response.data.data;
       const now = new Date(newVital.created_at || Date.now()).toLocaleString();
-      setHistory((prev) => [{ id: newVital.id, date: now, ...form }, ...prev]);
-      toast.success('Vital signs recorded successfully!');
+      const patientName = newVital.patient?.user?.name || patientOptions.find(p => String(p.id) === String(selectedPatientId))?.name || 'Patient';
+
+      setHistory((prev) => [{
+        id: newVital.id,
+        patientId: newVital.patient_id,
+        patientName,
+        date: now,
+        ...form,
+      }, ...prev]);
+
+      toast.success(`Vital signs recorded for ${patientName}!`);
       setForm({ blood_pressure: '', heart_rate: '', temperature: '', respiratory: '', oxygen: '', weight: '' });
       setShowForm(false);
-    } catch {
-      toast.error('Failed to save vital signs. Please try again.');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save vital signs.');
     } finally {
       setSaving(false);
     }
   };
 
-  // Latest reading
-  const latest = history[0];
-
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      {/* Header */}
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageTitle icon={HeartPulse} title="Vital Signs" description="Record and track your daily health measurements." iconClassName="bg-danger-bg text-danger-text" />
+        <PageTitle
+          icon={HeartPulse}
+          title={isPatient ? "My Vital Signs" : "Patient Vital Signs Records"}
+          description={isPatient
+            ? "Record and track your daily health measurements."
+            : "View and record vital signs measurements for patients across the health office."}
+          iconClassName="bg-danger-bg text-danger-text"
+        />
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-2 bg-rose-500 text-white px-5 py-2.5 rounded-xl hover:bg-rose-600 transition-all shadow-md shadow-rose-200 font-medium active:scale-95"
+          className="flex items-center gap-2 bg-rose-500 text-white px-5 py-2.5 rounded-xl hover:bg-rose-600 transition-all shadow-md shadow-rose-200 font-medium active:scale-95 shrink-0"
         >
-          <Plus size={18} /> {showForm ? 'Cancel' : 'Record Now'}
+          <Plus size={18} /> {showForm ? 'Cancel' : 'Record Vital Signs'}
         </button>
       </div>
+
+      {/* Patient Selector Bar for Doctors/Staff/Admin */}
+      {!isPatient && (
+        <div className="bg-surface rounded-2xl border border-border p-4 shadow-sm space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <div className="flex items-center gap-2 font-semibold text-sm text-text">
+              <User size={16} className="text-rose-500" />
+              <span>Select Patient:</span>
+            </div>
+
+            <div className="flex flex-1 sm:flex-initial gap-2 items-center flex-wrap sm:flex-nowrap">
+              <select
+                id="vital-patient-select"
+                value={selectedPatientId}
+                onChange={e => setSelectedPatientId(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-border bg-background text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/20 min-w-[200px]"
+              >
+                <option value="ALL">All Patients ({history.length} records)</option>
+                {patientOptions.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+
+              <div className="relative flex-1 sm:w-56">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                <input
+                  type="text"
+                  value={patientSearch}
+                  onChange={e => setPatientSearch(e.target.value)}
+                  placeholder="Filter patient list..."
+                  className="w-full pl-8 pr-3 py-2 rounded-xl border border-border bg-background text-xs outline-none focus:ring-2 focus:ring-rose-500/20"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick-entry form */}
       {showForm && (
         <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-          <h2 className="font-semibold text-text mb-5 flex items-center gap-2">
-            <HeartPulse size={18} className="text-rose-500" /> Enter Today's Readings
-          </h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-semibold text-text flex items-center gap-2">
+              <HeartPulse size={18} className="text-rose-500" />
+              {isPatient
+                ? "Enter Today's Readings"
+                : `Record Vital Signs for ${patientOptions.find(p => String(p.id) === String(selectedPatientId))?.name || 'Selected Patient'}`}
+            </h2>
+          </div>
+
+          {!isPatient && (!selectedPatientId || selectedPatientId === 'ALL') && (
+            <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle size={15} /> Please select a specific patient in the dropdown above before saving.
+            </div>
+          )}
+
           <form data-tour="page-form" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {VITAL_FIELDS.map((field) => {
@@ -136,11 +261,12 @@ export default function VitalSigns() {
                 );
               })}
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-text-muted hover:bg-surface-hover">Cancel</button>
               <button
                 type="submit"
-                disabled={saving}
-                className="flex items-center gap-2 bg-rose-500 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-rose-600 transition-colors shadow-md shadow-rose-200 disabled:opacity-70"
+                disabled={saving || (!isPatient && (!selectedPatientId || selectedPatientId === 'ALL'))}
+                className="flex items-center gap-2 bg-rose-500 text-white px-6 py-2 rounded-xl font-medium hover:bg-rose-600 transition-colors shadow-md shadow-rose-200 disabled:opacity-50"
               >
                 <HeartPulse size={16} /> {saving ? 'Saving...' : 'Save Readings'}
               </button>
@@ -153,7 +279,7 @@ export default function VitalSigns() {
       {latest && (
         <div>
           <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Clock size={14} /> Latest Reading — {latest.date}
+            <Clock size={14} /> Latest Reading {!isPatient && `(${latest.patientName})`} — {latest.date}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {VITAL_FIELDS.map((field) => {
@@ -177,15 +303,19 @@ export default function VitalSigns() {
 
       {/* History table */}
       <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-border">
+        <div className="p-5 border-b border-border flex justify-between items-center">
           <h2 className="font-semibold text-text flex items-center gap-2">
             <TrendingUp size={16} className="text-indigo-500" /> Vital Signs History
           </h2>
+          <span className="text-xs font-semibold text-text-muted">
+            {displayHistory.length} {displayHistory.length === 1 ? 'record' : 'records'}
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table data-tour="page-list" className="w-full text-sm text-left whitespace-nowrap">
             <thead>
               <tr className="bg-background text-text-muted text-xs border-b border-border">
+                {!isPatient && <th className="px-5 py-3 font-semibold">Patient Name</th>}
                 <th className="px-5 py-3 font-semibold">Date &amp; Time</th>
                 <th className="px-5 py-3 font-semibold">Blood Pressure</th>
                 <th className="px-5 py-3 font-semibold">Heart Rate</th>
@@ -196,10 +326,13 @@ export default function VitalSigns() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {history.length === 0 ? (
-                <tr><td colSpan={7} className="px-5 py-10 text-center text-text-light">No vital signs recorded yet. Tap "Record Now" to start.</td></tr>
-              ) : history.map((entry) => (
+              {loading ? (
+                <tr><td colSpan={8} className="px-5 py-10 text-center text-text-muted">Loading vital signs data...</td></tr>
+              ) : displayHistory.length === 0 ? (
+                <tr><td colSpan={8} className="px-5 py-10 text-center text-text-light">No vital signs recorded for this selection. Tap "Record Vital Signs" to add readings.</td></tr>
+              ) : displayHistory.map((entry) => (
                 <tr key={entry.id} className="hover:bg-background/60 transition-colors">
+                  {!isPatient && <td className="px-5 py-3 font-semibold text-text">{entry.patientName}</td>}
                   <td className="px-5 py-3 text-text-muted font-medium">{entry.date}</td>
                   <td className="px-5 py-3"><span className="font-semibold text-primary-text">{entry.blood_pressure || '—'}</span> mmHg</td>
                   <td className="px-5 py-3"><span className="font-semibold text-danger-text">{entry.heart_rate || '—'}</span> bpm</td>

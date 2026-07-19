@@ -50,6 +50,7 @@ export function buildNavGroups(role) {
         links: [
           { path: '/consultations',  label: 'Consultation Queue',      icon: Stethoscope },
           { path: '/patient-records', label: 'Patient Records',        icon: ClipboardList },
+          { path: '/vitals',          label: 'Patient Vital Signs',    icon: HeartPulse },
         ],
       },
       {
@@ -81,6 +82,7 @@ export function buildNavGroups(role) {
         label: 'Patient Records',
         links: [
           { path: '/consultations', label: 'View Patient Records',   icon: ClipboardList },
+          { path: '/vitals',        label: 'Patient Vital Signs',    icon: HeartPulse },
         ],
       },
       {
@@ -115,7 +117,8 @@ export function buildNavGroups(role) {
         { path: '/prescriptions', label: 'E-Prescriptions',  icon: FileText },
         { path: '/medicines',     label: 'Medicine List',     icon: Pill },
         { path: '/users',         label: 'Manage Users',      icon: Users },
-        { path: '/activity-logs', label: 'Activity Logs',     icon: ShieldCheck },
+        { path: '/vitals',        label: 'Patient Vital Signs',  icon: HeartPulse },
+        { path: '/activity-logs', label: 'Activity Logs',       icon: ShieldCheck },
       ],
     },
   ];
