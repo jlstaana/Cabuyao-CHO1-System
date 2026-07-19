@@ -171,9 +171,17 @@ class PrescriptionController extends Controller {
         }
 
         $doctorSignatureSvg = $prescription->doctor_signature_svg;
-        $doctorSignatureSrc = $doctorSignatureSvg
-            ? 'data:image/svg+xml;base64,' . base64_encode($doctorSignatureSvg)
-            : null;
+        $doctorSignatureSrc = null;
+
+        if ($doctorSignatureSvg) {
+            // Remove existing width/height from the <svg> opening tag
+            $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+width="[^"]*"/i', '$1', $doctorSignatureSvg);
+            $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+height="[^"]*"/i', '$1', $normalizedSvg);
+            // Inject fixed dimensions — small enough to fit under the signature line
+            $normalizedSvg = preg_replace('/(<svg)/i', '$1 width="140" height="28" preserveAspectRatio="xMidYMid meet"', $normalizedSvg, 1);
+            $doctorSignatureSrc = $normalizedSvg; // Pass raw inline SVG, not base64
+        }
+
         $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))->setPaper('a5', 'portrait');
         return $pdf->download("prescription_{$id}.pdf");
     }

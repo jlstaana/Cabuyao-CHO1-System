@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController, PatientController, AdminController, ConsultationController, MedicineController, PrescriptionController, AnalyticsController, DoctorController};
+use App\Http\Controllers\{AuthController, PatientController, AdminController, ConsultationController, MedicineController, PrescriptionController, AnalyticsController, DoctorController, ActivityLogController};
 
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/register/verify', [AuthController::class, 'verifyRegistration']);
@@ -77,4 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Analytics
     Route::get('/analytics/stats', [AnalyticsController::class, 'stats'])->middleware('role:Admin');
+
+    // Activity Logs (all authenticated users — scoped by role in controller)
+    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index']);
 });

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
 import {
   Video, Calendar, Clock, CheckCircle, XCircle,
-  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse,
+  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X, Filter,
 } from 'lucide-react';
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -174,8 +174,17 @@ function doctorSlotStatus(doctor, date, slot) {
 function PatientView({ consultations, loading, onRequest, onReschedule, onCancel }) {
   const tabs = ['All', 'Pending', 'Scheduled', 'Completed'];
   const [tab, setTab] = useState('All');
+  const [search, setSearch] = useState('');
 
-  const filtered = tab === 'All' ? consultations : consultations.filter(c => c.status === tab);
+  const filtered = consultations.filter(c => {
+    const matchTab = tab === 'All' || c.status === tab;
+    const q = search.trim().toLowerCase();
+    const matchSearch = !q
+      || c.doctor?.user?.name?.toLowerCase().includes(q)
+      || c.requested_specialization?.toLowerCase().includes(q)
+      || (c.status || '').toLowerCase().includes(q);
+    return matchTab && matchSearch;
+  });
 
   return (
     <div className="space-y-6">
@@ -194,16 +203,51 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
         </button>
       </div>
 
-      {/* Status tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {tabs.map(t => {
-          const Icon = TAB_ICON[t] || Stethoscope;
-          return (
-            <button key={t} onClick={() => setTab(t)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
-            ><Icon size={14} /> {t}</button>
-          );
-        })}
+      {/* Search & Status tabs */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {tabs.map(t => {
+            const Icon = TAB_ICON[t] || Stethoscope;
+            return (
+              <button key={t} onClick={() => setTab(t)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
+              ><Icon size={14} /> {t}</button>
+            );
+          })}
+        </div>
+
+        {/* Search bar */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:w-64">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search doctor or specialization..."
+              className="w-full pl-9 pr-9 py-2 rounded-xl border border-border bg-surface text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-all"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-200 bg-danger-bg text-rose-600 text-xs font-semibold hover:bg-rose-100 transition-all shrink-0"
+            >
+              <X size={13} /> Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Cards */}
@@ -265,12 +309,25 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
 // ─── DOCTOR VIEW ──────────────────────────────────────────────────────────────
 function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, onCancel, availabilityStatus, onOpenAvailability }) {
   const [tab, setTab] = useState('Pending');
+  const [search, setSearch] = useState('');
+
   const pending   = consultations.filter(c => c.status === 'Pending');
   const scheduled = consultations.filter(c => c.status === 'Scheduled');
   const completed = consultations.filter(c => c.status === 'Completed');
 
   const counts = { Pending: pending.length, Scheduled: scheduled.length, Completed: completed.length };
-  const filtered = tab === 'Pending' ? pending : tab === 'Scheduled' ? scheduled : completed;
+  const baseFiltered = tab === 'Pending' ? pending : tab === 'Scheduled' ? scheduled : completed;
+
+  const filtered = baseFiltered.filter(c => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      c.patient?.user?.name?.toLowerCase().includes(q) ||
+      (c.form?.symptoms || '').toLowerCase().includes(q) ||
+      (c.form?.diagnosis || '').toLowerCase().includes(q) ||
+      `cn-${String(c.id).padStart(6, '0')}`.includes(q)
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -323,21 +380,56 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
         ))}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2">
-        {['Pending', 'Scheduled', 'Completed'].map(t => {
-          const Icon = TAB_ICON[t] || Stethoscope;
-          return (
-            <button key={t} onClick={() => setTab(t)}
-              className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
+      {/* Tabs & Search */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="flex gap-2">
+          {['Pending', 'Scheduled', 'Completed'].map(t => {
+            const Icon = TAB_ICON[t] || Stethoscope;
+            return (
+              <button key={t} onClick={() => setTab(t)}
+                className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
+              >
+                <Icon size={14} /> {t}
+                {counts[t] > 0 && t === 'Pending' && (
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">{counts[t]}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search bar */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:w-64">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by patient name or symptoms..."
+              className="w-full pl-9 pr-9 py-2 rounded-xl border border-border bg-surface text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-all"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-200 bg-danger-bg text-rose-600 text-xs font-semibold hover:bg-rose-100 transition-all shrink-0"
             >
-              <Icon size={14} /> {t}
-              {counts[t] > 0 && t === 'Pending' && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">{counts[t]}</span>
-              )}
+              <X size={13} /> Clear
             </button>
-          );
-        })}
+          )}
+        </div>
       </div>
 
       {/* Queue list */}
@@ -421,7 +513,18 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
 // ─── ADMIN / STAFF VIEW ───────────────────────────────────────────────────────
 function AdminView({ consultations, loading, onReschedule, onCancel }) {
   const [tab, setTab] = useState('Scheduled');
-  const filtered = consultations.filter(c => c.status === tab);
+  const [search, setSearch] = useState('');
+
+  const filtered = consultations.filter(c => {
+    const matchTab = c.status === tab;
+    const q = search.trim().toLowerCase();
+    if (!q) return matchTab;
+    const matchSearch =
+      c.patient?.user?.name?.toLowerCase().includes(q) ||
+      c.doctor?.user?.name?.toLowerCase().includes(q) ||
+      `cn-${String(c.id).padStart(6, '0')}`.includes(q);
+    return matchTab && matchSearch;
+  });
 
   return (
     <div className="space-y-6">
@@ -444,16 +547,51 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
         })}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {['Pending','Scheduled','Completed','Cancelled'].map(t => {
-          const Icon = TAB_ICON[t] || Stethoscope;
-          return (
-            <button key={t} onClick={() => setTab(t)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
-            ><Icon size={14} /> {t} ({consultations.filter(c => c.status === t).length})</button>
-          );
-        })}
+      {/* Tabs & Search */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {['Pending','Scheduled','Completed','Cancelled'].map(t => {
+            const Icon = TAB_ICON[t] || Stethoscope;
+            return (
+              <button key={t} onClick={() => setTab(t)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
+              ><Icon size={14} /> {t} ({consultations.filter(c => c.status === t).length})</button>
+            );
+          })}
+        </div>
+
+        {/* Search bar */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:w-64">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search patient or assigned doctor..."
+              className="w-full pl-9 pr-9 py-2 rounded-xl border border-border bg-surface text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-all"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-200 bg-danger-bg text-rose-600 text-xs font-semibold hover:bg-rose-100 transition-all shrink-0"
+            >
+              <X size={13} /> Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Table */}

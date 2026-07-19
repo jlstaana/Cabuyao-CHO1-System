@@ -25,6 +25,7 @@ const VitalSigns = lazy(() => import('./pages/dashboard/VitalSigns'));
 const MedicalImages = lazy(() => import('./pages/dashboard/MedicalImages'));
 const ConsultationHistory = lazy(() => import('./pages/dashboard/ConsultationHistory'));
 const PatientRecords = lazy(() => import('./pages/dashboard/PatientRecords'));
+const ActivityLogs = lazy(() => import('./pages/dashboard/ActivityLogs'));
 
 // Loading fallback spinner
 const PageLoader = () => (
@@ -71,6 +72,7 @@ function App() {
               <Route path="/medical-images" element={<MedicalImages />} />
               <Route path="/consultation-history" element={<ConsultationHistory />} />
               <Route path="/patient-records" element={<PatientRecords />} />
+              <Route path="/activity-logs" element={<ActivityLogs />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
-import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar } from 'lucide-react';
+import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar, Search, X, Filter } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 import Modal from '../../components/Modal';
 import useAuthStore from '../../store/useAuthStore';
@@ -18,6 +18,12 @@ export default function Prescriptions() {
   const [editModal, setEditModal] = useState(false);
   const [selected, setSelected] = useState(null);
   const [editForm, setEditForm] = useState({ notes: '', items: [{ ...emptyItem }] });
+
+  // Filter state
+  const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     const fetchPrescriptions = async () => {
@@ -39,6 +45,32 @@ export default function Prescriptions() {
       .then((response) => setMedicines(response.data || []))
       .catch(() => setMedicines([]));
   }, [user?.role]);
+
+  // Derived filtered list
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return prescriptions.filter(p => {
+      const matchSearch = !q
+        || p.patient?.user?.name?.toLowerCase().includes(q)
+        || p.doctor?.user?.name?.toLowerCase().includes(q)
+        || (p.notes || '').toLowerCase().includes(q)
+        || `rx-${String(p.id).padStart(6, '0')}`.includes(q);
+
+      const issueDate = new Date(p.created_at);
+      const matchFrom = !dateFrom || issueDate >= new Date(dateFrom);
+      const matchTo   = !dateTo   || issueDate <= new Date(dateTo + 'T23:59:59');
+
+      return matchSearch && matchFrom && matchTo;
+    });
+  }, [prescriptions, search, dateFrom, dateTo]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setDateFrom('');
+    setDateTo('');
+  };
+
+  const hasActiveFilters = search || dateFrom || dateTo;
 
   const handleDownload = async (prescriptionId) => {
     setDownloadingId(prescriptionId);
@@ -113,8 +145,93 @@ export default function Prescriptions() {
   };
 
   return (
-    <div className="animate-in fade-in duration-500">      <div className="flex justify-between items-center mb-6">
+    <div className="animate-in fade-in duration-500">
+      <div className="flex justify-between items-center mb-6">
         <PageTitle icon={FileText} title="E-Prescriptions" description="Access and manage digitally signed medical prescriptions." iconClassName="bg-success-bg text-emerald-600" />
+      </div>
+
+      {/* Search & Filter Bar */}
+      <div className="mb-6 space-y-3">
+        <div className="flex gap-2">
+          {/* Search input */}
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <input
+              id="prescription-search"
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by patient, doctor, notes, or Rx number..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-surface text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors">
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Toggle filter panel */}
+          <button
+            id="prescription-filter-toggle"
+            onClick={() => setShowFilters(v => !v)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border font-medium text-sm transition-all ${
+              showFilters || (dateFrom || dateTo)
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                : 'bg-surface border-border text-text-muted hover:bg-surface-hover'
+            }`}
+          >
+            <Filter size={15} />
+            Filter
+            {(dateFrom || dateTo) && (
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+            )}
+          </button>
+
+          {/* Clear all */}
+          {hasActiveFilters && (
+            <button
+              id="prescription-clear-filters"
+              onClick={clearFilters}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-rose-200 bg-danger-bg text-rose-600 text-sm font-medium hover:bg-rose-100 transition-all"
+            >
+              <X size={14} /> Clear
+            </button>
+          )}
+        </div>
+
+        {/* Date filter panel */}
+        {showFilters && (
+          <div className="flex flex-wrap gap-3 p-4 rounded-xl border border-border bg-surface animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Date From</label>
+              <input
+                id="prescription-date-from"
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Date To</label>
+              <input
+                id="prescription-date-to"
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Result count */}
+        {!loading && (
+          <p className="text-xs text-text-muted">
+            Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{prescriptions.length}</span> prescriptions
+          </p>
+        )}
       </div>
 
       <div data-tour="page-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -127,19 +244,29 @@ export default function Prescriptions() {
                 <Skeleton className="h-10 w-full" />
              </div>
            ))
-        ) : prescriptions.length === 0 ? (
-           <div className="col-span-full p-8 text-center text-text-muted bg-surface rounded-2xl border border-border">No prescriptions found.</div>
-        ) : prescriptions.map(p => (
+        ) : filtered.length === 0 ? (
+           <div className="col-span-full p-8 text-center text-text-muted bg-surface rounded-2xl border border-border">
+             {hasActiveFilters ? (
+               <div className="space-y-2">
+                 <p className="font-medium">No prescriptions match your search.</p>
+                 <button onClick={clearFilters} className="text-sm text-emerald-600 hover:underline">Clear filters</button>
+               </div>
+             ) : 'No prescriptions found.'}
+           </div>
+        ) : filtered.map(p => (
           <div key={p.id} className="bg-surface rounded-2xl p-6 shadow-sm border border-border flex flex-col">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="font-bold text-lg text-text line-clamp-1">
-                {p.notes || 'Prescription Details'}
-              </h3>
+              <div>
+                <span className="text-xs font-mono text-text-muted">RX-{String(p.id).padStart(6, '0')}</span>
+                <h3 className="font-bold text-lg text-text line-clamp-1 mt-0.5">
+                  {p.notes || 'Prescription Details'}
+                </h3>
+              </div>
               <div className="w-10 h-10 rounded-full bg-success-bg text-emerald-600 flex items-center justify-center shrink-0">
                 <FileText size={20} />
               </div>
             </div>
-            
+
             <div className="space-y-2 mb-6 flex-1">
               <p className="text-sm flex items-center gap-2 text-text-muted">
                 <User size={16} className="text-text-light" /> Patient: {p.patient?.user?.name || 'Unknown Patient'}
@@ -151,7 +278,7 @@ export default function Prescriptions() {
                 <Calendar size={16} className="text-text-light" /> Issued On: {new Date(p.created_at).toLocaleDateString()}
               </p>
             </div>
-            
+
             <div className="space-y-2">
               {user?.role === 'Doctor' && (
                 <button

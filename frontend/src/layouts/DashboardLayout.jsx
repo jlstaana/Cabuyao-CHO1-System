@@ -62,6 +62,7 @@ export default function DashboardLayout() {
     if (path.includes('/users')) return 'Manage Users';
     if (path.includes('/analytics')) return 'Analytics & Reports';
     if (path.includes('/patient-records')) return 'Patient Records';
+    if (path.includes('/activity-logs'))   return 'Activity Logs';
     if (path.includes('/profile')) return 'Profile';
     if (path.includes('/notifications')) return 'Notifications';
     if (path.includes('/room/')) return 'Teleconsultation Room';

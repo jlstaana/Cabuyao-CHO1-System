@@ -12,7 +12,8 @@
         body {
             font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
             color: #111827;
-            line-height: 1.25;
+            font-size: 10px;
+            line-height: 1.2;
             margin: 0;
             padding: 0;
             background-color: #ffffff;
@@ -84,7 +85,7 @@
         .header h1 {
             color: #000000;
             margin: 2px 0;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -92,8 +93,8 @@
 
         .header h2 {
             color: #0369a1;
-            margin: 5px 0 0 0;
-            font-size: 14px;
+            margin: 4px 0 0 0;
+            font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
         }
@@ -107,8 +108,8 @@
         .meta-bar {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 8px;
-            font-size: 12px;
+            margin-bottom: 6px;
+            font-size: 10px;
         }
 
         .meta-bar td {
@@ -125,7 +126,7 @@
         .patient-grid {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
+            font-size: 9px;
         }
 
         .patient-grid td {
@@ -144,15 +145,15 @@
 
         .line-value {
             border-bottom: 1px solid #94a3b8;
-            min-height: 13px;
+            min-height: 12px;
             color: #0f172a;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
         }
 
         .rx-symbol {
             text-align: left;
-            font-size: 38px;
+            font-size: 30px;
             font-weight: bold;
             font-family: DejaVu Serif, serif;
             color: #075985;
@@ -180,8 +181,8 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 4px;
-            margin-bottom: 10px;
-            font-size: 12px;
+            margin-bottom: 8px;
+            font-size: 10px;
             table-layout: fixed;
         }
 
@@ -216,12 +217,12 @@
         .medicine-name {
             font-weight: bold;
             color: #0f172a;
-            font-size: 12px;
+            font-size: 10px;
             margin-bottom: 2px;
         }
 
         .medicine-desc {
-            font-size: 10px;
+            font-size: 9px;
             color: #64748b;
         }
 
@@ -245,57 +246,50 @@
         .instructions p {
             margin: 0;
             color: #475569;
-            font-size: 11px;
+            font-size: 10px;
         }
 
-        .footer {
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 8px;
             padding-top: 8px;
             border-top: 2px solid #cbd5e1;
         }
 
         .validity {
-            float: left;
-            width: 45%;
             font-size: 9px;
             color: #475569;
-            margin-bottom: 12px;
             text-align: left;
-        }
-
-        .signature-box {
-            float: right;
-            text-align: center;
-            width: 220px;
-        }
-
-        .signature-space {
-            width: 180px;
-            height: 40px;
-            line-height: 40px;
-            margin: 0 auto 0 auto;
-            border-bottom: 1px solid #000;
-            text-align: center;
-        }
-
-        .signature-image {
-            width: auto;
-            max-height: 38px;
-            max-width: 170px;
-            display: inline-block;
             vertical-align: bottom;
-            margin-bottom: -1px;
+            width: 50%;
+            padding-right: 10px;
+        }
+
+        .signature-col {
+            width: 50%;
+            text-align: center;
+            vertical-align: bottom;
+        }
+
+        .signature-line {
+            width: 160px;
+            border-bottom: 1px solid #000;
+            margin: 0 auto;
+            height: 30px;
+            text-align: center;
         }
 
         .doctor-name {
             font-weight: bold;
             color: #0f172a;
-            margin: 0 0 2px 0;
+            font-size: 11px;
+            margin: 2px 0 2px 0;
             text-transform: uppercase;
         }
 
         .doctor-license {
-            font-size: 12px;
+            font-size: 10px;
             color: #64748b;
             margin: 0 0 1px 0;
         }
@@ -457,26 +451,30 @@
             </p>
         </div>
 
-        <div class="footer clearfix">
-            <div class="validity">
-                <p><strong>Reminder:</strong> Follow the prescribed dosage and consult your physician or the City Health Office for any adverse reaction.</p>
-                <p>This electronically generated prescription is issued through the Cabuyao CHO-I Telehealth System.</p>
-            </div>
-            <div class="signature-box">
-                <div class="signature-space">
-                    @if(!empty($doctorSignatureSrc))
-                        <img class="signature-image" src="{{ $doctorSignatureSrc }}" alt="Doctor e-signature">
-                    @endif
-                </div>
-                <p class="doctor-name">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
-                <p class="doctor-license">PRC Lic. No.:
-                    {{ optional($doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}
-                </p>
-                <p class="doctor-license">{{ optional($doctor)->specialization ?? 'General Practice' }}</p>
-                <p class="doctor-license">PTR No.: ____________ &nbsp; S2 No.: ____________</p>
-                <div class="stamp">E-SIGNED</div>
-            </div>
-        </div>
+        <table class="footer-table">
+            <tr>
+                <td class="validity">
+                    <p><strong>Reminder:</strong> Follow the prescribed dosage and consult your physician or the City Health Office for any adverse reaction.</p>
+                    <p>This electronically generated prescription is issued through the Cabuyao CHO-I Telehealth System.</p>
+                </td>
+                <td class="signature-col">
+                    <table width="160" align="center" style="margin: 0 auto; border-collapse: collapse;">
+                        <tr>
+                            <td align="center" style="height: 30px; border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; padding: 0;">
+                                @if(!empty($doctorSignatureSrc))
+                                    {!! $doctorSignatureSrc !!}
+                                @endif
+                            </td>
+                        </tr>
+                    </table>
+                    <p class="doctor-name" style="text-align: center;">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
+                    <p class="doctor-license" style="text-align: center;">PRC Lic. No.: {{ optional($doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}</p>
+                    <p class="doctor-license" style="text-align: center;">{{ optional($doctor)->specialization ?? 'General Practice' }}</p>
+                    <p class="doctor-license" style="text-align: center;">PTR No.: ____________ &nbsp; S2 No.: ____________</p>
+                    <div class="stamp" style="display: block; width: 60px; margin: 6px auto 0 auto;">E-SIGNED</div>
+                </td>
+            </tr>
+        </table>
 
         <div class="small-note">
             This electronically signed document is officially verified by the Cabuyao CHO-I Telehealth System.

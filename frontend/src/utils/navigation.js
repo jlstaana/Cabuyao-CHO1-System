@@ -1,5 +1,5 @@
 import {
-  Home, HeartPulse, ImagePlus, Stethoscope, Clock, FileText, ClipboardList, Pill, Users, BarChart2
+  Home, HeartPulse, ImagePlus, Stethoscope, Clock, FileText, ClipboardList, Pill, Users, BarChart2, ShieldCheck
 } from 'lucide-react';
 
 export function buildNavGroups(role) {
@@ -27,6 +27,12 @@ export function buildNavGroups(role) {
           { path: '/prescriptions',        label: 'My Prescriptions',      icon: FileText },
         ],
       },
+      {
+        label: 'My Activity',
+        links: [
+          { path: '/activity-logs',        label: 'My Activity Log',       icon: ShieldCheck },
+        ],
+      },
     ];
   }
 
@@ -51,6 +57,12 @@ export function buildNavGroups(role) {
         links: [
           { path: '/prescriptions', label: 'Create E-Prescription',   icon: FileText },
           { path: '/medicines',     label: 'Medicine Database',       icon: Pill },
+        ],
+      },
+      {
+        label: 'My Activity',
+        links: [
+          { path: '/activity-logs', label: 'My Activity Log',         icon: ShieldCheck },
         ],
       },
     ];
@@ -86,7 +98,8 @@ export function buildNavGroups(role) {
       {
         label: 'Reports & Logs',
         links: [
-          { path: '/analytics',     label: 'Analytics & Reports',    icon: BarChart2 },
+          { path: '/analytics',      label: 'Analytics & Reports',  icon: BarChart2   },
+          { path: '/activity-logs',  label: 'Activity Logs',        icon: ShieldCheck },
         ],
       },
     ];
@@ -102,6 +115,7 @@ export function buildNavGroups(role) {
         { path: '/prescriptions', label: 'E-Prescriptions',  icon: FileText },
         { path: '/medicines',     label: 'Medicine List',     icon: Pill },
         { path: '/users',         label: 'Manage Users',      icon: Users },
+        { path: '/activity-logs', label: 'Activity Logs',     icon: ShieldCheck },
       ],
     },
   ];
