@@ -9,7 +9,6 @@ const REPORT_TABS = [
   { key: 'consultations', label: 'Consultation Statistics', icon: Activity },
   { key: 'prescriptions', label: 'E-Prescription Trends', icon: FileText },
   { key: 'utilization', label: 'Service Utilization', icon: TrendingUp },
-  { key: 'logs', label: 'Activity Logs', icon: List },
 ];
 
 const EMPTY_STATS = {
@@ -218,7 +217,7 @@ export default function Analytics() {
 
   return (
     <div className="animate-in fade-in duration-500 space-y-6">      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports and monitor system activity logs." iconClassName="bg-brand-bg text-indigo-600" />
+        <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports, health summaries, and service utilization charts." iconClassName="bg-brand-bg text-indigo-600" />
         <button
           data-tour="page-primary-action"
           onClick={handleExportFullReport}
@@ -323,42 +322,6 @@ export default function Analytics() {
             </div>
           </div>
 
-        </div>
-      )}
-
-      {activeTab === 'logs' && (
-        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-            <h3 className="font-semibold text-text flex items-center gap-2"><List size={16} className="text-rose-500" /> System Activity Logs</h3>
-            <div className="flex items-center gap-2">
-              <Filter size={14} className="text-text-light" />
-              {['all','admin','doctor','staff','patient','system'].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setLogFilter(f)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold capitalize transition-colors ${logFilter === f ? 'bg-slate-900 text-white' : 'bg-surface-hover/50 text-text-muted hover:bg-slate-200 dark:hover:bg-zinc-800'}`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="divide-y divide-slate-50">
-            {filteredLogs.length === 0 ? (
-              <div className="px-6 py-12 text-center text-sm text-text-light">No activity logs found.</div>
-            ) : filteredLogs.map((log, i) => (
-              <div key={`${log.created_at}-${i}`} className="flex justify-between items-center px-6 py-4 hover:bg-background/60 transition-colors">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-text">{log.action}</p>
-                  <p className="text-xs text-text-light mt-0.5">{log.user || 'System'}{log.role ? ` · ${log.role}` : ''}</p>
-                </div>
-                <div className="text-right shrink-0 ml-4">
-                  <p className="text-xs font-semibold text-text-light">{formatDateTime(log.created_at)}</p>
-                  <p className="text-[11px] text-text-light opacity-60 mt-0.5">IP: {log.ip_address || 'N/A'}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
     </div>

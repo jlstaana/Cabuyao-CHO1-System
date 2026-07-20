@@ -27,12 +27,6 @@ export function buildNavGroups(role) {
           { path: '/prescriptions',        label: 'My Prescriptions',      icon: FileText },
         ],
       },
-      {
-        label: 'My Activity',
-        links: [
-          { path: '/activity-logs',        label: 'My Activity Log',       icon: ShieldCheck },
-        ],
-      },
     ];
   }
 
@@ -57,12 +51,6 @@ export function buildNavGroups(role) {
         links: [
           { path: '/prescriptions', label: 'Create E-Prescription',   icon: FileText },
           { path: '/medicines',     label: 'Medicine Database',       icon: Pill },
-        ],
-      },
-      {
-        label: 'My Activity',
-        links: [
-          { path: '/activity-logs', label: 'My Activity Log',         icon: ShieldCheck },
         ],
       },
     ];

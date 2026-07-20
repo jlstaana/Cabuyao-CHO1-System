@@ -8,13 +8,7 @@ class ActivityLogController extends Controller
 {
     public function index(Request $request)
     {
-        $user  = $request->user();
         $query = AuditLog::with('user:id,name,role')->latest();
-
-        // Doctors and Patients only see their own access logs
-        if (in_array($user->role, ['Doctor', 'Patient'])) {
-            $query->where('user_id', $user->id);
-        }
 
         if ($request->filled('search')) {
             $q = $request->search;

@@ -78,6 +78,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Analytics
     Route::get('/analytics/stats', [AnalyticsController::class, 'stats'])->middleware('role:Admin');
 
-    // Activity Logs (all authenticated users — scoped by role in controller)
-    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index']);
+    // Activity Logs (Admin & Staff only)
+    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->middleware('role:Admin,Staff');
 });

@@ -60,6 +60,14 @@ export default function ActivityLogs() {
   const [dateTo, setDateTo]     = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+  if (!isAdminOrStaff) {
+    return (
+      <div className="p-8 text-center text-text-muted bg-surface rounded-2xl shadow-sm border border-border">
+        Access Denied. System Activity Logs are restricted to Health Officers and Administrative Staff.
+      </div>
+    );
+  }
+
   const fetchLogs = useCallback(async (params = {}) => {
     setLoading(true);
     try {
