@@ -9,41 +9,33 @@ use Illuminate\Http\Request;
 class VitalSignController extends Controller
 {
     /**
-     * Get vital signs. Patients get their own; Doctor/Admin/Staff get selected or all patients.
+     * Get all vital signs for the authenticated patient.
      */
     public function index(Request $request)
     {
         $user = $request->user();
-
-        if ($user->role === 'Patient') {
-            if (!$user->patient) {
-                return response()->json([]);
-            }
-            $vitals = VitalSign::where('patient_id', $user->patient->id)
-                ->orderBy('created_at', 'desc')
-                ->get();
-            return response()->json($vitals);
+        if ($user->role !== 'Patient' || !$user->patient) {
+            return response()->json(['message' => 'Unauthorized. Vital signs access is restricted to patients.'], 403);
         }
 
-        // Doctor, Admin, Staff
-        $query = VitalSign::with(['patient.user'])->orderBy('created_at', 'desc');
+        $vitals = VitalSign::where('patient_id', $user->patient->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        if ($request->filled('patient_id')) {
-            $query->where('patient_id', $request->patient_id);
-        }
-
-        return response()->json($query->get());
+        return response()->json($vitals);
     }
 
     /**
-     * Store a newly created vital sign. Patients store for themselves; Staff/Doctor/Admin store for a patient.
+     * Store a newly created vital sign for the authenticated patient.
      */
     public function store(Request $request)
     {
         $user = $request->user();
+        if ($user->role !== 'Patient' || !$user->patient) {
+            return response()->json(['message' => 'Unauthorized. Vital signs access is restricted to patients.'], 403);
+        }
 
         $data = $request->validate([
-            'patient_id' => 'nullable|integer|exists:patients,id',
             'height' => 'nullable|string|max:50',
             'weight' => 'nullable|string|max:50',
             'blood_pressure' => 'nullable|string|max:50',
@@ -53,23 +45,8 @@ class VitalSignController extends Controller
             'oxygen' => 'nullable|string|max:50',
         ]);
 
-        $targetPatientId = null;
-
-        if ($user->role === 'Patient') {
-            if (!$user->patient) {
-                return response()->json(['message' => 'Patient profile not found'], 404);
-            }
-            $targetPatientId = $user->patient->id;
-        } else {
-            // Staff, Doctor, Admin
-            if (empty($data['patient_id'])) {
-                return response()->json(['message' => 'Please select a patient'], 422);
-            }
-            $targetPatientId = $data['patient_id'];
-        }
-
         $vital = VitalSign::create([
-            'patient_id'     => $targetPatientId,
+            'patient_id'     => $user->patient->id,
             'height'         => $data['height'] ?? null,
             'weight'         => $data['weight'] ?? null,
             'blood_pressure' => $data['blood_pressure'] ?? null,
@@ -88,16 +65,13 @@ class VitalSignController extends Controller
         if (!empty($data['oxygen']))         $vitalsSummary[] = "SpO2: {$data['oxygen']}%";
         if (!empty($data['weight']))         $vitalsSummary[] = "Weight: {$data['weight']} kg";
 
-        $targetPatient = Patient::with('user')->find($targetPatientId);
-        $patientName = $targetPatient?->user?->name ?? "Patient #{$targetPatientId}";
-
         \App\Models\AuditLog::create([
             'user_id'     => $user->id,
             'action'      => 'Vital Signs Recorded',
-            'description' => "Recorded vital signs for {$patientName}: " . (implode(', ', $vitalsSummary) ?: 'Initial reading'),
+            'description' => "Recorded vital signs: " . (implode(', ', $vitalsSummary) ?: 'Initial reading'),
             'ip_address'  => $request->ip(),
         ]);
 
-        return response()->json(['message' => 'Vital signs recorded successfully', 'data' => $vital->load('patient.user')], 201);
+        return response()->json(['message' => 'Vital signs recorded successfully', 'data' => $vital], 201);
     }
 }
