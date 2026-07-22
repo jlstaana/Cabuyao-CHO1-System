@@ -158,9 +158,14 @@ export default function Medicines() {
     }
   };
 
+  const getCategoryCount = (cat) => {
+    if (cat === 'All') return medicines.length;
+    return medicines.filter((m) => (m.category || '').toLowerCase().includes(cat.toLowerCase())).length;
+  };
+
   const filtered = medicines.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || (m.generic_name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (m.category || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === 'All' || (m.category || '').includes(categoryFilter);
+    const matchesCategory = categoryFilter === 'All' || (m.category || '').toLowerCase().includes(categoryFilter.toLowerCase());
     return matchesSearch && matchesCategory;
   });
 
@@ -176,25 +181,37 @@ export default function Medicines() {
       </div>
 
       <div className="bg-surface rounded-2xl shadow-sm border border-border overflow-hidden">
-        <div className="p-4 border-b border-border flex gap-4 flex-col sm:flex-row">
-          <div data-tour="page-search" className="relative flex-1">
+        <div className="p-4 border-b border-border flex gap-4 flex-col sm:flex-row items-center justify-between">
+          <div data-tour="page-search" className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light" size={18} />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search medicines by name or category..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background focus:bg-surface transition-all"
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background focus:bg-surface transition-all text-sm"
             />
           </div>
-          <select
-            value={categoryFilter}
-            onChange={e => setCategoryFilter(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background focus:bg-surface transition-all sm:w-64"
-          >
-            <option value="All">All Categories</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+
+          {/* Right-side Category Filter Dropdown with live counts */}
+          <div className="w-full sm:w-auto shrink-0 flex items-center gap-2">
+            <span className="text-xs font-semibold text-text-muted whitespace-nowrap hidden md:inline">Category:</span>
+            <select
+              value={categoryFilter}
+              onChange={e => setCategoryFilter(e.target.value)}
+              className="w-full sm:w-72 px-4 py-2 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background focus:bg-surface transition-all text-sm font-medium text-text"
+            >
+              <option value="All">All Categories ({medicines.length})</option>
+              {CATEGORIES.map(c => {
+                const count = getCategoryCount(c);
+                return (
+                  <option key={c} value={c}>
+                    {c} ({count})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table data-tour="page-list" className="w-full text-left border-collapse">

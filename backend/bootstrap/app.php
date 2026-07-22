@@ -6,6 +6,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Auth\AuthenticationException;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SecurityHeadersMiddleware;
+use App\Http\Middleware\SanitizeInputMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
+        $middleware->append(SecurityHeadersMiddleware::class);
+        $middleware->append(SanitizeInputMiddleware::class);
         $middleware->redirectGuestsTo(fn (Request $request) => $request->expectsJson() || $request->is('api/*') ? null : '/login');
         $middleware->alias([
             'role' => RoleMiddleware::class,

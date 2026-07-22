@@ -2,12 +2,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{AuthController, PatientController, AdminController, ConsultationController, MedicineController, PrescriptionController, AnalyticsController, DoctorController, ActivityLogController};
 
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/register/verify', [AuthController::class, 'verifyRegistration']);
-Route::post('/auth/register/resend-code', [AuthController::class, 'resendVerificationCode']);
-Route::post('/auth/login', [AuthController::class, 'login'])->name('login');
-Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+Route::middleware('throttle:60,1')->group(function () {
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/register/verify', [AuthController::class, 'verifyRegistration']);
+    Route::post('/auth/register/resend-code', [AuthController::class, 'resendVerificationCode']);
+    Route::post('/auth/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (\Illuminate\Http\Request $request) {
