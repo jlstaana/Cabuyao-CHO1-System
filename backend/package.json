@@ -5,7 +5,8 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "ngrok": "ngrok http --domain=morphing-pebble-grandkid.ngrok-free.dev 8000"
+        "ngrok": "ngrok http --domain=morphing-pebble-grandkid.ngrok-free.dev 8000",
+        "cloudflare": "cloudflared tunnel --url http://127.0.0.1:8000"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
