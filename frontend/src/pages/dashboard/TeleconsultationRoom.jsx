@@ -73,6 +73,14 @@ function getAdaptiveNoiseThreshold() {
   return 0.025;
 }
 
+function formatDuration(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
 export default function TeleconsultationRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -88,6 +96,7 @@ export default function TeleconsultationRoom() {
   const [activeSidePanel, setActiveSidePanel] = useState('chat'); // 'chat' | 'clinical' | 'none'
   const [isSharingScreen, setIsSharingScreen] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [isAiActive, setIsAiActive] = useState(false);
 
   // WebRTC State
   const [remoteStream, setRemoteStream] = useState(null);
@@ -122,8 +131,24 @@ export default function TeleconsultationRoom() {
   const signatureCanvasRef = useRef(null);
   const signatureDrawingRef = useRef(false);
   const signatureStrokesRef = useRef([]);
+  const selfieSegmentationRef = useRef(null);
+  const canvasStreamRef = useRef(null);
 
   const bgPreset = BACKGROUND_PRESETS.find((b) => b.id === bgPresetId) || BACKGROUND_PRESETS[0];
+  const bgPresetRef = useRef(bgPreset);
+  const bgImgRef = useRef(null);
+
+  useEffect(() => {
+    bgPresetRef.current = bgPreset;
+    if (bgPreset.type === 'image' && bgPreset.url) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = bgPreset.url;
+      bgImgRef.current = img;
+    } else {
+      bgImgRef.current = null;
+    }
+  }, [bgPreset]);
 
   useEffect(() => {
     if (!callActive) {
@@ -136,80 +161,153 @@ export default function TeleconsultationRoom() {
     return () => clearInterval(timer);
   }, [callActive]);
 
-  // Real-time HTML5 Canvas Video Processor for Background Blur & Virtual Environments
+  // MediaPipe AI Person Segmentation Initialization (Google Meet Body Detection Engine)
   useEffect(() => {
-    if (!callActive || !cameraActive) {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-      return;
-    }
+    let active = true;
 
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    if (!canvas || !video) return;
+    const initAiSegmenter = async () => {
+      if (window.SelfieSegmentation) {
+        try {
+          const segmenter = new window.SelfieSegmentation({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+          });
 
-    const ctx = canvas.getContext('2d');
-    let bgImg = null;
+          segmenter.setOptions({
+            modelSelection: 1, // 1 = Landscape model (Google Meet style)
+            selfieMode: true,  // Mirroring
+          });
 
-    if (bgPreset.type === 'image' && bgPreset.url) {
-      bgImg = new Image();
-      bgImg.crossOrigin = 'anonymous';
-      bgImg.src = bgPreset.url;
-    }
+          segmenter.onResults((results) => {
+            if (!active) return;
+            const canvas = canvasRef.current;
+            if (!canvas || !results || !results.image) return;
 
-    const renderFrame = () => {
-      if (video && video.readyState >= 2) {
-        const width = canvas.width || 640;
-        const height = canvas.height || 480;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width || 640;
+            const height = canvas.height || 480;
+            const currentPreset = bgPresetRef.current;
 
-        ctx.save();
-        ctx.clearRect(0, 0, width, height);
+            ctx.save();
+            ctx.clearRect(0, 0, width, height);
 
-        // 1. Draw Virtual Background Image FIRST (Background Layer)
-        if (bgPreset.type === 'image' && bgImg && bgImg.complete) {
-          ctx.drawImage(bgImg, 0, 0, width, height);
-          ctx.globalAlpha = 0.88;
+            if (currentPreset.type === 'none') {
+              ctx.drawImage(results.image, 0, 0, width, height);
+              ctx.restore();
+              return;
+            }
+
+            if (results.segmentationMask) {
+              // 1. Draw Background First
+              if (currentPreset.type === 'image' && bgImgRef.current && bgImgRef.current.complete) {
+                try {
+                  ctx.drawImage(bgImgRef.current, 0, 0, width, height);
+                } catch(e) {
+                  // Fallback if image draw fails (CORS)
+                }
+              } else if (currentPreset.type === 'blur') {
+                ctx.filter = currentPreset.blurAmount || 'blur(12px)';
+                ctx.drawImage(results.image, 0, 0, width, height);
+                ctx.filter = 'none';
+              }
+
+              // 2. Cut a hole in the background where the person is
+              ctx.globalCompositeOperation = 'destination-out';
+              ctx.drawImage(results.segmentationMask, 0, 0, width, height);
+
+              // 3. Draw the raw camera feed BEHIND the background (shows through the hole)
+              ctx.globalCompositeOperation = 'destination-over';
+              ctx.drawImage(results.image, 0, 0, width, height);
+            } else {
+              // Fallback if no mask
+              ctx.drawImage(results.image, 0, 0, width, height);
+            }
+
+            ctx.restore();
+            setIsAiActive(true);
+          });
+
+          selfieSegmentationRef.current = segmenter;
+        } catch (err) {
+          console.error("AI Person Segmenter Error:", err);
         }
-
-        // 2. Apply Blur Filter if selected
-        if (bgPreset.type === 'blur') {
-          ctx.filter = bgPreset.blurAmount || 'blur(12px)';
-        } else {
-          ctx.filter = 'none';
-        }
-
-        // 3. Draw Mirrored Camera Video Frame ON TOP (Foreground Layer)
-        ctx.translate(width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, width, height);
-
-        ctx.restore();
       }
-
-      animationFrameRef.current = requestAnimationFrame(renderFrame);
     };
 
-    renderFrame();
+    initAiSegmenter();
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
+      active = false;
+      if (selfieSegmentationRef.current) {
+        selfieSegmentationRef.current.close().catch(() => {});
+        selfieSegmentationRef.current = null;
       }
     };
-  }, [callActive, cameraActive, bgPreset]);
+  }, []);
 
-  const formatDuration = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hrs > 0) {
-      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  // Frame Processing Loop sending video frames to MediaPipe AI
+  useEffect(() => {
+    if (!callActive || !cameraActive) return;
+
+    let frameId;
+    const processAiFrame = async () => {
+      const video = videoRef.current;
+      const segmenter = selfieSegmentationRef.current;
+
+      if (
+        video && 
+        video.readyState >= 2 && 
+        video.videoWidth > 0 && 
+        video.videoHeight > 0 && 
+        segmenter && 
+        bgPresetRef.current.id !== 'none'
+      ) {
+        try {
+          await segmenter.send({ image: video });
+        } catch {
+          // Graceful frame skip
+        }
+      }
+      frameId = requestAnimationFrame(processAiFrame);
+    };
+
+    processAiFrame();
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [callActive, cameraActive]);
+
+  // WebRTC AI Canvas Track Swapper
+  useEffect(() => {
+    if (!pcRef.current || isSharingScreen) return;
+    
+    const sender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
+    if (!sender) return;
+
+    if (bgPresetId !== 'none' && isAiActive && canvasRef.current) {
+      try {
+        if (!canvasStreamRef.current) {
+          canvasStreamRef.current = canvasRef.current.captureStream(30);
+        }
+        const canvasTrack = canvasStreamRef.current.getVideoTracks()[0];
+        if (canvasTrack && sender.track !== canvasTrack) {
+          sender.replaceTrack(canvasTrack);
+        }
+      } catch (err) {
+        console.warn("Could not capture stream from canvas (CORS tainted?):", err);
+        // Fallback to raw camera
+        if (streamRef.current) {
+          const camTrack = streamRef.current.getVideoTracks()[0];
+          if (camTrack && sender.track !== camTrack) sender.replaceTrack(camTrack);
+        }
+      }
+    } else if (streamRef.current) {
+      const camTrack = streamRef.current.getVideoTracks()[0];
+      if (camTrack && sender.track !== camTrack) {
+        sender.replaceTrack(camTrack);
+      }
     }
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  };
+  }, [bgPresetId, isAiActive, isSharingScreen]);
 
   const sendSignal = useCallback(async (payload) => {
     try {
@@ -335,7 +433,7 @@ export default function TeleconsultationRoom() {
         setVideoQuality(nextQuality);
         return;
       } catch {
-        // Try lower profile fallback
+        // Fallback quality
       }
     }
   }, []);
@@ -463,6 +561,7 @@ export default function TeleconsultationRoom() {
         setTimeout(() => {
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(() => {});
           }
         }, 100);
 
@@ -547,6 +646,13 @@ export default function TeleconsultationRoom() {
         });
         const enhanced = enhanceAudioStream(camStream);
         streamRef.current = enhanced;
+
+        const newVideoTrack = enhanced.getVideoTracks()[0];
+        if (pcRef.current && newVideoTrack) {
+          const sender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
+          if (sender) sender.replaceTrack(newVideoTrack);
+        }
+
         if (videoRef.current) videoRef.current.srcObject = enhanced;
         setIsSharingScreen(false);
         toast.success('Switched back to camera');
@@ -557,10 +663,17 @@ export default function TeleconsultationRoom() {
       try {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
         streamRef.current = screenStream;
+
+        const screenTrack = screenStream.getVideoTracks()[0];
+        if (pcRef.current && screenTrack) {
+          const sender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
+          if (sender) sender.replaceTrack(screenTrack);
+        }
+
         if (videoRef.current) videoRef.current.srcObject = screenStream;
         setIsSharingScreen(true);
         toast.success('Sharing screen');
-        screenStream.getVideoTracks()[0].onended = () => {
+        screenTrack.onended = () => {
           setIsSharingScreen(false);
         };
       } catch {
@@ -744,6 +857,15 @@ export default function TeleconsultationRoom() {
     }
   }, [remoteStream, callActive]);
 
+  useEffect(() => {
+    if (callActive && videoRef.current && streamRef.current) {
+      if (videoRef.current.srcObject !== streamRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+      }
+      videoRef.current.play().catch(() => {});
+    }
+  }, [callActive, cameraActive, bgPresetId]);
+
   return (
     <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-7rem)] gap-4 animate-in fade-in duration-500 bg-slate-950 p-2 sm:p-4 rounded-3xl text-white">
       {/* ── Main Video Stage (Google Meet Widescreen) ─────────────────────────── */}
@@ -766,8 +888,8 @@ export default function TeleconsultationRoom() {
 
           <div className="flex items-center gap-2 pointer-events-auto">
             {callActive && bgPreset.id !== 'none' && (
-              <span className="bg-indigo-600/90 backdrop-blur-md text-white border border-indigo-500/50 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-sm">
-                <Sparkles size={12} /> {bgPreset.label}
+              <span className="bg-indigo-600/90 backdrop-blur-md text-white border border-indigo-500/50 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+                <Sparkles size={12} /> {isAiActive ? '🤖 AI Person Detection' : 'Visual Effect'}: {bgPreset.label}
               </span>
             )}
             {callActive && (
@@ -817,30 +939,39 @@ export default function TeleconsultationRoom() {
                 </div>
               )}
 
-              {/* Local Video Canvas Processor (Picture-in-Picture) */}
+              {/* Local Video Tile with AI Person Segmentation or Direct Video */}
               <div 
                 className={`absolute bottom-6 right-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 border-white/30 shadow-2xl overflow-hidden transition-all duration-300 z-20 bg-slate-950 ${cameraActive ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
               >
-                {/* Hidden raw video element receiving camera MediaStream */}
+                {/* AI Processed Canvas (when preset is selected) */}
+                <canvas 
+                  ref={canvasRef}
+                  width={640}
+                  height={480}
+                  className={`w-full h-full object-cover relative z-10 ${bgPreset.id !== 'none' && isAiActive ? 'block' : 'hidden'}`}
+                  style={{ transform: 'scaleX(-1)' }}
+                />
+
+                {/* Direct Video Element */}
                 <video 
                   ref={videoRef} 
                   autoPlay 
                   playsInline 
                   muted 
-                  className="hidden" 
+                  className={`object-cover transition-all duration-300 ${
+                    bgPreset.id === 'none' || !isAiActive
+                      ? 'w-full h-full relative z-10 block' 
+                      : 'w-full h-full absolute inset-0 opacity-0 pointer-events-none'
+                  }`}
+                  style={{ 
+                    transform: 'scaleX(-1)',
+                    filter: (!isAiActive && bgPreset.type === 'blur') ? bgPreset.blurAmount : 'none'
+                  }}
                 />
-                
-                {/* Real-time Processed Canvas Video Display */}
-                <canvas 
-                  ref={canvasRef}
-                  width={640}
-                  height={480}
-                  className="w-full h-full object-cover relative z-10"
-                />
-                
-                {/* PIP Tag (z-20 Top Layer) */}
+
+                {/* PIP Tag */}
                 <div className="absolute bottom-2 left-2 z-20 bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md border border-white/10">
-                  You ({user.name.split(' ')[0]})
+                  You ({user?.name ? user.name.split(' ')[0] : 'You'})
                 </div>
               </div>
 
@@ -881,7 +1012,7 @@ export default function TeleconsultationRoom() {
             {/* Google Meet Backgrounds & Visual Effects Button */}
             <button 
               onClick={() => setIsBgModalOpen(true)} 
-              title="Apply Visual Effects & Background Blur"
+              title="Apply Visual Effects & AI Background Blur"
               className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${bgPresetId !== 'none' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
             >
               <Sparkles size={20} />
@@ -1094,10 +1225,10 @@ export default function TeleconsultationRoom() {
       )}
 
       {/* ── Google Meet Background Selection Modal ────────────────────────────── */}
-      <Modal isOpen={isBgModalOpen} onClose={() => setIsBgModalOpen(false)} title="Visual Effects & Background Blur">
+      <Modal isOpen={isBgModalOpen} onClose={() => setIsBgModalOpen(false)} title="Visual Effects & AI Background Blur">
         <div className="space-y-4">
           <p className="text-sm text-text-muted">
-            Choose background blur or a virtual environment for your video stream.
+            Choose AI person-segmentation background blur or a virtual environment for your video stream.
           </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
