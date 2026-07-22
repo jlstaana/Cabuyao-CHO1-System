@@ -135,6 +135,7 @@ export default function Register() {
           <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
           <input 
             {...register('name', { required: true })} 
+            placeholder="e.g. Juan Dela Cruz"
             className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
           />
         </div>
@@ -143,6 +144,7 @@ export default function Register() {
           <input 
             type="email"
             {...register('email', { required: true })} 
+            placeholder="e.g. juandelacruz@gmail.com"
             className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
           />
         </div>
@@ -153,7 +155,7 @@ export default function Register() {
           </div>
           <div>
              <label className="block text-sm font-medium text-slate-700 mb-1">Contact No.</label>
-             <input {...register('contact_no', { required: true })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-background focus:bg-surface" />
+             <input {...register('contact_no', { required: true })} placeholder="e.g. 09171234567" className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-background focus:bg-surface" />
           </div>
         </div>
         <div>
@@ -162,6 +164,7 @@ export default function Register() {
             <input 
               type={showPassword ? "text" : "password"}
               {...register('password', { required: true, minLength: 8 })} 
+              placeholder="e.g. password123 (Min. 8 chars)"
               className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
