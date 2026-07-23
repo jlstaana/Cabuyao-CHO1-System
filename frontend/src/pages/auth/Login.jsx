@@ -100,7 +100,7 @@ export default function Login() {
               value={resetEmail}
               onChange={(event) => setResetEmail(event.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
-              placeholder="you@example.com"
+              placeholder="username"
               required
             />
           </div>
@@ -203,7 +203,7 @@ export default function Login() {
           <input 
             {...register('email', { required: true })} 
             className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
-            placeholder="e.g. patient@gmail.com or doctor@cabuyao.gov.ph"
+            placeholder="username"
           />
         </div>
         <div>
@@ -218,7 +218,7 @@ export default function Login() {
               type={showPassword ? "text" : "password"}
               {...register('password', { required: true })} 
               className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
-              placeholder="e.g. password123"
+              placeholder="password"
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}

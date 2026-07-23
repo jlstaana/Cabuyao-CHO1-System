@@ -201,7 +201,7 @@ export default function Register() {
               value={recoveryEmail}
               onChange={(event) => setRecoveryEmail(event.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
-              placeholder="you@example.com"
+              placeholder="username"
               required
             />
             <div className="flex gap-3">
