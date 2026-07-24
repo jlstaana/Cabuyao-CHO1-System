@@ -153,7 +153,7 @@ function AdminOverview({ user, stats }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Total Patients" value={formatNumber(summary.registered_patients)} icon={Users} color="text-indigo-500" bg="bg-indigo-100" sub="Registered individuals" />
         <StatCard label="Total Doctors" value={formatNumber(summary.active_doctors)} icon={Activity} color="text-sky-500" bg="bg-primary-hover" sub="Active healthcare providers" />
-        <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} icon={ClipboardList} color="text-emerald-500" bg="bg-emerald-100" sub="All recorded sessions" />
+        <StatCard label="Total Consultations" value={formatNumber(summary.registered_patients)} icon={ClipboardList} color="text-emerald-500" bg="bg-emerald-100" sub="All-time verified registered cases" />
         <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-rose-500" bg="bg-rose-100" sub="Generated prescriptions" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

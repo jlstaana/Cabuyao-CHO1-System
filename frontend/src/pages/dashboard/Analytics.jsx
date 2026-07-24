@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { BarChart2, Activity, Download, List, TrendingUp, FileText, Users, Filter } from 'lucide-react';
+import { BarChart2, Activity, Download, List, TrendingUp, FileText, Users, Filter, Calendar, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
 import html2pdf from 'html2pdf.js';
@@ -91,7 +91,7 @@ function dataTable(headers, bodyHtml) {
 }
 
 // Returns an array of complete HTML strings — one per PDF page
-function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl) {
+function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom, dateTo) {
   const summary = stats.summary || {};
   const statusRows  = stats.consultations_by_status.map((r) => ({ Status: r.status, Total: r.total }));
   const doctorRows  = stats.consultations_by_doctor.map((r) => ({ Doctor: r.name, Consultations: r.total }));
@@ -110,6 +110,10 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl) {
 
   const logo = (w, h) => logoDataUrl ? `<img src="${logoDataUrl}" width="${w}" height="${h}" style="display:block;" alt="CHO" />` : '';
 
+  const dateRangeBadge = (dateFrom || dateTo)
+    ? `<div style="background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;font-size:8.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:99px;display:inline-block;margin-bottom:5px;">Period: ${dateFrom || 'Start'} &mdash; ${dateTo || 'Latest'}</div>`
+    : '';
+
   const fullHeader = `
     <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:3px solid #0ea5e9;padding-bottom:14px;margin-bottom:20px;">
       <tr>
@@ -121,7 +125,8 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl) {
           <div style="font-size:10.5px;color:#64748b;margin-top:1px;">Telehealth &amp; E-Prescription Information System</div>
         </td>
         <td style="text-align:right;vertical-align:top;">
-          <div style="background:#0ea5e9;color:#fff;font-size:8.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:99px;display:inline-block;margin-bottom:5px;">Official Report</div>
+          <div style="background:#0ea5e9;color:#fff;font-size:8.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:99px;display:inline-block;margin-bottom:4px;">Official Report</div><br/>
+          ${dateRangeBadge}
           <div style="font-size:10.5px;color:#64748b;line-height:1.75;">
             <b style="color:#0f172a;">Date:</b> ${dateStr}<br/>
             <b style="color:#0f172a;">Time:</b> ${timeStr}<br/>
@@ -166,7 +171,7 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl) {
   const kpiGrid = `
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;table-layout:fixed;">
       <tr>
-        ${kpiCard('Total Consultations', formatNumber(summary.total_consultations), '#0ea5e9')}
+        ${kpiCard('Total Consultations', formatNumber(summary.registered_patients), '#0ea5e9')}
         ${kpiCard('Completed', formatNumber(summary.completed_consultations), '#10b981')}
         ${kpiCard('Pending / Reminders', formatNumber(summary.pending_consultations), '#f59e0b')}
         <td style="padding:0;">
@@ -257,6 +262,9 @@ export default function Analytics() {
   const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(EMPTY_STATS);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportDateFrom, setExportDateFrom] = useState('');
+  const [exportDateTo, setExportDateTo] = useState('');
 
   useEffect(() => {
     if (user?.role !== 'Admin') {
@@ -283,10 +291,25 @@ export default function Analytics() {
     ? stats.recent_logs
     : stats.recent_logs.filter((log) => (log.role || 'system').toLowerCase() === logFilter);
 
-  const handleExportFullReport = async () => {
+  const handleExportFullReport = async ({ dateFrom, dateTo } = {}) => {
+    setShowExportModal(false);
     setExporting(true);
     try {
       const generatedAt = new Date();
+
+      // Fetch filtered stats if date range provided, otherwise use current stats
+      let reportStats = stats;
+      if (dateFrom || dateTo) {
+        const params = new URLSearchParams();
+        if (dateFrom) params.append('date_from', dateFrom);
+        if (dateTo)   params.append('date_to',   dateTo);
+        try {
+          const res = await api.get(`/analytics/stats?${params.toString()}`);
+          reportStats = { ...EMPTY_STATS, ...res.data };
+        } catch {
+          toast.error('Failed to fetch filtered data — exporting full report instead.');
+        }
+      }
 
       // Pre-fetch logo as base64 so html2canvas can render it
       let logoDataUrl = null;
@@ -300,20 +323,19 @@ export default function Analytics() {
         });
       } catch { /* skip logo if unavailable */ }
 
-      const pages = buildReportPages(stats, generatedAt, user?.name, logoDataUrl);
-      const filename = `cabuyao-cho-analytics-report-${generatedAt.toISOString().slice(0, 10)}.pdf`;
+      const pages = buildReportPages(reportStats, generatedAt, user?.name, logoDataUrl, dateFrom, dateTo);
+      const suffix = dateFrom && dateTo ? `${dateFrom}_to_${dateTo}` : generatedAt.toISOString().slice(0, 10);
+      const filename = `cabuyao-cho-analytics-report-${suffix}.pdf`;
 
       // Render each page HTML independently, stitch into one jsPDF document
       const { jsPDF } = await import('jspdf');
       const html2canvas = (await import('html2canvas')).default;
 
-      // Letter size in mm
       const W_MM = 215.9;
       const H_MM = 279.4;
       const doc = new jsPDF({ unit: 'mm', format: 'letter', orientation: 'portrait' });
 
       for (let i = 0; i < pages.length; i++) {
-        // Render page HTML into an offscreen iframe
         const iframe = document.createElement('iframe');
         iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:816px;height:1056px;border:none;';
         document.body.appendChild(iframe);
@@ -323,7 +345,6 @@ export default function Analytics() {
           iframe.srcdoc = pages[i];
         });
 
-        // Give fonts/images a moment to paint
         await new Promise((r) => setTimeout(r, 300));
 
         const canvas = await html2canvas(iframe.contentDocument.body, {
@@ -337,17 +358,15 @@ export default function Analytics() {
         document.body.removeChild(iframe);
 
         const imgData = canvas.toDataURL('image/jpeg', 0.97);
-        const canvasW = canvas.width;
-        const canvasH = canvas.height;
-        const ratio = W_MM / canvasW;
-        const imgH = canvasH * ratio;
+        const ratio = W_MM / canvas.width;
+        const imgH = canvas.height * ratio;
 
         if (i > 0) doc.addPage();
         doc.addImage(imgData, 'JPEG', 0, 0, W_MM, Math.min(imgH, H_MM));
       }
 
       doc.save(filename);
-      toast.success('Full report exported as PDF');
+      toast.success('Report exported successfully!');
     } catch (e) {
       console.error(e);
       toast.error('Failed to export PDF');
@@ -359,10 +378,14 @@ export default function Analytics() {
   const doctorMax = maxTotal(stats.consultations_by_doctor);
   const diseaseMax = maxTotal(stats.top_diseases || []);
   const lowStockMax = maxTotal(stats.low_stock_medicines || []);
+  const currentMonth = new Date().toLocaleString('en-PH', { month: 'long' });
+  const currentMonthYear = new Date().toLocaleString('en-PH', { month: 'long', year: 'numeric' });
+  // Doctors who have handled consultations = active today
+  const activeDoctorNames = stats.consultations_by_doctor.map((d) => d.name).filter(Boolean);
   const serviceRows = [
     { name: 'Registered Patients', total: summary.registered_patients || 0 },
     { name: 'Active Doctors', total: summary.active_doctors || 0 },
-    { name: 'Total Consultations', total: summary.total_consultations || 0 },
+    { name: `Monthly Consults (${currentMonth})`, total: summary.registered_patients || 0 },
     { name: 'Prescriptions Issued', total: summary.prescriptions_issued || 0 },
   ];
   const serviceMax = maxTotal(serviceRows);
@@ -373,7 +396,7 @@ export default function Analytics() {
         <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports, health summaries, and service utilization charts." iconClassName="bg-brand-bg text-indigo-600" />
         <button
           data-tour="page-primary-action"
-          onClick={handleExportFullReport}
+          onClick={() => setShowExportModal(true)}
           disabled={exporting || loading}
           className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm font-medium text-sm disabled:opacity-70"
         >
@@ -405,7 +428,7 @@ export default function Analytics() {
       {activeTab === 'consultations' && (
         <div data-tour="page-stats" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard label="Monthly Consultations" value={formatNumber(summary.total_consultations)} sub="This month" color="sky" />
+            <StatCard label="Monthly Consultations" value={formatNumber(summary.registered_patients)} sub={<>as of <b>{currentMonth}</b> complete consultation</>} color="sky" />
             <StatCard label="Completed" value={formatNumber(getStatusTotal(stats, 'Completed'))} sub="Successfully finished" color="emerald" />
             <StatCard label="Scheduled" value={formatNumber(getStatusTotal(stats, 'Scheduled'))} sub="Upcoming sessions" color="indigo" />
           </div>
@@ -462,14 +485,66 @@ export default function Analytics() {
 
       {activeTab === 'utilization' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <StatCard label="Registered Patients" value={formatNumber(summary.registered_patients)} sub="Individuals fully registered for health tracking" color="indigo" />
-            <StatCard label="Active Doctors" value={formatNumber(summary.active_doctors)} sub="Medical officers currently available for teleconsultations" color="sky" />
-            <StatCard label="Monthly Consults" value={formatNumber(summary.total_consultations)} sub="This month" color="emerald" />
-            <StatCard label="Reminders" value={formatNumber(summary.pending_consultations)} sub="Pending to-do items for doctors" color="rose" />
+
+          {/* ── Top Stat Cards ── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label="Registered Patients"
+              value={formatNumber(summary.registered_patients)}
+              sub="Individuals fully registered for health tracking"
+              color="indigo"
+            />
+
+            {/* Active Doctors — name + consult count */}
+            <div className="rounded-2xl border bg-primary-bg border-sky-100 p-5 col-span-2 lg:col-span-1">
+              <p className="text-xs font-semibold uppercase tracking-wider opacity-70 text-primary-text">Active Doctors</p>
+              <p className="text-3xl font-black mt-1 text-primary-text">{formatNumber(summary.active_doctors)}</p>
+              {stats.consultations_by_doctor.length > 0 ? (
+                <ul className="mt-2 space-y-1.5">
+                  {stats.consultations_by_doctor.map((doc) => (
+                    <li key={doc.name} className="flex items-center justify-between gap-2 text-xs">
+                      <span className="flex items-center gap-1.5 text-primary-text truncate">
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
+                        {doc.name}
+                      </span>
+                      <span className="font-bold text-sky-700 shrink-0 bg-sky-100 px-1.5 py-0.5 rounded-md">
+                        {doc.total} consult{doc.total !== 1 ? 's' : ''}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs mt-1 opacity-60 text-primary-text">No consultations recorded</p>
+              )}
+              <div className="mt-3 pt-3 border-t border-sky-200">
+                <p className="text-xs font-semibold text-sky-700">Tomorrow</p>
+                <p className="text-xs text-primary-text opacity-70 mt-0.5">
+                  <span className="font-bold">{formatNumber(summary.active_doctors)}</span> doctor{summary.active_doctors !== 1 ? 's' : ''} available for scheduling
+                </p>
+              </div>
+            </div>
+
+
+            {/* Monthly Consults — month name bolded */}
+            <div className="rounded-2xl border bg-success-bg border-success-border p-5">
+              <p className="text-xs font-semibold uppercase tracking-wider opacity-70 text-emerald-600">Monthly Consults</p>
+              <p className="text-3xl font-black mt-1 text-emerald-600">{formatNumber(summary.registered_patients)}</p>
+              <p className="text-xs mt-1 opacity-70 text-emerald-700">
+                as of <span className="font-bold">{currentMonth}</span> complete consultation
+              </p>
+            </div>
+
+            <StatCard
+              label="Reminders"
+              value={formatNumber(summary.pending_consultations)}
+              sub="Pending to-do items for doctors"
+              color="rose"
+            />
           </div>
+
+          {/* ── System Utilization bar chart ── */}
           <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-            <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><BarChart2 size={16} className="text-sky-500" /> System Utilization</h3>
+            <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><BarChart2 size={16} className="text-sky-500" /> System Utilization — <span className="font-bold">{currentMonthYear}</span></h3>
             <div className="space-y-3">
               {serviceRows.map((row) => <BarRow key={row.name} label={row.name} value={row.total} max={serviceMax} color="bg-sky-400" />)}
             </div>
@@ -477,6 +552,91 @@ export default function Analytics() {
 
         </div>
       )}
+
+      {/* ── Export Date Filter Modal ───────────────────────── */}
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-surface border border-border rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-brand-bg flex items-center justify-center">
+                  <Calendar size={18} className="text-indigo-600" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-text text-base">Export Full Report</h2>
+                  <p className="text-xs text-text-muted mt-0.5">Filter data by date range</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="p-1.5 rounded-lg hover:bg-surface-hover text-text-muted hover:text-text transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-sm text-text-muted">
+                Select a date range to include in the report. Leave both fields empty to export all available data.
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">From</label>
+                  <input
+                    type="date"
+                    value={exportDateFrom}
+                    max={exportDateTo || undefined}
+                    onChange={(e) => setExportDateFrom(e.target.value)}
+                    className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">To</label>
+                  <input
+                    type="date"
+                    value={exportDateTo}
+                    min={exportDateFrom || undefined}
+                    onChange={(e) => setExportDateTo(e.target.value)}
+                    className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition"
+                  />
+                </div>
+              </div>
+
+              {exportDateFrom && exportDateTo && (
+                <div className="flex items-center gap-2 bg-primary-bg border border-sky-200 rounded-xl px-3 py-2.5">
+                  <Calendar size={14} className="text-sky-500 shrink-0" />
+                  <p className="text-xs text-primary-text">
+                    Report will cover <b>{new Date(exportDateFrom).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</b> to <b>{new Date(exportDateTo).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</b>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 pb-6">
+              <button
+                onClick={() => { setShowExportModal(false); setExportDateFrom(''); setExportDateTo(''); }}
+                className="px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-text-muted hover:bg-surface-hover transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleExportFullReport({ dateFrom: exportDateFrom, dateTo: exportDateTo })}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold transition-colors shadow-sm"
+              >
+                <Download size={15} />
+                {exportDateFrom || exportDateTo ? 'Export Filtered Report' : 'Export All Data'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
