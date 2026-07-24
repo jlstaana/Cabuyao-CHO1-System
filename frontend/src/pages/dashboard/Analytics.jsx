@@ -4,6 +4,8 @@ import api from '../../utils/api';
 import { BarChart2, Activity, Download, List, TrendingUp, FileText, Users, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
+import html2pdf from 'html2pdf.js';
+import choLogo from '../../assets/CHO1-Logo.png';
 
 const REPORT_TABS = [
   { key: 'consultations', label: 'Consultation Statistics', icon: Activity },
@@ -67,86 +69,185 @@ function EmptyBlock({ label }) {
   );
 }
 
-function tableRows(rows, columns) {
+function tableRows(rows, columns, isEven) {
   if (!rows.length) {
-    return `<tr><td colspan="${columns.length}" class="empty">No records available</td></tr>`;
+    return `<tr><td colspan="${columns.length}" style="text-align:center;color:#94a3b8;font-style:italic;padding:16px 12px;border:1px solid #e2e8f0;">No records available</td></tr>`;
   }
-  return rows.map((row) => (
-    `<tr>${columns.map((column) => `<td>${row[column] ?? ''}</td>`).join('')}</tr>`
-  )).join('');
+  return rows.map((row, i) => {
+    const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+    return `<tr>${columns.map((col) => `<td style="padding:9px 12px;border:1px solid #e2e8f0;font-size:12px;color:#334155;background:${bg};">${row[col] ?? ''}</td>`).join('')}</tr>`;
+  }).join('');
 }
 
-function buildReportHtml(stats, generatedAt, generatedBy) {
+function sectionHeader(title, dotColor) {
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;"><tr><td width="10" style="padding:0;vertical-align:top;padding-top:4px;"><div style="width:8px;height:8px;border-radius:50%;background:${dotColor};"></div></td><td style="padding:0 0 0 8px;font-size:13px;font-weight:700;color:#0f172a;">${title}</td></tr></table>`;
+}
+
+function dataTable(headers, bodyHtml) {
+  const headCells = headers.map(([label, w]) =>
+    `<th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:0.06em;border:1px solid #bae6fd;background:#f0f9ff;${w ? 'width:' + w : ''}">${label}</th>`
+  ).join('');
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:0;"><thead><tr>${headCells}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+}
+
+// Returns an array of complete HTML strings — one per PDF page
+function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl) {
   const summary = stats.summary || {};
-  const statusRows = stats.consultations_by_status.map((row) => ({ Status: row.status, Total: row.total }));
-  const doctorRows = stats.consultations_by_doctor.map((row) => ({ Doctor: row.name, Consultations: row.total }));
-  const diseaseRows = (stats.top_diseases || []).map((row) => ({ Disease: row.diagnosis, Cases: row.total }));
-  const lowStockRows = (stats.low_stock_medicines || []).map((row) => ({ Category: row.category, 'Low Stock Count': row.count }));
-  const volumeRows = stats.time_based_volume.map((row) => ({ Date: row.date, Consultations: row.count }));
-  const logRows = stats.recent_logs.map((row) => ({
-    Date: formatDateTime(row.created_at),
-    User: row.user || 'System',
-    Role: row.role || 'N/A',
-    Action: row.action,
-    IP: row.ip_address || 'N/A',
+  const statusRows  = stats.consultations_by_status.map((r) => ({ Status: r.status, Total: r.total }));
+  const doctorRows  = stats.consultations_by_doctor.map((r) => ({ Doctor: r.name, Consultations: r.total }));
+  const diseaseRows = (stats.top_diseases || []).map((r) => ({ Disease: r.diagnosis, Cases: r.total }));
+  const lowStockRows = (stats.low_stock_medicines || []).map((r) => ({ Category: r.category, 'Low Stock Count': r.count }));
+  const volumeRows  = stats.time_based_volume.map((r) => ({ Date: r.date, Consultations: r.count }));
+  const logRows     = stats.recent_logs.map((r) => ({
+    Date: formatDateTime(r.created_at), User: r.user || 'System',
+    Role: r.role || 'N/A', Action: r.action, IP: r.ip_address || 'N/A',
   }));
 
-  return `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Cabuyao CHO Full Analytics Report</title>
-  <style>
-    body { font-family: Arial, sans-serif; color: #0f172a; margin: 28px; }
-    .header { border-bottom: 3px solid #0284c7; padding-bottom: 14px; margin-bottom: 20px; }
-    h1 { margin: 0; font-size: 24px; }
-    .meta { color: #475569; font-size: 12px; margin-top: 6px; }
-    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 24px; }
-    .card { border: 1px solid #cbd5e1; background: #f8fafc; padding: 12px; }
-    .card .label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold; }
-    .card .value { font-size: 22px; font-weight: bold; margin-top: 4px; }
-    h2 { font-size: 16px; margin: 24px 0 8px; color: #075985; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-    th { background: #e0f2fe; color: #0c4a6e; text-align: left; }
-    th, td { border: 1px solid #cbd5e1; padding: 8px; font-size: 12px; }
-    .empty { text-align: center; color: #64748b; font-style: italic; }
-    .footer { margin-top: 28px; font-size: 11px; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 10px; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>Cabuyao CHO Full Analytics Report</h1>
-    <div class="meta">Generated: ${generatedAt.toLocaleString()} | Prepared by: ${generatedBy || 'System Administrator'}</div>
-  </div>
+  const dateStr = generatedAt.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = generatedAt.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+  const yr = generatedAt.getFullYear();
+  const BODY = 'font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#0f172a;background:#fff;margin:0;padding:30px 36px;';
 
-  <div class="summary">
-    <div class="card"><div class="label">Total Consultations</div><div class="value">${formatNumber(summary.total_consultations)}</div></div>
-    <div class="card"><div class="label">Completed</div><div class="value">${formatNumber(summary.completed_consultations)}</div></div>
-    <div class="card"><div class="label">Reminders</div><div class="value">${formatNumber(summary.pending_consultations)}</div></div>
-    <div class="card"><div class="label">Prescriptions Issued</div><div class="value">${formatNumber(summary.prescriptions_issued)}</div></div>
-  </div>
+  const logo = (w, h) => logoDataUrl ? `<img src="${logoDataUrl}" width="${w}" height="${h}" style="display:block;" alt="CHO" />` : '';
 
-  <h2>Consultation Volume</h2>
-  <table><thead><tr><th>Date</th><th>Consultations</th></tr></thead><tbody>${tableRows(volumeRows, ['Date', 'Consultations'])}</tbody></table>
+  const fullHeader = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:3px solid #0ea5e9;padding-bottom:14px;margin-bottom:20px;">
+      <tr>
+        <td width="68" style="vertical-align:middle;padding-right:12px;">${logo(58, 58)}</td>
+        <td width="2" style="vertical-align:middle;"><div style="width:1px;height:50px;background:#cbd5e1;margin-right:14px;"></div></td>
+        <td style="vertical-align:middle;padding-left:4px;">
+          <div style="font-size:9.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">Republic of the Philippines &middot; Cabuyao City</div>
+          <div style="font-size:19px;font-weight:800;color:#0f172a;line-height:1.2;margin-top:2px;">City <span style="color:#0ea5e9;">Health</span> Office</div>
+          <div style="font-size:10.5px;color:#64748b;margin-top:1px;">Telehealth &amp; E-Prescription Information System</div>
+        </td>
+        <td style="text-align:right;vertical-align:top;">
+          <div style="background:#0ea5e9;color:#fff;font-size:8.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:99px;display:inline-block;margin-bottom:5px;">Official Report</div>
+          <div style="font-size:10.5px;color:#64748b;line-height:1.75;">
+            <b style="color:#0f172a;">Date:</b> ${dateStr}<br/>
+            <b style="color:#0f172a;">Time:</b> ${timeStr}<br/>
+            <b style="color:#0f172a;">Prepared by:</b> ${generatedBy || 'System Administrator'}
+          </div>
+        </td>
+      </tr>
+    </table>`;
 
-  <h2>Consultations by Status</h2>
-  <table><thead><tr><th>Status</th><th>Total</th></tr></thead><tbody>${tableRows(statusRows, ['Status', 'Total'])}</tbody></table>
+  const miniHeader = (sub) => `
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:2px solid #0ea5e9;padding-bottom:9px;margin-bottom:16px;">
+      <tr>
+        <td width="38" style="vertical-align:middle;padding-right:9px;">${logo(30, 30)}</td>
+        <td style="vertical-align:middle;">
+          <div style="font-size:13.5px;font-weight:800;color:#0f172a;">Cabuyao City Health Office</div>
+          <div style="font-size:9.5px;color:#64748b;">${sub}</div>
+        </td>
+        <td style="text-align:right;font-size:9.5px;color:#94a3b8;vertical-align:middle;">${dateStr} &mdash; ${timeStr}</td>
+      </tr>
+    </table>`;
 
-  <h2>Consultations by Doctor</h2>
-  <table><thead><tr><th>Doctor</th><th>Consultations</th></tr></thead><tbody>${tableRows(doctorRows, ['Doctor', 'Consultations'])}</tbody></table>
+  const pageFooter = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e2e8f0;padding-top:9px;margin-top:20px;">
+      <tr>
+        <td style="font-size:9px;color:#94a3b8;font-style:italic;">Cabuyao CHO Telehealth &amp; E-Prescription System &middot; ${yr}</td>
+        <td style="text-align:right;font-size:9px;font-weight:700;color:#0ea5e9;">OFFICIAL DOCUMENT &mdash; FOR AUTHORIZED USE ONLY</td>
+      </tr>
+    </table>`;
 
-  <h2>Top Diagnosed Diseases</h2>
-  <table><thead><tr><th>Disease / Diagnosis</th><th>Total Cases</th></tr></thead><tbody>${tableRows(diseaseRows, ['Disease', 'Cases'])}</tbody></table>
+  const wrap = (content) => `<!doctype html><html lang="en"><head><meta charset="utf-8"/></head><body style="${BODY}">${content}${pageFooter}</body></html>`;
 
-  <h2>Low Stock Alerts by Category</h2>
-  <table><thead><tr><th>Medicine Category</th><th>Count</th></tr></thead><tbody>${tableRows(lowStockRows, ['Category', 'Low Stock Count'])}</tbody></table>
+  const kpiCard = (label, value, color) => `
+    <td style="padding:0 8px 0 0;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:3px solid ${color};background:#f8fafc;">
+        <tr><td style="padding:12px 14px;">
+          <div style="font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;">${label}</div>
+          <div style="font-size:22px;font-weight:800;color:${color};line-height:1;">${value}</div>
+        </td></tr>
+      </table>
+    </td>`;
 
-  <h2>Recent System Activity</h2>
-  <table><thead><tr><th>Date</th><th>User</th><th>Role</th><th>Action</th><th>IP</th></tr></thead><tbody>${tableRows(logRows, ['Date', 'User', 'Role', 'Action', 'IP'])}</tbody></table>
+  const kpiGrid = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;table-layout:fixed;">
+      <tr>
+        ${kpiCard('Total Consultations', formatNumber(summary.total_consultations), '#0ea5e9')}
+        ${kpiCard('Completed', formatNumber(summary.completed_consultations), '#10b981')}
+        ${kpiCard('Pending / Reminders', formatNumber(summary.pending_consultations), '#f59e0b')}
+        <td style="padding:0;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:3px solid #8b5cf6;background:#f8fafc;">
+            <tr><td style="padding:12px 14px;">
+              <div style="font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;">Prescriptions Issued</div>
+              <div style="font-size:22px;font-weight:800;color:#8b5cf6;line-height:1;">${formatNumber(summary.prescriptions_issued)}</div>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>`;
 
-  <div class="footer">This report is generated from live Cabuyao CHO system records.</div>
-</body>
-</html>`;
+  const twoCol = (leftContent, rightContent) => `
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="width:49%;padding-right:14px;vertical-align:top;">${leftContent}</td>
+        <td style="width:49%;vertical-align:top;">${rightContent}</td>
+      </tr>
+    </table>`;
+
+  const signatures = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:40px;border-top:1px solid #e2e8f0;padding-top:18px;">
+      <tr>
+        <td style="width:33%;text-align:center;padding:0 10px;">
+          <div style="border-bottom:1.5px solid #0f172a;height:46px;margin-bottom:7px;"></div>
+          <div style="font-size:10.5px;font-weight:700;color:#0f172a;">Eduardo Gamnudoy Jr.</div>
+          <div style="font-size:9.5px;color:#64748b;margin-top:3px;">System Admin</div>
+          <div style="font-size:9.5px;color:#64748b;">CHO1</div>
+        </td>
+        <td style="width:33%;text-align:center;padding:0 10px;">
+          <div style="border-bottom:1.5px solid #0f172a;height:46px;margin-bottom:7px;"></div>
+          <div style="font-size:10.5px;font-weight:700;color:#0f172a;">Eduardo Gamnudoy Jr.</div>
+          <div style="font-size:9.5px;color:#64748b;margin-top:2px;">Administrative Assistant-III</div>
+          <div style="font-size:9.5px;color:#64748b;">CHO1</div>
+        </td>
+        <td style="width:33%;text-align:center;padding:0 10px;">
+          <div style="border-bottom:1.5px solid #0f172a;height:46px;margin-bottom:7px;"></div>
+          <div style="font-size:10.5px;font-weight:700;color:#0f172a;">Elena C. Diamante, MD, MPH</div>
+          <div style="font-size:9.5px;color:#64748b;margin-top:2px;">City Health Officer-II</div>
+          <div style="font-size:9.5px;color:#64748b;">CHO1</div>
+        </td>
+      </tr>
+    </table>`;
+
+  // ── One HTML string per page ──────────────────────────────
+  return [
+    // PAGE 1 — Cover + KPIs + Status & Diseases
+    wrap(`
+      ${fullHeader}
+      ${kpiGrid}
+      ${twoCol(
+        sectionHeader('Consultations by Status', '#0ea5e9') + dataTable([['Status', '68%'], ['Count', '32%']], tableRows(statusRows, ['Status', 'Total'])),
+        sectionHeader('Top Diagnosed Diseases', '#f43f5e') + dataTable([['Disease / Diagnosis', '68%'], ['Cases', '32%']], tableRows(diseaseRows, ['Disease', 'Cases']))
+      )}
+    `),
+
+    // PAGE 2 — Consultation Volume
+    wrap(`
+      ${miniHeader('Consultation Volume Report')}
+      ${sectionHeader('Consultation Volume by Date', '#8b5cf6')}
+      ${dataTable([['Date', '60%'], ['Consultations', '40%']], tableRows(volumeRows, ['Date', 'Consultations']))}
+    `),
+
+    // PAGE 3 — Inventory & Staff
+    wrap(`
+      ${miniHeader('Inventory & Staff Report')}
+      ${twoCol(
+        sectionHeader('Low Stock Medicines', '#f59e0b') + dataTable([['Medicine Category', '68%'], ['Count', '32%']], tableRows(lowStockRows, ['Category', 'Low Stock Count'])),
+        sectionHeader('Consultations by Doctor', '#10b981') + dataTable([['Doctor Name', '68%'], ['Total Handled', '32%']], tableRows(doctorRows, ['Doctor', 'Consultations']))
+      )}
+    `),
+
+    // PAGE 4 — Activity Log + Signatures
+    wrap(`
+      ${miniHeader('System Activity Log')}
+      ${sectionHeader('Recent System Activity Log', '#64748b')}
+      ${dataTable([['Date & Time', '18%'], ['User', '18%'], ['Role', '12%'], ['Action', '38%'], ['IP', '14%']], tableRows(logRows, ['Date', 'User', 'Role', 'Action', 'IP']))}
+      ${signatures}
+    `),
+  ];
 }
 
 export default function Analytics() {
@@ -182,23 +283,74 @@ export default function Analytics() {
     ? stats.recent_logs
     : stats.recent_logs.filter((log) => (log.role || 'system').toLowerCase() === logFilter);
 
-  const handleExportFullReport = () => {
+  const handleExportFullReport = async () => {
     setExporting(true);
     try {
       const generatedAt = new Date();
-      const html = buildReportHtml(stats, generatedAt, user?.name);
-      const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `cabuyao-cho-full-analytics-report-${generatedAt.toISOString().slice(0, 10)}.xls`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      toast.success('Full report exported');
-    } catch {
-      toast.error('Failed to export report');
+
+      // Pre-fetch logo as base64 so html2canvas can render it
+      let logoDataUrl = null;
+      try {
+        const resp = await fetch(choLogo);
+        const blob = await resp.blob();
+        logoDataUrl = await new Promise((res) => {
+          const reader = new FileReader();
+          reader.onloadend = () => res(reader.result);
+          reader.readAsDataURL(blob);
+        });
+      } catch { /* skip logo if unavailable */ }
+
+      const pages = buildReportPages(stats, generatedAt, user?.name, logoDataUrl);
+      const filename = `cabuyao-cho-analytics-report-${generatedAt.toISOString().slice(0, 10)}.pdf`;
+
+      // Render each page HTML independently, stitch into one jsPDF document
+      const { jsPDF } = await import('jspdf');
+      const html2canvas = (await import('html2canvas')).default;
+
+      // Letter size in mm
+      const W_MM = 215.9;
+      const H_MM = 279.4;
+      const doc = new jsPDF({ unit: 'mm', format: 'letter', orientation: 'portrait' });
+
+      for (let i = 0; i < pages.length; i++) {
+        // Render page HTML into an offscreen iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:816px;height:1056px;border:none;';
+        document.body.appendChild(iframe);
+
+        await new Promise((resolve) => {
+          iframe.onload = resolve;
+          iframe.srcdoc = pages[i];
+        });
+
+        // Give fonts/images a moment to paint
+        await new Promise((r) => setTimeout(r, 300));
+
+        const canvas = await html2canvas(iframe.contentDocument.body, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          width: 816,
+          windowWidth: 816,
+        });
+
+        document.body.removeChild(iframe);
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.97);
+        const canvasW = canvas.width;
+        const canvasH = canvas.height;
+        const ratio = W_MM / canvasW;
+        const imgH = canvasH * ratio;
+
+        if (i > 0) doc.addPage();
+        doc.addImage(imgData, 'JPEG', 0, 0, W_MM, Math.min(imgH, H_MM));
+      }
+
+      doc.save(filename);
+      toast.success('Full report exported as PDF');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to export PDF');
     } finally {
       setExporting(false);
     }
@@ -216,7 +368,8 @@ export default function Analytics() {
   const serviceMax = maxTotal(serviceRows);
 
   return (
-    <div className="animate-in fade-in duration-500 space-y-6">      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="animate-in fade-in duration-500 space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports, health summaries, and service utilization charts." iconClassName="bg-brand-bg text-indigo-600" />
         <button
           data-tour="page-primary-action"
