@@ -10,4 +10,5 @@ class Patient extends Model {
     public function recordVersions() { return $this->hasMany(PatientRecordVersion::class); }
     public function consultations() { return $this->hasMany(Consultation::class); }
     public function prescriptions() { return $this->hasMany(Prescription::class); }
+    public function medicalImages() { return $this->hasMany(MedicalImage::class); }
 }

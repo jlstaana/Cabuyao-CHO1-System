@@ -2,12 +2,42 @@ import { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
-import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar, Search, X, Filter } from 'lucide-react';
+import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar, Search, X, Filter, Activity, Pill, Stethoscope, Clock } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 import Modal from '../../components/Modal';
 import useAuthStore from '../../store/useAuthStore';
 
 const emptyItem = { medicine_id: '', dosage: '', frequency: '', duration: '', instructions: '' };
+
+function StatCard({ label, value, icon: Icon, color, sub }) {
+  const isIndigo = color?.includes('indigo');
+  const isEmerald = color?.includes('emerald');
+  const isRose = color?.includes('rose');
+  const isAmber = color?.includes('amber');
+  const isFuchsia = color?.includes('fuchsia');
+  const isSlate = color?.includes('slate');
+
+  const bgGradient = isIndigo ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-200' :
+                     isEmerald ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200' :
+                     isRose ? 'bg-gradient-to-br from-rose-500 to-pink-600 shadow-rose-200' :
+                     isAmber ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-200' :
+                     isFuchsia ? 'bg-gradient-to-br from-fuchsia-600 to-purple-700 shadow-fuchsia-200' :
+                     isSlate ? 'bg-gradient-to-br from-slate-600 to-slate-800 shadow-slate-300' :
+                     'bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200';
+
+  return (
+    <div data-tour="page-stats" className={`p-5 rounded-2xl border shadow-md border-transparent ${bgGradient}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</span>
+        <div className="p-2 rounded-xl bg-white/20 text-white">
+          <Icon size={18} />
+        </div>
+      </div>
+      <p className="text-3xl font-black mt-1 text-white">{value}</p>
+      {sub && <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">{sub}</p>}
+    </div>
+  );
+}
 
 export default function Prescriptions() {
   const { user } = useAuthStore();
@@ -148,6 +178,38 @@ export default function Prescriptions() {
     <div className="animate-in fade-in duration-500">
       <div className="flex justify-between items-center mb-6">
         <PageTitle icon={FileText} title="E-Prescriptions" description="Access and manage digitally signed medical prescriptions." iconClassName="bg-success-bg text-emerald-600" />
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard 
+          label="Total Prescriptions" 
+          value={prescriptions.length} 
+          icon={FileText} 
+          color="sky" 
+          sub="All records" 
+        />
+        <StatCard 
+          label="Issued Today" 
+          value={prescriptions.filter(p => new Date(p.created_at).toDateString() === new Date().toDateString()).length} 
+          icon={Activity} 
+          color="emerald" 
+          sub="Today's volume" 
+        />
+        <StatCard 
+          label="Items Prescribed" 
+          value={prescriptions.reduce((acc, p) => acc + (p.items?.length || 0), 0)} 
+          icon={Pill} 
+          color="indigo" 
+          sub="Total medicines dispensed" 
+        />
+        <StatCard 
+          label="Active Doctors" 
+          value={new Set(prescriptions.map(p => p.doctor_id).filter(Boolean)).size} 
+          icon={Stethoscope} 
+          color="amber" 
+          sub="Prescribing physicians" 
+        />
       </div>
 
       {/* Search & Filter Bar */}

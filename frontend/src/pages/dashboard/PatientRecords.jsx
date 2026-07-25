@@ -36,13 +36,36 @@ function fileLabel(file) {
   return file.document_type || file.file_type?.toUpperCase() || 'Medical File';
 }
 
-function buildPatientRecords(consultations) {
-  const grouped = new Map();
+function buildPatientRecords(patientsData) {
+  return patientsData.map((patient) => {
+    const rawConsultations = patient.consultations || [];
+    const formattedConsultations = rawConsultations.map(c => ({
+      id: c.id,
+      date: formatDate(c.scheduled_at || c.created_at),
+      time: formatTime(c.scheduled_at || c.created_at),
+      status: c.status,
+      diagnosis: c.form?.diagnosis,
+      notes: c.form?.notes,
+      prescription_id: c.prescription?.id,
+    })).sort((a, b) => b.id - a.id);
 
-  consultations.forEach((consultation) => {
-    const patient = consultation.patient;
-    if (!patient?.id) return;
-    const existing = grouped.get(patient.id) || {
+    let vitals = {};
+    const cWithVitals = [...rawConsultations].reverse().find(c => c.vital_signs || c.vitalSigns);
+    if (cWithVitals) vitals = cWithVitals.vital_signs || cWithVitals.vitalSigns;
+
+    const rawImages = patient.medical_images || patient.medicalImages || [];
+    const images = rawImages.map(image => ({
+      id: image.id,
+      name: image.original_name || image.file_path?.split('/').pop() || `Medical file #${image.id}`,
+      type: fileLabel(image),
+      mimeType: image.mime_type || '',
+      fileType: image.file_type || '',
+      notes: image.notes,
+      date: formatDate(image.created_at),
+      status: 'Uploaded',
+    }));
+
+    return {
       id: patient.id,
       name: patient.user?.name || 'Unknown Patient',
       dob: patient.dob,
@@ -52,48 +75,13 @@ function buildPatientRecords(consultations) {
       medical_history: patient.record?.medical_history || '',
       blood_type: 'N/A',
       allergies: 'N/A',
-      last_visit: 'N/A',
-      total_consultations: 0,
-      consultations: [],
-      vitals: {},
-      images: [],
+      last_visit: formattedConsultations[0]?.date || 'N/A',
+      total_consultations: formattedConsultations.length,
+      consultations: formattedConsultations,
+      vitals,
+      images
     };
-
-    existing.consultations.push({
-      id: consultation.id,
-      date: formatDate(consultation.scheduled_at || consultation.created_at),
-      time: formatTime(consultation.scheduled_at || consultation.created_at),
-      status: consultation.status,
-      diagnosis: consultation.form?.diagnosis,
-      notes: consultation.form?.notes,
-      prescription_id: consultation.prescription?.id,
-    });
-
-    if (consultation.vital_signs || consultation.vitalSigns) {
-      existing.vitals = consultation.vital_signs || consultation.vitalSigns;
-    }
-
-    const medicalImages = consultation.medical_images || consultation.medicalImages || [];
-    existing.images.push(...medicalImages.map((image) => ({
-      id: image.id,
-      name: image.original_name || image.file_path?.split('/').pop() || `Medical file #${image.id}`,
-      type: fileLabel(image),
-      mimeType: image.mime_type || '',
-      fileType: image.file_type || '',
-      notes: image.notes,
-      date: formatDate(image.created_at),
-      status: 'Uploaded',
-    })));
-
-    existing.total_consultations = existing.consultations.length;
-    existing.last_visit = existing.consultations[0]?.date || 'N/A';
-    grouped.set(patient.id, existing);
   });
-
-  return Array.from(grouped.values()).map((patient) => ({
-    ...patient,
-    consultations: patient.consultations.sort((a, b) => b.id - a.id),
-  }));
 }
 
 const STATUS_STYLE = {
@@ -122,6 +110,36 @@ function InfoChip({ icon: Icon, label, value }) {
   );
 }
 
+function StatCard({ label, value, icon: Icon, color, sub }) {
+  const isIndigo = color?.includes('indigo');
+  const isEmerald = color?.includes('emerald');
+  const isRose = color?.includes('rose');
+  const isAmber = color?.includes('amber');
+  const isFuchsia = color?.includes('fuchsia');
+  const isSlate = color?.includes('slate');
+
+  const bgGradient = isIndigo ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-200' :
+                     isEmerald ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200' :
+                     isRose ? 'bg-gradient-to-br from-rose-500 to-pink-600 shadow-rose-200' :
+                     isAmber ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-200' :
+                     isFuchsia ? 'bg-gradient-to-br from-fuchsia-600 to-purple-700 shadow-fuchsia-200' :
+                     isSlate ? 'bg-gradient-to-br from-slate-600 to-slate-800 shadow-slate-300' :
+                     'bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200';
+
+  return (
+    <div data-tour="page-stats" className={`p-5 rounded-2xl border shadow-md border-transparent ${bgGradient}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</span>
+        <div className="p-2 rounded-xl bg-white/20 text-white">
+          <Icon size={18} />
+        </div>
+      </div>
+      <p className="text-3xl font-black mt-1 text-white">{value}</p>
+      {sub && <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">{sub}</p>}
+    </div>
+  );
+}
+
 function VitalBadge({ label, value, unit, color }) {
   return (
     <div className={`rounded-xl p-3 text-center ${color}`}>
@@ -138,6 +156,7 @@ export default function PatientRecords() {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState({}); // per patient
   const [editModal, setEditModal] = useState(false);
@@ -152,7 +171,7 @@ export default function PatientRecords() {
       return;
     }
     let isActive = true;
-    api.get('/consultations')
+    api.get('/patients')
       .then((res) => {
         if (isActive) setPatients(buildPatientRecords(res.data || []));
       })
@@ -250,32 +269,79 @@ export default function PatientRecords() {
     }
   };
 
-  const filtered = patients.filter((p) =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.address || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.category || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filtered = patients.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (p.address || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (p.category || '').toLowerCase().includes(searchQuery.toLowerCase());
+    
+    let matchesDate = true;
+    if (dateFilter) {
+      const selectedDateStr = new Date(dateFilter).toLocaleDateString();
+      matchesDate = p.consultations.some(c => c.date === selectedDateStr);
+    }
+
+    return matchesSearch && matchesDate;
+  });
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <PageTitle icon={Users} title="Patient Records" description={canEditRecords ? 'Open patient records, update permitted information, and review history.' : 'View medical history, vitals, images, and consultations for your patients.'} iconClassName="bg-brand-bg text-indigo-600" />
-        <div className="text-right">
-          <p className="text-2xl font-black text-primary-text">{patients.length}</p>
-          <p className="text-xs text-text-light font-medium">Assigned Patients</p>
-        </div>
       </div>
 
-      {/* Search */}
-      <div data-tour="page-search" className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light" size={18} />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search patient by name or address..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface transition-all"
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          label="Total Patients" 
+          value={patients.length} 
+          icon={Users} 
+          color="sky" 
+          sub="Registered in system" 
         />
+        <StatCard 
+          label="Old Patients" 
+          value={patients.filter(p => p.total_consultations > 1).length} 
+          icon={HeartPulse} 
+          color="emerald" 
+          sub="> 1 consultation" 
+        />
+        <StatCard 
+          label="New Patients" 
+          value={patients.filter(p => p.total_consultations <= 1).length} 
+          icon={User} 
+          color="indigo" 
+          sub="≤ 1 consultation" 
+        />
+        <StatCard 
+          label="Upcoming" 
+          value={patients.filter(p => p.consultations.some(c => c.status === 'Scheduled')).length} 
+          icon={Clock} 
+          color="amber" 
+          sub="Scheduled consultations" 
+        />
+      </div>
+
+      {/* Search and Filters */}
+      <div data-tour="page-search" className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light" size={18} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search patient by name or address..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface transition-all"
+          />
+        </div>
+        <div className="relative sm:w-48">
+          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-text-light" size={18} />
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface transition-all text-sm text-text"
+          />
+        </div>
       </div>
 
       {/* Patient list */}
@@ -316,7 +382,13 @@ export default function PatientRecords() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-bold text-text">{patient.name}</p>
                       <span className="text-xs text-text-light">·</span>
-                    <p className="text-sm text-text-muted">{calcAge(patient.dob)} yrs · {patient.blood_type}</p>
+                      <p className="text-sm text-text-muted">{calcAge(patient.dob)} yrs</p>
+                      <span className="text-xs text-text-light">·</span>
+                      <span className="flex items-center gap-1 text-sm text-text-muted"><HeartPulse size={13} className="text-text-light" /> {patient.blood_type}</span>
+                      <span className="text-xs text-text-light">·</span>
+                      <span className="flex items-center gap-1 text-sm text-text-muted"><Phone size={13} className="text-text-light" /> {patient.contact || 'N/A'}</span>
+                      <span className="text-xs text-text-light">·</span>
+                      <span className="flex items-center gap-1 text-sm text-text-muted"><MapPin size={13} className="text-text-light" /> {patient.address}</span>
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-text-light flex-wrap">
                       <span className="flex items-center gap-1"><Calendar size={11} /> Last visit: {patient.last_visit}</span>

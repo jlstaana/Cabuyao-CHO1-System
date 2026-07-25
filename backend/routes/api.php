@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/onboarding-complete', [AuthController::class, 'completeOnboarding']);
     
     // Patient Profile & History
+    Route::get('/patients', [PatientController::class, 'index'])->middleware('role:Admin,Staff,Doctor');
     Route::get('/patients/profile', [PatientController::class, 'profile']);
     Route::put('/patients/profile', [PatientController::class, 'updateProfile']);
     Route::get('/patients/{patient}/record', [PatientController::class, 'record']);

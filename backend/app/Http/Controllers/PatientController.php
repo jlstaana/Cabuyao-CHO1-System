@@ -5,6 +5,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PatientController extends Controller {
+    public function index(Request $request) {
+        if (!in_array($request->user()->role, ['Admin', 'Staff', 'Doctor'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        $patients = Patient::with(['user', 'record', 'consultations', 'consultations.prescription', 'medicalImages', 'consultations.vitalSigns'])->get();
+        return response()->json($patients);
+    }
     public function profile(Request $request) {
         return response()->json($request->user()->load('patient'));
     }
