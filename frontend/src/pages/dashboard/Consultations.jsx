@@ -499,6 +499,12 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
         </div>
       </div>
 
+      {!loading && (
+        <p className="text-xs text-text-muted mt-3">
+          Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{consultations.length}</span> consultations
+        </p>
+      )}
+
       {/* Queue list */}
       <div data-tour="page-list" className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
         {loading ? (
@@ -659,6 +665,12 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
           )}
         </div>
       </div>
+
+      {!loading && (
+        <p className="text-xs text-text-muted -mt-3">
+          Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{consultations.length}</span> consultations
+        </p>
+      )}
 
       {/* Table */}
       <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
@@ -991,7 +1003,7 @@ export default function Consultations() {
   }));
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      <header>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      <header>
         <PageTitle icon={Stethoscope} title={title.h1} description={title.sub} iconClassName="bg-primary-bg text-primary-text" />
       </header>
 

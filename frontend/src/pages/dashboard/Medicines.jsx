@@ -212,7 +212,13 @@ export default function Medicines() {
               })}
             </select>
           </div>
+          </div>
         </div>
+        {!loading && (
+          <div className="px-4 py-2.5 bg-surface-hover/30 border-b border-border text-xs text-text-muted">
+            Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{medicines.length}</span> medicines
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table data-tour="page-list" className="w-full text-left border-collapse">
             <thead>

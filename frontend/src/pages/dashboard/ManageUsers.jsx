@@ -344,7 +344,13 @@ export default function ManageUsers() {
             </div>
          </div>
         
-        <div className="overflow-x-auto">
+         {!loading && (
+           <div className="px-4 py-2.5 bg-surface-hover/30 border-b border-border text-xs text-text-muted">
+             Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{users.length}</span> users
+           </div>
+         )}
+         
+         <div className="overflow-x-auto">
           <table data-tour="page-list" className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-background/50 text-text-muted text-sm border-b border-border">

@@ -344,6 +344,13 @@ export default function PatientRecords() {
         </div>
       </div>
 
+      {/* Result count */}
+      {!loading && (
+        <p className="text-xs text-text-muted">
+          Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{patients.length}</span> patients
+        </p>
+      )}
+
       {/* Patient list */}
       <div data-tour="page-list" className="space-y-4">
         {loading ? (

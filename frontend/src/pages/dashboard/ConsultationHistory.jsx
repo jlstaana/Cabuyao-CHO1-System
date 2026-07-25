@@ -138,6 +138,12 @@ export default function ConsultationHistory() {
         </div>
       </div>
 
+      {!loading && (
+        <p className="text-xs text-text-muted mt-1 mb-2">
+          Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{history.length}</span> consultations
+        </p>
+      )}
+
       {/* History list */}
       <div data-tour="page-list" className="space-y-3">
         {loading ? (
