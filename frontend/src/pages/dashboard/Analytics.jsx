@@ -33,17 +33,17 @@ const getStatusTotal = (stats, status) => (
 const maxTotal = (items) => Math.max(...items.map((item) => Number(item.total || item.count || 0)), 1);
 
 function StatCard({ label, value, sub, color = 'sky' }) {
-  const colors = {
-    sky: 'bg-primary-bg text-primary-text border-sky-100',
-    emerald: 'bg-success-bg text-emerald-600 border-success-border',
-    indigo: 'bg-brand-bg text-indigo-600 border-brand-border',
-    rose: 'bg-danger-bg text-danger-text border-danger-border',
+  const styles = {
+    sky: 'bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent shadow-sky-200',
+    emerald: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent shadow-emerald-200',
+    indigo: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent shadow-indigo-200',
+    rose: 'bg-gradient-to-br from-rose-500 to-pink-600 text-white border-transparent shadow-rose-200',
   };
   return (
-    <div className={`rounded-2xl border p-5 ${colors[color]}`}>
-      <p className="text-xs font-semibold uppercase tracking-wider opacity-70">{label}</p>
-      <p className="text-3xl font-black mt-1">{value}</p>
-      {sub && <p className="text-xs mt-1 opacity-60">{sub}</p>}
+    <div className={`p-5 rounded-2xl border shadow-md ${styles[color] || styles.sky}`}>
+      <p className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</p>
+      <p className="text-3xl font-black mt-1 text-white">{value}</p>
+      {sub && <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">{sub}</p>}
     </div>
   );
 }
@@ -385,7 +385,7 @@ export default function Analytics() {
   const serviceRows = [
     { name: 'Registered Patients', total: summary.registered_patients || 0 },
     { name: 'Active Doctors', total: summary.active_doctors || 0 },
-    { name: `Monthly Consults (${currentMonth})`, total: summary.registered_patients || 0 },
+    { name: `Monthly Consults (${currentMonth})`, total: summary.total_consultations || 0 },
     { name: 'Prescriptions Issued', total: summary.prescriptions_issued || 0 },
   ];
   const serviceMax = maxTotal(serviceRows);
@@ -428,7 +428,7 @@ export default function Analytics() {
       {activeTab === 'consultations' && (
         <div data-tour="page-stats" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard label="Monthly Consultations" value={formatNumber(summary.registered_patients)} sub={<>as of <b>{currentMonth}</b> complete consultation</>} color="sky" />
+            <StatCard label="Monthly Consultations" value={formatNumber(summary.total_consultations)} sub={<>as of <b>{currentMonth}</b> complete consultation</>} color="sky" />
             <StatCard label="Completed" value={formatNumber(getStatusTotal(stats, 'Completed'))} sub="Successfully finished" color="emerald" />
             <StatCard label="Scheduled" value={formatNumber(getStatusTotal(stats, 'Scheduled'))} sub="Upcoming sessions" color="indigo" />
           </div>
@@ -496,40 +496,39 @@ export default function Analytics() {
             />
 
             {/* Active Doctors — name + consult count */}
-            <div className="rounded-2xl border bg-primary-bg border-sky-100 p-5 col-span-2 lg:col-span-1">
-              <p className="text-xs font-semibold uppercase tracking-wider opacity-70 text-primary-text">Active Doctors</p>
-              <p className="text-3xl font-black mt-1 text-primary-text">{formatNumber(summary.active_doctors)}</p>
+            <div className="p-5 rounded-2xl border shadow-md border-transparent bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200 col-span-2 lg:col-span-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-white/80">Active Doctors</p>
+              <p className="text-3xl font-black mt-1 text-white">{formatNumber(summary.active_doctors)}</p>
               {stats.consultations_by_doctor.length > 0 ? (
                 <ul className="mt-2 space-y-1.5">
                   {stats.consultations_by_doctor.map((doc) => (
                     <li key={doc.name} className="flex items-center justify-between gap-2 text-xs">
-                      <span className="flex items-center gap-1.5 text-primary-text truncate">
-                        <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
+                      <span className="flex items-center gap-1.5 text-white/90 truncate">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
                         {doc.name}
                       </span>
-                      <span className="font-bold text-sky-700 shrink-0 bg-sky-100 px-1.5 py-0.5 rounded-md">
+                      <span className="font-bold text-sky-800 shrink-0 bg-white/90 px-1.5 py-0.5 rounded-md">
                         {doc.total} consult{doc.total !== 1 ? 's' : ''}
                       </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs mt-1 opacity-60 text-primary-text">No consultations recorded</p>
+                <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">No consultations recorded</p>
               )}
-              <div className="mt-3 pt-3 border-t border-sky-200">
-                <p className="text-xs font-semibold text-sky-700">Tomorrow</p>
-                <p className="text-xs text-primary-text opacity-70 mt-0.5">
+              <div className="mt-3 pt-3 border-t border-white/20">
+                <p className="text-xs font-semibold text-white/90">Tomorrow</p>
+                <p className="text-xs text-white/80 mt-0.5">
                   <span className="font-bold">{formatNumber(summary.active_doctors)}</span> doctor{summary.active_doctors !== 1 ? 's' : ''} available for scheduling
                 </p>
               </div>
             </div>
 
-
             {/* Monthly Consults — month name bolded */}
-            <div className="rounded-2xl border bg-success-bg border-success-border p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider opacity-70 text-emerald-600">Monthly Consults</p>
-              <p className="text-3xl font-black mt-1 text-emerald-600">{formatNumber(summary.registered_patients)}</p>
-              <p className="text-xs mt-1 opacity-70 text-emerald-700">
+            <div className="p-5 rounded-2xl border shadow-md border-transparent bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200">
+              <p className="text-xs font-bold uppercase tracking-wider text-white/80">Monthly Consults</p>
+              <p className="text-3xl font-black mt-1 text-white">{formatNumber(summary.total_consultations)}</p>
+              <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">
                 as of <span className="font-bold">{currentMonth}</span> complete consultation
               </p>
             </div>

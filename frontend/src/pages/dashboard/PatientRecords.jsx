@@ -97,15 +97,16 @@ function buildPatientRecords(consultations) {
 }
 
 const STATUS_STYLE = {
-  Completed:  'bg-emerald-100 text-success-text',
-  Scheduled:  'bg-primary-hover text-primary-text',
-  Pending:    'bg-amber-100 text-warning-text',
-  Cancelled:  'bg-surface-hover/50 text-text-muted',
+  Completed:  { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
+  Scheduled:  { bg: 'bg-sky-50 text-sky-700 border-sky-200', dot: 'bg-sky-500' },
+  Pending:    { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
+  Cancelled:  { bg: 'bg-slate-50 text-slate-600 border-slate-200', dot: 'bg-slate-400' },
 };
 
 const IMAGE_STATUS_STYLE = {
-  Reviewed:       'bg-emerald-100 text-success-text',
-  'Pending Review': 'bg-amber-100 text-warning-text',
+  Reviewed:       { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
+  'Pending Review': { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
+  Uploaded:       { bg: 'bg-slate-50 text-slate-600 border-slate-200', dot: 'bg-slate-400' },
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -449,9 +450,15 @@ export default function PatientRecords() {
                                   <Clock size={14} className="text-text-light" />
                                   <span className="text-text-muted">{c.time}</span>
                                 </div>
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_STYLE[c.status] || STATUS_STYLE.Pending}`}>
-                                  {c.status}
-                                </span>
+                                {(() => {
+                                  const style = STATUS_STYLE[c.status] || STATUS_STYLE.Pending;
+                                  return (
+                                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-sm ${style.bg}`}>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                                      {c.status}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                               {c.diagnosis && (
                                 <p className="text-sm font-semibold text-text">Dx: {c.diagnosis}</p>
@@ -526,9 +533,15 @@ export default function PatientRecords() {
                                 {img.notes && <p className="text-xs text-text-light mt-0.5 truncate">{img.notes}</p>}
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${IMAGE_STATUS_STYLE[img.status] || 'bg-surface-hover/50 text-text-muted'}`}>
-                                  {img.status}
-                                </span>
+                                {(() => {
+                                  const style = IMAGE_STATUS_STYLE[img.status] || IMAGE_STATUS_STYLE.Uploaded;
+                                  return (
+                                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-sm ${style.bg}`}>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                                      {img.status}
+                                    </span>
+                                  );
+                                })()}
                                 <button type="button" onClick={() => handleDownload(img)} className="p-2 rounded-lg text-text-light hover:text-primary-text hover:bg-primary-bg transition-colors" title="Download file">
                                   <Download size={16} />
                                 </button>

@@ -13,10 +13,10 @@ import {
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS = {
-  Pending:   { pill: 'bg-amber-100 text-warning-text',   dot: 'bg-amber-400',   icon: Clock },
-  Scheduled: { pill: 'bg-primary-hover text-primary-text',       dot: 'bg-sky-400',     icon: Calendar },
-  Completed: { pill: 'bg-emerald-100 text-success-text', dot: 'bg-emerald-400', icon: CheckCircle },
-  Cancelled: { pill: 'bg-surface-hover/50 text-text-muted',   dot: 'bg-slate-300',   icon: XCircle },
+  Pending:   { pill: 'bg-amber-50 text-amber-700 border-amber-200 border shadow-sm',   dot: 'bg-amber-500',   icon: Clock },
+  Scheduled: { pill: 'bg-sky-50 text-sky-700 border-sky-200 border shadow-sm',       dot: 'bg-sky-500',     icon: Calendar },
+  Completed: { pill: 'bg-emerald-50 text-emerald-700 border-emerald-200 border shadow-sm', dot: 'bg-emerald-500', icon: CheckCircle },
+  Cancelled: { pill: 'bg-slate-50 text-slate-600 border-slate-200 border shadow-sm',   dot: 'bg-slate-400',   icon: XCircle },
 };
 
 const TAB_ICON = {
@@ -63,9 +63,74 @@ function StatusPill({ status }) {
   const cfg = STATUS[status] || STATUS.Pending;
   const Icon = cfg.icon;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${cfg.pill}`}>
-      <Icon size={12} /> {status}
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold ${cfg.pill}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {status}
     </span>
+  );
+}
+
+const FILTER_STYLES = {
+  All: {
+    active: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent shadow-indigo-200 shadow-md',
+    iconActive: 'bg-white/20 text-white',
+    textActive: 'text-white',
+    subActive: 'text-indigo-100',
+    labelActive: 'text-indigo-100',
+  },
+  Pending: {
+    active: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent shadow-amber-200 shadow-md',
+    iconActive: 'bg-white/20 text-white',
+    textActive: 'text-white',
+    subActive: 'text-amber-100',
+    labelActive: 'text-amber-100',
+  },
+  Scheduled: {
+    active: 'bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent shadow-sky-200 shadow-md',
+    iconActive: 'bg-white/20 text-white',
+    textActive: 'text-white',
+    subActive: 'text-sky-100',
+    labelActive: 'text-sky-100',
+  },
+  Completed: {
+    active: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent shadow-emerald-200 shadow-md',
+    iconActive: 'bg-white/20 text-white',
+    textActive: 'text-white',
+    subActive: 'text-emerald-100',
+    labelActive: 'text-emerald-100',
+  },
+  Cancelled: {
+    active: 'bg-gradient-to-br from-slate-500 to-gray-600 text-white border-transparent shadow-slate-200 shadow-md',
+    iconActive: 'bg-white/20 text-white',
+    textActive: 'text-white',
+    subActive: 'text-slate-100',
+    labelActive: 'text-slate-100',
+  }
+};
+
+function InteractiveStatCard({ status, label, count, sub }) {
+  const styles = FILTER_STYLES[status] || FILTER_STYLES.All;
+  const Icon = TAB_ICON[status] || Stethoscope;
+  const displayLabel = label || status;
+  return (
+    <div
+      className={`p-4 rounded-2xl border shadow-sm ${styles.active}`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className={`text-xs font-bold uppercase tracking-wider ${styles.labelActive}`}>
+          {displayLabel}
+        </span>
+        <div className={`p-2 rounded-xl ${styles.iconActive}`}>
+          <Icon size={18} />
+        </div>
+      </div>
+      <p className={`text-2xl font-black ${styles.textActive}`}>
+        {count}
+      </p>
+      <p className={`text-[10px] mt-1 uppercase tracking-wide ${styles.subActive}`}>
+        {sub}
+      </p>
+    </div>
   );
 }
 
@@ -365,18 +430,20 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
         </div>
       )}
 
-      {/* Summary strip */}
-      <div data-tour="page-stats" className="grid grid-cols-3 gap-4">
+      {/* Summary strip / Filter cards */}
+      <div data-tour="page-stats" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { label: 'Pending',   value: pending.length,   color: 'bg-warning-bg border-amber-200 text-warning-text', sub: 'Needs review' },
-          { label: 'Scheduled', value: scheduled.length, color: 'bg-primary-bg border-sky-200 text-primary-text', sub: 'Upcoming' },
-          { label: 'Completed', value: completed.length, color: 'bg-success-bg border-emerald-200 text-success-text', sub: 'Finished' },
+          { label: 'Pending', status: 'Pending', count: pending.length, sub: 'Needs review' },
+          { label: 'Scheduled', status: 'Scheduled', count: scheduled.length, sub: 'Upcoming' },
+          { label: 'Completed', status: 'Completed', count: completed.length, sub: 'Finished' },
         ].map(s => (
-          <div key={s.label} className={`rounded-2xl border p-4 text-center ${s.color}`}>
-            <p className="text-3xl font-black">{s.value}</p>
-            <p className="text-xs font-semibold mt-1 opacity-80">{s.label}</p>
-            <p className="text-[10px] mt-0.5 opacity-60 uppercase tracking-wide">{s.sub}</p>
-          </div>
+          <InteractiveStatCard
+            key={s.label}
+            status={s.status}
+            label={s.label}
+            count={s.count}
+            sub={s.sub}
+          />
         ))}
       </div>
 
@@ -529,22 +596,21 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div data-tour="page-stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div data-tour="page-stats" className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { status: 'Pending', sub: 'Awaiting assignment' },
           { status: 'Scheduled', sub: 'Upcoming sessions' },
           { status: 'Completed', sub: 'Successfully finished' },
           { status: 'Cancelled', sub: 'Discontinued requests' }
-        ].map(s => {
-          const cfg = STATUS[s.status];
-          return (
-            <div key={s.status} className={`rounded-2xl border p-4 ${cfg.pill} bg-opacity-40`}>
-              <p className="text-2xl font-black">{consultations.filter(c => c.status === s.status).length}</p>
-              <p className="text-xs font-semibold mt-1 opacity-80">{s.status}</p>
-              <p className="text-[10px] mt-0.5 opacity-60 uppercase tracking-wide">{s.sub}</p>
-            </div>
-          );
-        })}
+        ].map(s => (
+          <InteractiveStatCard
+            key={s.status}
+            status={s.status}
+            label={s.status}
+            count={consultations.filter(c => c.status === s.status).length}
+            sub={s.sub}
+          />
+        ))}
       </div>
 
       {/* Tabs & Search */}

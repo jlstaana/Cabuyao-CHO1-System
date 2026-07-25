@@ -200,145 +200,115 @@ export default function ManageUsers() {
       {/* Category Summary Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <div
-          onClick={() => setRoleFilter('All')}
-          className={`cursor-pointer p-4 rounded-2xl border transition-all duration-200 shadow-sm ${
-            roleFilter === 'All'
-              ? 'bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-transparent shadow-sky-200 shadow-md scale-[1.02]'
-              : 'bg-surface border-border hover:border-sky-300 hover:shadow-md'
-          }`}
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-transparent shadow-sky-200 shadow-md"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${roleFilter === 'All' ? 'text-sky-100' : 'text-text-muted'}`}>
+            <span className="text-xs font-bold uppercase tracking-wider text-sky-100">
               Total Accounts
             </span>
-            <div className={`p-2 rounded-xl ${roleFilter === 'All' ? 'bg-white/20 text-white' : 'bg-sky-50 text-sky-600'}`}>
+            <div className="p-2 rounded-xl bg-white/20 text-white">
               <Users size={18} />
             </div>
           </div>
-          <p className={`text-2xl font-black ${roleFilter === 'All' ? 'text-white' : 'text-text'}`}>
+          <p className="text-2xl font-black text-white">
             {loading ? '...' : totalCount}
           </p>
-          <p className={`text-xs mt-1 ${roleFilter === 'All' ? 'text-sky-100' : 'text-text-muted'}`}>
+          <p className="text-xs mt-1 text-sky-100">
             All system users
           </p>
         </div>
 
         <div
-          onClick={() => setRoleFilter('Admin')}
-          className={`cursor-pointer p-4 rounded-2xl border transition-all duration-200 shadow-sm ${
-            roleFilter === 'Admin'
-              ? 'bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white border-transparent shadow-fuchsia-200 shadow-md scale-[1.02]'
-              : 'bg-surface border-border hover:border-fuchsia-300 hover:shadow-md'
-          }`}
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white border-transparent shadow-fuchsia-200 shadow-md"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${roleFilter === 'Admin' ? 'text-fuchsia-100' : 'text-text-muted'}`}>
+            <span className="text-xs font-bold uppercase tracking-wider text-fuchsia-100">
               Admins
             </span>
-            <div className={`p-2 rounded-xl ${roleFilter === 'Admin' ? 'bg-white/20 text-white' : 'bg-fuchsia-50 text-fuchsia-600'}`}>
+            <div className="p-2 rounded-xl bg-white/20 text-white">
               <ShieldCheck size={18} />
             </div>
           </div>
-          <p className={`text-2xl font-black ${roleFilter === 'Admin' ? 'text-white' : 'text-text'}`}>
+          <p className="text-2xl font-black text-white">
             {loading ? '...' : adminCount}
           </p>
-          <p className={`text-xs mt-1 ${roleFilter === 'Admin' ? 'text-fuchsia-100' : 'text-text-muted'}`}>
+          <p className="text-xs mt-1 text-fuchsia-100">
             Administrators
           </p>
         </div>
 
         <div
-          onClick={() => setRoleFilter('Doctor')}
-          className={`cursor-pointer p-4 rounded-2xl border transition-all duration-200 shadow-sm ${
-            roleFilter === 'Doctor'
-              ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-transparent shadow-cyan-200 shadow-md scale-[1.02]'
-              : 'bg-surface border-border hover:border-cyan-300 hover:shadow-md'
-          }`}
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-transparent shadow-cyan-200 shadow-md"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${roleFilter === 'Doctor' ? 'text-cyan-100' : 'text-text-muted'}`}>
+            <span className="text-xs font-bold uppercase tracking-wider text-cyan-100">
               Doctors
             </span>
-            <div className={`p-2 rounded-xl ${roleFilter === 'Doctor' ? 'bg-white/20 text-white' : 'bg-cyan-50 text-cyan-600'}`}>
+            <div className="p-2 rounded-xl bg-white/20 text-white">
               <Stethoscope size={18} />
             </div>
           </div>
-          <p className={`text-2xl font-black ${roleFilter === 'Doctor' ? 'text-white' : 'text-text'}`}>
+          <p className="text-2xl font-black text-white">
             {loading ? '...' : doctorCount}
           </p>
-          <p className={`text-xs mt-1 ${roleFilter === 'Doctor' ? 'text-cyan-100' : 'text-text-muted'}`}>
+          <p className="text-xs mt-1 text-cyan-100">
             Resident & Visiting
           </p>
         </div>
 
         <div
-          onClick={() => setRoleFilter('Staff')}
-          className={`cursor-pointer p-4 rounded-2xl border transition-all duration-200 shadow-sm ${
-            roleFilter === 'Staff'
-              ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent shadow-amber-200 shadow-md scale-[1.02]'
-              : 'bg-surface border-border hover:border-amber-300 hover:shadow-md'
-          }`}
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent shadow-amber-200 shadow-md"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${roleFilter === 'Staff' ? 'text-amber-100' : 'text-text-muted'}`}>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-100">
               Staff
             </span>
-            <div className={`p-2 rounded-xl ${roleFilter === 'Staff' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-600'}`}>
+            <div className="p-2 rounded-xl bg-white/20 text-white">
               <UserCog size={18} />
             </div>
           </div>
-          <p className={`text-2xl font-black ${roleFilter === 'Staff' ? 'text-white' : 'text-text'}`}>
+          <p className="text-2xl font-black text-white">
             {loading ? '...' : staffCount}
           </p>
-          <p className={`text-xs mt-1 ${roleFilter === 'Staff' ? 'text-amber-100' : 'text-text-muted'}`}>
+          <p className="text-xs mt-1 text-amber-100">
             Health officers & staff
           </p>
         </div>
 
         <div
-          onClick={() => setRoleFilter('Patient')}
-          className={`cursor-pointer p-4 rounded-2xl border transition-all duration-200 shadow-sm ${
-            roleFilter === 'Patient'
-              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent shadow-emerald-200 shadow-md scale-[1.02]'
-              : 'bg-surface border-border hover:border-emerald-300 hover:shadow-md'
-          }`}
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent shadow-emerald-200 shadow-md"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${roleFilter === 'Patient' ? 'text-emerald-100' : 'text-text-muted'}`}>
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-100">
               Patients
             </span>
-            <div className={`p-2 rounded-xl ${roleFilter === 'Patient' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600'}`}>
+            <div className="p-2 rounded-xl bg-white/20 text-white">
               <HeartPulse size={18} />
             </div>
           </div>
-          <p className={`text-2xl font-black ${roleFilter === 'Patient' ? 'text-white' : 'text-text'}`}>
+          <p className="text-2xl font-black text-white">
             {loading ? '...' : patientCount}
           </p>
-          <p className={`text-xs mt-1 ${roleFilter === 'Patient' ? 'text-emerald-100' : 'text-text-muted'}`}>
+          <p className="text-xs mt-1 text-emerald-100">
             Registered patients
           </p>
         </div>
 
         <div
-          onClick={() => setRoleFilter('Inactive')}
-          className={`cursor-pointer p-4 rounded-2xl border transition-all duration-200 shadow-sm ${
-            roleFilter === 'Inactive'
-              ? 'bg-gradient-to-br from-slate-600 to-slate-800 text-white border-transparent shadow-slate-300 shadow-md scale-[1.02]'
-              : 'bg-surface border-border hover:border-slate-300 hover:shadow-md'
-          }`}
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-slate-600 to-slate-800 text-white border-transparent shadow-slate-300 shadow-md"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${roleFilter === 'Inactive' ? 'text-slate-200' : 'text-text-muted'}`}>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
               Archived
             </span>
-            <div className={`p-2 rounded-xl ${roleFilter === 'Inactive' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
+            <div className="p-2 rounded-xl bg-white/20 text-white">
               <Archive size={18} />
             </div>
           </div>
-          <p className={`text-2xl font-black ${roleFilter === 'Inactive' ? 'text-white' : 'text-text'}`}>
+          <p className="text-2xl font-black text-white">
             {loading ? '...' : inactiveCount}
           </p>
-          <p className={`text-xs mt-1 ${roleFilter === 'Inactive' ? 'text-slate-200' : 'text-text-muted'}`}>
+          <p className="text-xs mt-1 text-slate-200">
             Deactivated accounts
           </p>
         </div>

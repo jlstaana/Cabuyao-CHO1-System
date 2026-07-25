@@ -23,15 +23,32 @@ function isToday(value) {
   return value && new Date(value).toDateString() === todayKey;
 }
 
-function StatCard({ label, value, icon: Icon, color, bg, sub }) {
+function StatCard({ label, value, icon: Icon, color, sub }) {
+  const isIndigo = color?.includes('indigo');
+  const isEmerald = color?.includes('emerald');
+  const isRose = color?.includes('rose');
+  const isAmber = color?.includes('amber');
+  const isFuchsia = color?.includes('fuchsia');
+  const isSlate = color?.includes('slate');
+
+  const bgGradient = isIndigo ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-200' :
+                     isEmerald ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200' :
+                     isRose ? 'bg-gradient-to-br from-rose-500 to-pink-600 shadow-rose-200' :
+                     isAmber ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-200' :
+                     isFuchsia ? 'bg-gradient-to-br from-fuchsia-600 to-purple-700 shadow-fuchsia-200' :
+                     isSlate ? 'bg-gradient-to-br from-slate-600 to-slate-800 shadow-slate-300' :
+                     'bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200';
+
   return (
-    <div data-tour="page-stats" className="bg-surface rounded-2xl p-6 shadow-sm border border-border flex items-start gap-4 hover:shadow-md dark:hover:shadow-none transition-shadow">
-      <div className={`p-3 rounded-xl ${bg} ${color}`}><Icon size={24} /></div>
-      <div>
-        <p className="text-sm font-medium text-text-muted">{label}</p>
-        <h3 className="text-2xl font-bold text-text mt-1">{value}</h3>
-        {sub && <p className="text-xs text-text-light mt-1">{sub}</p>}
+    <div data-tour="page-stats" className={`p-5 rounded-2xl border shadow-md border-transparent ${bgGradient}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</span>
+        <div className="p-2 rounded-xl bg-white/20 text-white">
+          <Icon size={18} />
+        </div>
       </div>
+      <p className="text-3xl font-black mt-1 text-white">{value}</p>
+      {sub && <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">{sub}</p>}
     </div>
   );
 }
@@ -151,10 +168,10 @@ function AdminOverview({ user, stats }) {
         <PageTitle icon={ShieldCheck} title="Health Officer Dashboard" description={`Welcome, ${user?.name}. Here's the current system overview.`} iconClassName="bg-primary-bg text-primary-text" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Total Patients" value={formatNumber(summary.registered_patients)} icon={Users} color="text-indigo-500" bg="bg-indigo-100" sub="Registered individuals" />
-        <StatCard label="Total Doctors" value={formatNumber(summary.active_doctors)} icon={Activity} color="text-sky-500" bg="bg-primary-hover" sub="Active healthcare providers" />
-        <StatCard label="Total Consultations" value={formatNumber(summary.registered_patients)} icon={ClipboardList} color="text-emerald-500" bg="bg-emerald-100" sub="All-time verified registered cases" />
-        <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-rose-500" bg="bg-rose-100" sub="Generated prescriptions" />
+        <StatCard label="Total Patients" value={formatNumber(summary.registered_patients)} icon={Users} color="text-indigo-500" sub="Registered individuals" />
+        <StatCard label="Total Doctors" value={formatNumber(summary.active_doctors)} icon={Activity} color="text-sky-500" sub="Active healthcare providers" />
+        <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} icon={ClipboardList} color="text-emerald-500" sub="Year-to-date complete consultations" />
+        <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-rose-500" sub="Generated prescriptions" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <VolumePanel stats={stats} />
