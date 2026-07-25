@@ -203,9 +203,9 @@ export default function MedicalImages() {
       </header>
 
       {/* Upload form */}
-      <form data-tour="page-form" onSubmit={handleSubmit} className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-5">
-        <h2 className="font-semibold text-text flex items-center gap-2">
-          <ImagePlus size={18} className="text-sky-500" /> Upload New Image
+      <form data-tour="page-form" onSubmit={handleSubmit} className="rounded-2xl border border-transparent shadow-md bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200 p-6 space-y-5">
+        <h2 className="font-bold text-white flex items-center gap-2">
+          <ImagePlus size={18} /> Upload New Image
         </h2>
 
         {/* Drop zone */}
@@ -216,16 +216,16 @@ export default function MedicalImages() {
           onClick={() => fileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-200 ${
             dragOver
-              ? 'border-sky-400 bg-primary-bg'
-              : 'border-border bg-background hover:border-sky-300 hover:bg-primary-bg/50'
+              ? 'border-white bg-white/20'
+              : 'border-white/40 bg-white/10 hover:border-white/60 hover:bg-white/20'
           }`}
         >
-          <div className="w-14 h-14 rounded-2xl bg-primary-hover flex items-center justify-center">
-            <Upload size={28} className="text-sky-500" />
+          <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-white">
+            <Upload size={28} />
           </div>
-          <div className="text-center">
-            <p className="font-semibold text-slate-700">Drag &amp; drop images here</p>
-            <p className="text-sm text-text-light mt-1">or click to browse — JPG, PNG, WEBP, PDF, DOC up to {MAX_SIZE_MB} MB</p>
+          <div className="text-center text-white">
+            <p className="font-bold">Drag &amp; drop images here</p>
+            <p className="text-sm text-white/80 mt-1">or click to browse — JPG, PNG, WEBP, PDF, DOC up to {MAX_SIZE_MB} MB</p>
           </div>
           <input
             ref={fileInputRef}
@@ -241,22 +241,22 @@ export default function MedicalImages() {
         {previews.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {previews.map((p, idx) => (
-              <div key={idx} className="relative group rounded-xl overflow-hidden border border-border aspect-square bg-surface-hover/50">
+              <div key={idx} className="relative group rounded-xl overflow-hidden border border-white/20 aspect-square bg-white/10">
                 {p.url ? (
                   <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-background text-text-muted">
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-transparent text-white/80">
                     <FileText size={34} />
                     <span className="text-xs font-bold">{p.extension}</span>
                   </div>
                 )}
                 <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                   {p.url && (
-                    <button type="button" onClick={() => setLightbox(p.url)} className="p-1.5 bg-surface rounded-lg text-slate-700 hover:text-primary-text">
+                    <button type="button" onClick={() => setLightbox(p.url)} className="p-1.5 bg-white rounded-lg text-slate-700 hover:text-sky-600">
                       <Eye size={16} />
                     </button>
                   )}
-                  <button type="button" onClick={() => removePreview(idx)} className="p-1.5 bg-surface rounded-lg text-slate-700 hover:text-danger-text">
+                  <button type="button" onClick={() => removePreview(idx)} className="p-1.5 bg-white rounded-lg text-slate-700 hover:text-rose-600">
                     <X size={16} />
                   </button>
                 </div>
@@ -269,28 +269,28 @@ export default function MedicalImages() {
         {/* Metadata fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Image Type</label>
+            <label className="block text-xs font-bold text-white/90 mb-1 uppercase tracking-wide">Image Type</label>
             <select
               value={imageType}
               onChange={(e) => setImageType(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full px-4 py-2.5 rounded-xl border-none bg-white text-slate-900 outline-none focus:ring-4 focus:ring-white/30 shadow-inner font-medium text-sm"
             >
               {IMAGE_TYPES.map((t) => <option key={t}>{t}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Notes (optional)</label>
+            <label className="block text-xs font-bold text-white/90 mb-1 uppercase tracking-wide">Notes (optional)</label>
             <input
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Taken at Cabuyao District Hospital"
-              className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full px-4 py-2.5 rounded-xl border-none bg-white text-slate-900 placeholder-slate-400 outline-none focus:ring-4 focus:ring-white/30 shadow-inner font-medium text-sm"
             />
           </div>
         </div>
 
-        <div className="bg-primary-bg border border-sky-100 rounded-xl px-4 py-3 flex gap-3 text-sm text-primary-text">
+        <div className="bg-white/20 border border-white/30 rounded-xl px-4 py-3 flex gap-3 text-sm text-white">
           <Info size={16} className="shrink-0 mt-0.5" />
           <span>Uploaded images are securely stored in your personal medical gallery and visible to your doctors during consultations.</span>
         </div>
@@ -299,7 +299,7 @@ export default function MedicalImages() {
           <button
             type="submit"
             disabled={uploading || !previews.length}
-            className="flex items-center gap-2 bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-md shadow-sky-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-white text-sky-600 px-6 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
             {uploading ? 'Uploading...' : `Upload ${previews.length ? `(${previews.length})` : ''}`}

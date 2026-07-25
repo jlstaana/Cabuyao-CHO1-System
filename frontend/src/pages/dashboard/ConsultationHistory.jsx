@@ -87,17 +87,25 @@ export default function ConsultationHistory() {
       {/* Summary stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Sessions',     value: total,     color: 'text-primary-text',     bg: 'bg-primary-bg',     border: 'border-sky-100', sub: 'All logged consultations' },
-          { label: 'Completed',          value: completed, color: 'text-emerald-600', bg: 'bg-success-bg', border: 'border-success-border', sub: 'Successfully finished' },
-          { label: 'Cancelled',          value: history.filter(c => c.status === 'Cancelled').length, color: 'text-text-muted', bg: 'bg-background', border: 'border-border', sub: 'Discontinued requests' },
-          { label: 'Prescriptions',      value: history.filter(c => c.prescription_id).length, color: 'text-indigo-600', bg: 'bg-brand-bg', border: 'border-brand-border', sub: 'Received documents' },
-        ].map((s) => (
-          <div key={s.label} className={`rounded-2xl border p-5 ${s.bg} ${s.border}`}>
-            <p className={`text-3xl font-black ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-text-muted font-medium mt-1">{s.label}</p>
-            <p className="text-[10px] mt-0.5 opacity-60 uppercase tracking-wide text-slate-500">{s.sub}</p>
-          </div>
-        ))}
+          { label: 'Total Sessions',     value: total,     icon: ClipboardList, gradient: 'bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200', sub: 'All logged consultations' },
+          { label: 'Completed',          value: completed, icon: CheckCircle,   gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200', sub: 'Successfully finished' },
+          { label: 'Cancelled',          value: history.filter(c => c.status === 'Cancelled').length, icon: XCircle, gradient: 'bg-gradient-to-br from-slate-500 to-slate-700 shadow-slate-200', sub: 'Discontinued requests' },
+          { label: 'Prescriptions',      value: history.filter(c => c.prescription_id).length, icon: FileText, gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-200', sub: 'Received documents' },
+        ].map((s) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.label} className={`p-5 rounded-2xl border shadow-md border-transparent ${s.gradient}`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-white/80">{s.label}</span>
+                <div className="p-2 rounded-xl bg-white/20 text-white">
+                  <Icon size={18} />
+                </div>
+              </div>
+              <p className="text-3xl font-black mt-1 text-white">{s.value}</p>
+              <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">{s.sub}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Search + Filter */}
