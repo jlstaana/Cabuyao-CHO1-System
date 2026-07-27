@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
-import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar, Search, X, Filter, Activity, Pill, Stethoscope, Clock } from 'lucide-react';
+import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar, Search, X, Filter, Activity, Pill, Stethoscope } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 import Modal from '../../components/Modal';
 import useAuthStore from '../../store/useAuthStore';

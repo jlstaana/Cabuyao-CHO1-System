@@ -60,15 +60,8 @@ export default function ActivityLogs() {
   const [dateTo, setDateTo]     = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  if (!isAdminOrStaff) {
-    return (
-      <div className="p-8 text-center text-text-muted bg-surface rounded-2xl shadow-sm border border-border">
-        Access Denied. System Activity Logs are restricted to Health Officers and Administrative Staff.
-      </div>
-    );
-  }
-
   const fetchLogs = useCallback(async (params = {}) => {
+    if (!isAdminOrStaff) return;
     setLoading(true);
     try {
       const res = await api.get('/admin/activity-logs', {
@@ -81,13 +74,25 @@ export default function ActivityLogs() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, role, dateFrom, dateTo]);
+  }, [page, search, role, dateFrom, dateTo, isAdminOrStaff]);
 
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchLogs();
+  }, [fetchLogs]);
 
   const applyFilters = () => { setPage(1); fetchLogs({ page: 1 }); };
   const clearFilters = () => { setSearch(''); setRole(''); setDateFrom(''); setDateTo(''); setPage(1); };
   const hasActive = search || role || dateFrom || dateTo;
+
+  if (!isAdminOrStaff) {
+    return (
+      <div className="p-8 text-center text-text-muted bg-surface rounded-2xl shadow-sm border border-border">
+        Access Denied. System Activity Logs are restricted to Health Officers and Administrative Staff.
+      </div>
+    );
+  }
+
 
   return (
     <div className="animate-in fade-in duration-500">

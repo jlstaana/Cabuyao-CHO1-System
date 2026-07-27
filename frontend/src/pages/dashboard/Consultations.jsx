@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
 import {
   Video, Calendar, Clock, CheckCircle, XCircle,
-  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X, Filter,
+  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X,
 } from 'lucide-react';
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -61,7 +61,6 @@ const EMPTY_REQUEST_FORM = {
 
 function StatusPill({ status }) {
   const cfg = STATUS[status] || STATUS.Pending;
-  const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold ${cfg.pill}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />

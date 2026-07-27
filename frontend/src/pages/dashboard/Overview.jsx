@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import {
-  Activity, Users, FileText, TrendingUp, HeartPulse, Stethoscope,
+  Activity, Users, FileText, HeartPulse, Stethoscope,
   Clock, CheckCircle, Calendar, Pill, BarChart2, ShieldCheck,
   Video, ClipboardList, AlertCircle, ImagePlus,
 } from 'lucide-react';

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { BarChart2, Activity, Download, List, TrendingUp, FileText, Users, Filter, Calendar, X } from 'lucide-react';
+import { BarChart2, Activity, Download, TrendingUp, FileText, Users, Calendar, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
-import html2pdf from 'html2pdf.js';
+
 import choLogo from '../../assets/CHO1-Logo.png';
 
 const REPORT_TABS = [
@@ -69,7 +69,7 @@ function EmptyBlock({ label }) {
   );
 }
 
-function tableRows(rows, columns, isEven) {
+function tableRows(rows, columns) {
   if (!rows.length) {
     return `<tr><td colspan="${columns.length}" style="text-align:center;color:#94a3b8;font-style:italic;padding:16px 12px;border:1px solid #e2e8f0;">No records available</td></tr>`;
   }
@@ -258,7 +258,7 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
 export default function Analytics() {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('consultations');
-  const [logFilter, setLogFilter] = useState('all');
+
   const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(EMPTY_STATS);
@@ -287,9 +287,7 @@ export default function Analytics() {
   }
 
   const summary = stats.summary || {};
-  const filteredLogs = logFilter === 'all'
-    ? stats.recent_logs
-    : stats.recent_logs.filter((log) => (log.role || 'system').toLowerCase() === logFilter);
+
 
   const handleExportFullReport = async ({ dateFrom, dateTo } = {}) => {
     setShowExportModal(false);
@@ -380,8 +378,7 @@ export default function Analytics() {
   const lowStockMax = maxTotal(stats.low_stock_medicines || []);
   const currentMonth = new Date().toLocaleString('en-PH', { month: 'long' });
   const currentMonthYear = new Date().toLocaleString('en-PH', { month: 'long', year: 'numeric' });
-  // Doctors who have handled consultations = active today
-  const activeDoctorNames = stats.consultations_by_doctor.map((d) => d.name).filter(Boolean);
+
   const serviceRows = [
     { name: 'Registered Patients', total: summary.registered_patients || 0 },
     { name: 'Active Doctors', total: summary.active_doctors || 0 },

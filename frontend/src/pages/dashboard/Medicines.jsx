@@ -27,7 +27,7 @@ function BatchManager({ medicine, fetchMedicines }) {
       setNewBatch({ batch_number: '', stock: 0, expiration_date: '' });
       toast.success('Batch added');
       fetchMedicines(); // update main list total_stock
-    } catch (err) {
+    } catch {
       toast.error('Failed to add batch');
     }
   };
@@ -211,7 +211,6 @@ export default function Medicines() {
                 );
               })}
             </select>
-          </div>
           </div>
         </div>
         {!loading && (

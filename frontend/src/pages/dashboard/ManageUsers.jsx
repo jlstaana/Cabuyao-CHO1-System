@@ -145,14 +145,6 @@ export default function ManageUsers() {
   const patientCount = users.filter((u) => u.role === 'Patient').length;
   const inactiveCount = users.filter((u) => !u.is_active).length;
 
-  const roleCounts = {
-    All: totalCount,
-    Admin: adminCount,
-    Doctor: doctorCount,
-    Staff: staffCount,
-    Patient: patientCount,
-    Inactive: inactiveCount,
-  };
 
   const filtered = users.filter((u) => {
     const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase());

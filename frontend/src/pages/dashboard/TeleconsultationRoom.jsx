@@ -6,7 +6,7 @@ import Modal from '../../components/Modal';
 import { 
   Video, Mic, MicOff, VideoOff, PhoneOff, Activity, FileText, Pill, 
   Plus, CheckCircle, Wifi, MessageCircle, Send, PenLine, Eraser, 
-  Sparkles, MonitorUp, Sliders, X, Clock, LayoutGrid
+  Sparkles, MonitorUp, X, Clock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -106,9 +106,7 @@ export default function TeleconsultationRoom() {
   const remoteVideoRef = useRef(null);
   const [medicines, setMedicines] = useState([]);
   const [prescriptionItems, setPrescriptionItems] = useState([]);
-  const [pastPrescriptions, setPastPrescriptions] = useState([]);
   const [videoQuality, setVideoQuality] = useState(getAdaptiveVideoQuality);
-  const [noiseCancellationActive, setNoiseCancellationActive] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatMessage, setChatMessage] = useState('');
   const [chatSending, setChatSending] = useState(false);
@@ -123,7 +121,6 @@ export default function TeleconsultationRoom() {
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const animationFrameRef = useRef(null);
   const streamRef = useRef(null);
   const audioContextRef = useRef(null);
   const noiseGateFrameRef = useRef(null);
@@ -152,6 +149,7 @@ export default function TeleconsultationRoom() {
 
   useEffect(() => {
     if (!callActive) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCallDuration(0);
       return;
     }
@@ -201,7 +199,7 @@ export default function TeleconsultationRoom() {
               if (currentPreset.type === 'image' && bgImgRef.current && bgImgRef.current.complete) {
                 try {
                   ctx.drawImage(bgImgRef.current, 0, 0, width, height);
-                } catch(e) {
+                } catch {
                   // Fallback if image draw fails (CORS)
                 }
               } else if (currentPreset.type === 'blur') {
@@ -355,13 +353,11 @@ export default function TeleconsultationRoom() {
       audioContextRef.current.close().catch(() => {});
       audioContextRef.current = null;
     }
-    setNoiseCancellationActive(false);
   }, []);
 
   const enhanceAudioStream = useCallback((stream) => {
     const audioTrack = stream.getAudioTracks()[0];
     if (!audioTrack || !window.AudioContext) {
-      setNoiseCancellationActive(Boolean(audioTrack));
       return stream;
     }
 
@@ -405,14 +401,12 @@ export default function TeleconsultationRoom() {
 
       updateGate();
       audioContextRef.current = audioContext;
-      setNoiseCancellationActive(true);
 
       return new MediaStream([
         ...stream.getVideoTracks(),
         ...destination.stream.getAudioTracks(),
       ]);
     } catch {
-      setNoiseCancellationActive(Boolean(audioTrack));
       return stream;
     }
   }, [stopAudioProcessing]);
@@ -445,11 +439,8 @@ export default function TeleconsultationRoom() {
         const current = res.data.find(c => c.id === parseInt(id));
         if (current) {
           setConsultation(current);
-          if (user?.role === 'Doctor' && current.patient_id) {
-             api.get(`/patients/${current.patient_id}/prescriptions`)
-               .then(pRes => setPastPrescriptions(pRes.data || []))
-               .catch(() => {});
-          }
+          // past prescriptions removed
+
         }
       } catch {
         toast.error("Could not load consultation context");
@@ -818,21 +809,6 @@ export default function TeleconsultationRoom() {
     setPrescriptionItems([...prescriptionItems, { medicine_id: '', dosage: '', frequency: '' }]);
   };
 
-  const copyPrescriptionItems = (items) => {
-    const newItems = items.map(item => ({
-      medicine_id: String(item.medicine_id),
-      dosage: item.dosage || '',
-      frequency: item.frequency || '',
-    }));
-    if (prescriptionItems.length === 1 && !prescriptionItems[0].medicine_id) {
-      setPrescriptionItems(newItems);
-    } else if (prescriptionItems.length === 0) {
-      setPrescriptionItems(newItems);
-    } else {
-      setPrescriptionItems([...prescriptionItems, ...newItems]);
-    }
-    toast.success('Copied to current prescription list');
-  };
 
   const sendChatMessage = async (e) => {
     e.preventDefault();
