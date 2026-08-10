@@ -16,7 +16,7 @@ const STATUS = {
   Pending:   { pill: 'bg-amber-50 text-amber-700 border-amber-200 border shadow-sm',   dot: 'bg-amber-500',   icon: Clock },
   Scheduled: { pill: 'bg-sky-50 text-sky-700 border-sky-200 border shadow-sm',       dot: 'bg-sky-500',     icon: Calendar },
   Completed: { pill: 'bg-emerald-50 text-emerald-700 border-emerald-200 border shadow-sm', dot: 'bg-emerald-500', icon: CheckCircle },
-  Cancelled: { pill: 'bg-slate-50 text-slate-600 border-slate-200 border shadow-sm',   dot: 'bg-slate-400',   icon: XCircle },
+  Cancelled: { pill: 'bg-slate-50 text-text-muted border-slate-200 border shadow-sm',   dot: 'bg-slate-400',   icon: XCircle },
 };
 
 const TAB_ICON = {
@@ -413,7 +413,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
             <button
               data-tour="page-primary-action"
               onClick={onOpenAvailability}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-surface/80 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-surface transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-surface/80 px-3 py-1.5 text-xs font-bold text-text-muted hover:bg-surface transition-colors"
             >
               <Settings size={13} /> Availability Settings
             </button>
@@ -1134,7 +1134,7 @@ export default function Consultations() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Doctor Type</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Doctor Type</label>
             <div className="grid grid-cols-2 gap-2 rounded-xl bg-surface-hover/50 p-1">
               {['Resident', 'Visiting'].map((type) => (
                 <button
@@ -1144,7 +1144,7 @@ export default function Consultations() {
                   className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                     availabilityForm.doctor_type === type
                       ? 'bg-surface text-primary-text shadow-sm'
-                      : 'text-text-muted hover:text-slate-700'
+                      : 'text-text-muted hover:text-text-muted'
                   }`}
                 >
                   {type}
@@ -1160,7 +1160,7 @@ export default function Consultations() {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-slate-700">Schedule Entries</p>
+              <p className="text-sm font-semibold text-text-muted">Schedule Entries</p>
               <button
                 type="button"
                 onClick={addAvailabilitySlot}
@@ -1223,7 +1223,7 @@ export default function Consultations() {
             Enter your consultation details, vital signs, and preferred schedule. The system will schedule an available doctor or queue the request for coordination.
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Needed Specialization</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Needed Specialization</label>
             <select
               required
               value={requestForm.requested_specialization}
@@ -1252,7 +1252,7 @@ export default function Consultations() {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Consultation Details</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Consultation Details</label>
             <textarea
               required
               rows={3}
@@ -1263,7 +1263,7 @@ export default function Consultations() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Additional Notes</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Additional Notes</label>
             <textarea
               rows={2}
               value={requestForm.notes}
@@ -1273,7 +1273,7 @@ export default function Consultations() {
             />
           </div>
           <div>
-            <p className="block text-sm font-medium text-slate-700 mb-2">Vital Signs</p>
+            <p className="block text-sm font-medium text-text-muted mb-2">Vital Signs</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input type="text" value={requestForm.vitals.blood_pressure} onChange={e => updateRequestVital('blood_pressure', e.target.value)} placeholder="Blood pressure, e.g. 120/80" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
               <input type="text" value={requestForm.vitals.heart_rate} onChange={e => updateRequestVital('heart_rate', e.target.value)} placeholder="Heart rate, e.g. 72 bpm" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
@@ -1306,7 +1306,7 @@ export default function Consultations() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Preferred Date &amp; Time</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Preferred Date &amp; Time</label>
             <input
               required
               type="datetime-local"
@@ -1431,7 +1431,7 @@ export default function Consultations() {
             </div>
             {(user?.role === 'Admin' || user?.role === 'Staff') && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Assigned Doctor</label>
+                <label className="block text-sm font-medium text-text-muted mb-1">Assigned Doctor</label>
                 <select required value={rescheduleForm.doctor_id} onChange={e => setRescheduleForm({ ...rescheduleForm, doctor_id: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none">
                   <option value="">Select a doctor...</option>
@@ -1521,7 +1521,7 @@ export default function Consultations() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">New Date &amp; Time</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">New Date &amp; Time</label>
               <input required type="datetime-local" value={rescheduleForm.scheduled_at}
                 onChange={e => setRescheduleForm({ ...rescheduleForm, scheduled_at: e.target.value })}
                 className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
@@ -1538,3 +1538,4 @@ export default function Consultations() {
     </div>
   );
 }
+

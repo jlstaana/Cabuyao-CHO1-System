@@ -86,7 +86,7 @@ class AuthController extends Controller {
         Patient::create(['user_id' => $user->id, 'dob' => $request->dob, 'contact_no' => $request->contact_no, 'address' => $request->address ?? '', 'category' => $request->category]);
         $code = $this->createVerificationCode($user);
         $this->sendVerificationCode($user, $code);
-        AuditLog::create(['user_id' => $user->id, 'action' => 'Register', 'ip_address' => $request->ip()]);
+        AuditLog::create(['user_id' => $user->id, 'action' => 'Register', 'description' => 'User registered a new patient account.', 'ip_address' => $request->ip()]);
         return response()->json([
             'message' => 'Registration submitted. Please enter the verification code sent to your email.',
             'email' => $user->email,
@@ -114,7 +114,7 @@ class AuthController extends Controller {
             'email_verification_code_hash' => null,
             'email_verification_code_expires_at' => null,
         ]);
-        AuditLog::create(['user_id' => $user->id, 'action' => 'Verify Registration', 'ip_address' => $request->ip()]);
+        AuditLog::create(['user_id' => $user->id, 'action' => 'Verify Registration', 'description' => 'User verified their email address.', 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Account verified successfully. You can now log in.']);
     }
     public function resendVerificationCode(Request $request) {
@@ -140,7 +140,7 @@ class AuthController extends Controller {
         if (!$user || !Hash::check($request->password, $user->password) || !$user->is_active) {
             throw ValidationException::withMessages(['email' => ['Invalid credentials or inactive account.']]);
         }
-        AuditLog::create(['user_id' => $user->id, 'action' => 'Login', 'ip_address' => $request->ip()]);
+        AuditLog::create(['user_id' => $user->id, 'action' => 'Login', 'description' => 'User logged into the system.', 'ip_address' => $request->ip()]);
         return response()->json(['token' => $user->createToken('auth')->plainTextToken, 'user' => $user]);
     }
     public function forgotPassword(Request $request) {
@@ -175,12 +175,12 @@ class AuthController extends Controller {
         }
         $user->update(['password' => Hash::make($request->password), 'first_login' => false]);
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-        AuditLog::create(['user_id' => $user->id, 'action' => 'Reset Password', 'ip_address' => $request->ip()]);
+        AuditLog::create(['user_id' => $user->id, 'action' => 'Reset Password', 'description' => 'User reset their password using an email code.', 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Password reset successfully. You can now log in.']);
     }
     public function logout(Request $request) {
         $request->user()->currentAccessToken()->delete();
-        AuditLog::create(['user_id' => $request->user()->id, 'action' => 'Logout', 'ip_address' => $request->ip()]);
+        AuditLog::create(['user_id' => $request->user()->id, 'action' => 'Logout', 'description' => 'User logged out of the system.', 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Logged out']);
     }
     public function changePassword(Request $request) {
@@ -188,14 +188,14 @@ class AuthController extends Controller {
         $user = $request->user();
         if (!Hash::check($request->old_password, $user->password)) return response()->json(['message' => 'Invalid old password'], 400);
         $user->update(['password' => Hash::make($request->new_password), 'first_login' => false]);
-        AuditLog::create(['user_id' => $user->id, 'action' => 'Change Password', 'ip_address' => $request->ip()]);
+        AuditLog::create(['user_id' => $user->id, 'action' => 'Change Password', 'description' => 'User changed their account password.', 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Password changed successfully']);
     }
 
     public function completeOnboarding(Request $request) {
         $user = $request->user();
         $user->update(['first_login' => false]);
-        AuditLog::create(['user_id' => $user->id, 'action' => 'Complete Onboarding Tutorial', 'ip_address' => $request->ip()]);
+        AuditLog::create(['user_id' => $user->id, 'action' => 'Complete Onboarding Tutorial', 'description' => 'User completed the initial onboarding tutorial.', 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Onboarding completed', 'user' => $user->fresh()]);
     }
 
@@ -209,7 +209,7 @@ class AuthController extends Controller {
         if ($request->hasFile('profile_picture')) {
             $path = $request->file('profile_picture')->store('profiles', 'public');
             $user->update(['profile_picture' => $path]);
-            AuditLog::create(['user_id' => $user->id, 'action' => 'Update Profile Picture', 'ip_address' => $request->ip()]);
+            AuditLog::create(['user_id' => $user->id, 'action' => 'Update Profile Picture', 'description' => 'User uploaded a new profile picture.', 'ip_address' => $request->ip()]);
         }
 
         return response()->json([

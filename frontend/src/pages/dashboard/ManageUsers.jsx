@@ -18,7 +18,7 @@ const ROLE_STYLES = {
   Doctor:  'bg-primary-hover text-primary-text',
   Staff:   'bg-amber-100 text-warning-text',
   Visitor: 'bg-purple-100 text-purple-700',
-  Patient: 'bg-surface-hover/50 text-slate-700',
+  Patient: 'bg-surface-hover/50 text-text-muted',
 };
 
 const SPECIALIZATION_OPTIONS = [
@@ -447,7 +447,7 @@ export default function ManageUsers() {
                 key={t}
                 type="button"
                 onClick={() => setFormData(f => ({ ...f, access_type: t }))}
-                className={`flex-1 py-1.5 rounded-lg text-sm font-semibold capitalize transition-all ${formData.access_type === t ? 'bg-surface shadow text-primary-text' : 'text-text-muted hover:text-slate-700'}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-semibold capitalize transition-all ${formData.access_type === t ? 'bg-surface shadow text-primary-text' : 'text-text-muted hover:text-text-muted'}`}
               >
                 {t === 'visiting' ? '🩺 Visiting Doctor' : '🏥 Permanent Staff'}
               </button>
@@ -455,17 +455,17 @@ export default function ManageUsers() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Full Name</label>
             <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. Dr. Maria Santos or Nurse Juan Dela Cruz" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Email Address</label>
             <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. doctor.santos@cabuyao.gov.ph" />
           </div>
 
           {formData.access_type === 'permanent' && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Assign Role</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Assign Role</label>
               <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface outline-none">
                 <option value="Doctor">Doctor</option>
                 <option value="Staff">Staff</option>
@@ -475,7 +475,7 @@ export default function ManageUsers() {
 
           {(formData.role === 'Doctor' || formData.access_type === 'visiting') && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Specialization</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Specialization</label>
               <select required value={formData.specialization} onChange={e => setFormData({...formData, specialization: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none">
                 {SPECIALIZATION_OPTIONS.map((specialization) => (
                   <option key={specialization} value={specialization}>{specialization}</option>
@@ -486,7 +486,7 @@ export default function ManageUsers() {
 
           {(formData.role === 'Doctor' || formData.access_type === 'visiting') && (
             <div className="space-y-3 rounded-xl border border-border bg-background p-4">
-              <label className="block text-sm font-semibold text-slate-700">Consultation Schedule</label>
+              <label className="block text-sm font-semibold text-text-muted">Consultation Schedule</label>
               <div className="flex flex-wrap gap-2">
                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
                   <button
@@ -518,14 +518,14 @@ export default function ManageUsers() {
 
           {formData.role === 'Staff' && formData.access_type === 'permanent' && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Department</label>
               <input required value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. Outpatient, Pharmacy" />
             </div>
           )}
 
           {formData.access_type === 'visiting' && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Access Expires On</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Access Expires On</label>
               <input type="date" value={formData.expires_at} onChange={e => setFormData({...formData, expires_at: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-purple-500/20 outline-none" />
               <p className="text-xs text-text-light mt-1">Leave blank for indefinite visiting access.</p>
             </div>
@@ -608,3 +608,4 @@ export default function ManageUsers() {
     </div>
   );
 }
+

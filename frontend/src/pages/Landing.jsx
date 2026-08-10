@@ -103,7 +103,7 @@ export default function Landing() {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:text-zinc-400 dark:hover:bg-zinc-800/50 transition-colors mr-1"
+              className="p-2 rounded-full text-text-muted hover:bg-slate-100 dark:hover:text-text-muted dark:hover:bg-zinc-800/50 transition-colors mr-1"
               aria-label="Toggle dark mode"
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
@@ -186,7 +186,7 @@ export default function Landing() {
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 dark:bg-zinc-100 text-sm font-bold text-white dark:text-zinc-900">
                     {index + 1}
                   </div>
-                  <p className="pt-1 text-base font-medium leading-7 text-slate-700 dark:text-zinc-300">{step}</p>
+                  <p className="pt-1 text-base font-medium leading-7 text-text-muted dark:text-zinc-300">{step}</p>
                 </div>
               ))}
             </div>
@@ -245,3 +245,4 @@ export default function Landing() {
     </div>
   );
 }
+

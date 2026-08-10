@@ -891,7 +891,7 @@ export default function TeleconsultationRoom() {
                 <Video size={40} />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Ready to join consultation?</h2>
-              <p className="text-slate-400 text-sm mb-6">
+              <p className="text-text-muted text-sm mb-6">
                 Ensure your camera and microphone are connected before entering the meeting.
               </p>
               <button 
@@ -913,12 +913,12 @@ export default function TeleconsultationRoom() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-900/90 p-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 mb-3 animate-pulse">
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-text-muted bg-slate-900/90 p-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-text-muted mb-3 animate-pulse">
                     <Video size={28} />
                   </div>
                   <p className="text-base font-semibold text-slate-200">Waiting for participant to join...</p>
-                  <p className="text-xs text-slate-500 mt-1">The video stream will connect automatically as soon as both participants enter.</p>
+                  <p className="text-xs text-text-muted mt-1">The video stream will connect automatically as soon as both participants enter.</p>
                 </div>
               )}
 
@@ -959,7 +959,7 @@ export default function TeleconsultationRoom() {
               </div>
 
               {!cameraActive && (
-                <div className="absolute bottom-6 right-6 w-36 sm:w-48 h-48 sm:h-64 bg-slate-900 rounded-2xl border-2 border-white/20 shadow-2xl flex flex-col items-center justify-center text-slate-400 text-xs text-center p-3">
+                <div className="absolute bottom-6 right-6 w-36 sm:w-48 h-48 sm:h-64 bg-slate-900 rounded-2xl border-2 border-white/20 shadow-2xl flex flex-col items-center justify-center text-text-muted text-xs text-center p-3">
                   <VideoOff size={24} className="mb-2 text-rose-400" />
                   <span>Camera Disabled</span>
                 </div>
@@ -970,7 +970,7 @@ export default function TeleconsultationRoom() {
 
         {/* ── Google Meet Floating Control Bar ───────────────────────────────── */}
         <div data-tour="page-actions" className="h-20 bg-slate-950 border-t border-slate-800/80 flex items-center justify-between px-4 sm:px-8 z-30">
-          <div className="hidden sm:flex items-center text-xs font-semibold text-slate-400 gap-2">
+          <div className="hidden sm:flex items-center text-xs font-semibold text-text-muted gap-2">
             <span>Cabuyao CHO Telehealth</span>
           </div>
 
@@ -1069,7 +1069,7 @@ export default function TeleconsultationRoom() {
                   const isMine = message.sender_id === user?.id;
                   return (
                     <div key={message.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${isMine ? 'bg-teal-500 text-white rounded-br-md' : 'bg-surface text-slate-700 border border-border rounded-bl-md'}`}>
+                      <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${isMine ? 'bg-teal-500 text-white rounded-br-md' : 'bg-surface text-text-muted border border-border rounded-bl-md'}`}>
                         <div className="text-[10px] opacity-75 font-semibold mb-0.5">{message.sender?.name || (isMine ? 'You' : 'User')}</div>
                         <p className="whitespace-pre-wrap leading-relaxed">{message.message}</p>
                       </div>
@@ -1139,7 +1139,7 @@ export default function TeleconsultationRoom() {
                   
                   <div className="border border-border rounded-xl p-3 bg-background flex-1 overflow-y-auto">
                     <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm font-semibold text-slate-700 flex items-center gap-1"><Pill size={14}/> Prescribe Medicines</span>
+                      <span className="text-sm font-semibold text-text-muted flex items-center gap-1"><Pill size={14}/> Prescribe Medicines</span>
                       <button type="button" onClick={addPrescriptionItem} className="text-xs bg-emerald-100 text-success-text px-2 py-1 rounded hover:bg-emerald-200 font-bold flex items-center"><Plus size={12}/> Add</button>
                     </div>
                     
@@ -1174,7 +1174,7 @@ export default function TeleconsultationRoom() {
                   {prescriptionItems.length > 0 && (
                     <div className="border border-border rounded-xl bg-surface p-4">
                       <div className="flex items-center justify-between gap-3 mb-3">
-                        <span className="text-sm font-semibold text-slate-700 flex items-center gap-1"><PenLine size={14}/> Doctor E-Signature</span>
+                        <span className="text-sm font-semibold text-text-muted flex items-center gap-1"><PenLine size={14}/> Doctor E-Signature</span>
                         <button type="button" onClick={clearSignature} className="text-xs bg-surface-hover/50 text-text-muted px-2 py-1 rounded hover:bg-slate-200 font-bold flex items-center gap-1">
                           <Eraser size={12}/> Clear
                         </button>
@@ -1259,3 +1259,4 @@ export default function TeleconsultationRoom() {
     </div>
   );
 }
+

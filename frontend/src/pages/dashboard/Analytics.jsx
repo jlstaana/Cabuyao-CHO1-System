@@ -56,7 +56,7 @@ function BarRow({ label, value, max, color = 'bg-sky-500' }) {
       <div className="flex-1 h-2.5 bg-surface-hover/50 rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${width}%` }} />
       </div>
-      <span className="text-xs font-semibold text-slate-700 w-10 text-right">{formatNumber(value)}</span>
+      <span className="text-xs font-semibold text-text-muted w-10 text-right">{formatNumber(value)}</span>
     </div>
   );
 }
@@ -636,3 +636,4 @@ export default function Analytics() {
     </div>
   );
 }
+

@@ -94,7 +94,7 @@ export default function Login() {
         </div>
         <form onSubmit={handleForgotPassword} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Email Address</label>
             <input
               type="email"
               value={resetEmail}
@@ -129,7 +129,7 @@ export default function Login() {
         </div>
         <form onSubmit={handleResetPassword} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Reset Code</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Reset Code</label>
             <input
               value={resetCode}
               onChange={(event) => setResetCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -142,7 +142,7 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">New Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -152,13 +152,13 @@ export default function Login() {
                 required
                 minLength="8"
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-muted">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Confirm New Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -168,7 +168,7 @@ export default function Login() {
                 required
                 minLength="8"
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-muted">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -181,7 +181,7 @@ export default function Login() {
           <button type="button" onClick={handleForgotPassword} disabled={loading} className="font-semibold text-primary-text hover:underline disabled:opacity-60">
             Resend reset code
           </button>
-          <button type="button" onClick={() => setMode('login')} className="text-text-muted hover:text-slate-700">
+          <button type="button" onClick={() => setMode('login')} className="text-text-muted hover:text-text-muted">
             Back to sign in
           </button>
         </div>
@@ -199,7 +199,7 @@ export default function Login() {
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">Email Address</label>
           <input 
             {...register('email', { required: true })} 
             className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
@@ -208,7 +208,7 @@ export default function Login() {
         </div>
         <div>
           <div className="mb-1 flex items-center justify-between gap-3">
-            <label className="block text-sm font-medium text-slate-700">Password</label>
+            <label className="block text-sm font-medium text-text-muted">Password</label>
             <button type="button" onClick={() => setMode('forgot')} className="text-xs font-semibold text-primary-text hover:underline">
               Forgot password?
             </button>
@@ -220,7 +220,7 @@ export default function Login() {
               className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
               placeholder="password"
             />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-muted">
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
@@ -238,3 +238,4 @@ export default function Login() {
     </div>
   );
 }
+

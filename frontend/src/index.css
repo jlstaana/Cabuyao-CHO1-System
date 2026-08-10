@@ -49,16 +49,16 @@
 
 .dark {
   /* Structural Colors */
-  --color-background: #09090b;
-  --color-surface: #18181b;
-  --color-surface-muted: rgba(39, 39, 42, 0.5);
-  --color-surface-hover: #27272a;
-  --color-border: #27272a;
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-muted: rgba(30, 41, 59, 0.5);
+  --color-surface-hover: #334155;
+  --color-border: #334155;
   
   /* Text Colors */
-  --color-text: #fafafa;
-  --color-text-muted: #a1a1aa;
-  --color-text-light: #71717a;
+  --color-text: #f8fafc;
+  --color-text-muted: #cbd5e1;
+  --color-text-light: #94a3b8;
 
   /* Status Colors (Dark Mode) */
   --color-primary-text: #38bdf8;

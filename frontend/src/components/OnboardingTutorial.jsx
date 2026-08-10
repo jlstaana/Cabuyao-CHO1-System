@@ -532,7 +532,7 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
             <button
               type="button"
               onClick={closeReplay}
-              className="rounded-full p-2 text-text-light transition-colors hover:bg-surface-hover hover:text-slate-700"
+              className="rounded-full p-2 text-text-light transition-colors hover:bg-surface-hover hover:text-text-muted"
               aria-label="Close tutorial"
             >
               <X size={18} />
@@ -541,7 +541,7 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
         </div>
 
         <div className="px-5 py-4">
-          <p className="text-sm leading-6 text-slate-700">{activeStep.body}</p>
+          <p className="text-sm leading-6 text-text-muted">{activeStep.body}</p>
           <div className="mt-4 rounded-xl border border-sky-100 bg-primary-bg p-3">
             <p className="text-xs font-bold uppercase tracking-wide text-primary-text">What to do</p>
             <p className="mt-1 text-sm leading-5 text-sky-900">{activeStep.action}</p>
@@ -594,3 +594,4 @@ export default function OnboardingTutorial({ user, pathname, navigate, open, for
     </div>
   );
 }
+

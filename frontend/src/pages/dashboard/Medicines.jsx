@@ -70,15 +70,15 @@ function BatchManager({ medicine, fetchMedicines }) {
         <form onSubmit={addBatch} className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Batch No.</label>
+              <label className="block text-xs font-medium text-text-muted mb-1">Batch No.</label>
               <input required type="text" value={newBatch.batch_number} onChange={e=>setNewBatch({...newBatch, batch_number: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface" placeholder="e.g. BATCH-01" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Stock</label>
+              <label className="block text-xs font-medium text-text-muted mb-1">Stock</label>
               <input required type="number" min="1" value={newBatch.stock} onChange={e=>setNewBatch({...newBatch, stock: parseInt(e.target.value) || 0})} className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Exp Date</label>
+              <label className="block text-xs font-medium text-text-muted mb-1">Exp Date</label>
               <input required type="date" value={newBatch.expiration_date} onChange={e=>setNewBatch({...newBatch, expiration_date: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface" />
             </div>
           </div>
@@ -355,41 +355,41 @@ export default function Medicines() {
         <form data-tour="page-form" onSubmit={handleAdd} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Brand Name</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Brand Name</label>
               <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Generic Name</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Generic Name</label>
               <input value={formData.generic_name} onChange={e => setFormData({ ...formData, generic_name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Category</label>
             <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none bg-surface">
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Unit/Dosage Form</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Unit/Dosage Form</label>
             <input value={formData.dosage_form} onChange={e => setFormData({ ...formData, dosage_form: e.target.value })} placeholder="e.g. tablets, boxes, bottles" className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Description (optional)</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Description (optional)</label>
             <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
           <div className="border-t border-border pt-4 mt-4">
             <h4 className="text-sm font-semibold text-text mb-3">Initial Batch (Optional)</h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Batch No.</label>
+                <label className="block text-xs font-medium text-text-muted mb-1">Batch No.</label>
                 <input type="text" value={formData.batch_number} onChange={e => setFormData({ ...formData, batch_number: e.target.value })} placeholder="e.g. BATCH-01" className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Initial Stock</label>
+                <label className="block text-xs font-medium text-text-muted mb-1">Initial Stock</label>
                 <input type="number" min="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Expiration Date</label>
+                <label className="block text-xs font-medium text-text-muted mb-1">Expiration Date</label>
                 <input type="date" value={formData.expiration_date} onChange={e => setFormData({ ...formData, expiration_date: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
               </div>
             </div>
@@ -407,26 +407,26 @@ export default function Medicines() {
           <form onSubmit={handleEdit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Brand Name</label>
+                <label className="block text-sm font-medium text-text-muted mb-1">Brand Name</label>
                 <input required value={editTarget.name} onChange={e => setEditTarget({ ...editTarget, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Generic Name</label>
+                <label className="block text-sm font-medium text-text-muted mb-1">Generic Name</label>
                 <input value={editTarget.generic_name || ''} onChange={e => setEditTarget({ ...editTarget, generic_name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Category</label>
               <select value={editTarget.category} onChange={e => setEditTarget({ ...editTarget, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none bg-surface">
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Unit/Dosage Form</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Unit/Dosage Form</label>
               <input value={editTarget.dosage_form || ''} onChange={e => setEditTarget({ ...editTarget, dosage_form: e.target.value })} placeholder="e.g. tablets, boxes, bottles" className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Description</label>
               <input value={editTarget.description || ''} onChange={e => setEditTarget({ ...editTarget, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
             </div>
             <p className="text-xs text-text-light italic">Note: To edit stock and expiration dates, please use the "Manage Batches" button.</p>
@@ -447,3 +447,4 @@ export default function Medicines() {
     </div>
   );
 }
+

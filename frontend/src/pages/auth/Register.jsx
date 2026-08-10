@@ -90,7 +90,7 @@ export default function Register() {
         </div>
         <form onSubmit={handleVerify} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Verification Code</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Verification Code</label>
             <input
               value={code}
               onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -113,7 +113,7 @@ export default function Register() {
           <button type="button" onClick={handleResend} disabled={resending} className="font-semibold text-primary-text hover:underline disabled:opacity-60">
             {resending ? 'Sending new code...' : 'Resend verification code'}
           </button>
-          <button type="button" onClick={() => setPendingEmail('')} className="text-text-muted hover:text-slate-700">
+          <button type="button" onClick={() => setPendingEmail('')} className="text-text-muted hover:text-text-muted">
             Back to registration
           </button>
         </div>
@@ -132,7 +132,7 @@ export default function Register() {
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">Full Name</label>
           <input 
             {...register('name', { required: true })} 
             placeholder="e.g. Juan Dela Cruz"
@@ -140,7 +140,7 @@ export default function Register() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">Email Address</label>
           <input 
             type="email"
             {...register('email', { required: true })} 
@@ -150,16 +150,16 @@ export default function Register() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-             <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+             <label className="block text-sm font-medium text-text-muted mb-1">Date of Birth</label>
              <input type="date" {...register('dob', { required: true })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-background focus:bg-surface" />
           </div>
           <div>
-             <label className="block text-sm font-medium text-slate-700 mb-1">Contact No.</label>
+             <label className="block text-sm font-medium text-text-muted mb-1">Contact No.</label>
              <input {...register('contact_no', { required: true })} placeholder="e.g. 09171234567" className="w-full px-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-background focus:bg-surface" />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">Password</label>
           <div className="relative">
             <input 
               type={showPassword ? "text" : "password"}
@@ -167,7 +167,7 @@ export default function Register() {
               placeholder="e.g. password123 (Min. 8 chars)"
               className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all bg-background focus:bg-surface"
             />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-muted">
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
@@ -225,3 +225,4 @@ export default function Register() {
     </div>
   );
 }
+

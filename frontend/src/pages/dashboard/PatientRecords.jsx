@@ -88,13 +88,13 @@ const STATUS_STYLE = {
   Completed:  { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
   Scheduled:  { bg: 'bg-sky-50 text-sky-700 border-sky-200', dot: 'bg-sky-500' },
   Pending:    { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  Cancelled:  { bg: 'bg-slate-50 text-slate-600 border-slate-200', dot: 'bg-slate-400' },
+  Cancelled:  { bg: 'bg-slate-50 text-text-muted border-slate-200', dot: 'bg-slate-400' },
 };
 
 const IMAGE_STATUS_STYLE = {
   Reviewed:       { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
   'Pending Review': { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  Uploaded:       { bg: 'bg-slate-50 text-slate-600 border-slate-200', dot: 'bg-slate-400' },
+  Uploaded:       { bg: 'bg-slate-50 text-text-muted border-slate-200', dot: 'bg-slate-400' },
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ function InfoChip({ icon: Icon, label, value }) {
       <Icon size={14} className="text-text-light mt-0.5 shrink-0" />
       <div>
         <p className="text-[10px] font-semibold text-text-light uppercase tracking-wide">{label}</p>
-        <p className="text-sm text-slate-700 font-medium">{value}</p>
+        <p className="text-sm text-text-muted font-medium">{value}</p>
       </div>
     </div>
   );
@@ -437,7 +437,7 @@ export default function PatientRecords() {
                           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
                             tab === key
                               ? 'bg-sky-600 text-white shadow-sm'
-                              : 'text-text-muted hover:bg-surface-hover hover:text-slate-700'
+                              : 'text-text-muted hover:bg-surface-hover hover:text-text-muted'
                           }`}
                         >
                           <Icon size={14} /> {label}
@@ -646,25 +646,25 @@ export default function PatientRecords() {
               Edit permitted patient information. Invalid changes are rejected and the previous record is kept.
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Full Name</label>
               <input required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                <label className="block text-sm font-medium text-text-muted mb-1">Date of Birth</label>
                 <input type="date" value={editForm.dob} onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Contact No.</label>
+                <label className="block text-sm font-medium text-text-muted mb-1">Contact No.</label>
                 <input value={editForm.contact_no} onChange={(e) => setEditForm({ ...editForm, contact_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Address</label>
               <textarea rows={2} value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Category</label>
               <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none bg-surface">
                 <option value="">General</option>
                 <option value="Pediatric">Pediatric</option>
@@ -677,7 +677,7 @@ export default function PatientRecords() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Medical History</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Medical History</label>
               <textarea rows={4} value={editForm.medical_history} onChange={(e) => setEditForm({ ...editForm, medical_history: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
             </div>
             <div className="pt-2 flex justify-end gap-3">
@@ -697,7 +697,7 @@ export default function PatientRecords() {
               Provide a reason before archiving {selected.name}. Records with active consultation requests or schedules cannot be archived.
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Archive Reason</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Archive Reason</label>
               <textarea
                 required
                 rows={4}
@@ -719,3 +719,4 @@ export default function PatientRecords() {
     </div>
   );
 }
+

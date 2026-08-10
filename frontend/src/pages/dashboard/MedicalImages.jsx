@@ -252,11 +252,11 @@ export default function MedicalImages() {
                 )}
                 <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                   {p.url && (
-                    <button type="button" onClick={() => setLightbox(p.url)} className="p-1.5 bg-white rounded-lg text-slate-700 hover:text-sky-600">
+                    <button type="button" onClick={() => setLightbox(p.url)} className="p-1.5 bg-white rounded-lg text-text-muted hover:text-sky-600">
                       <Eye size={16} />
                     </button>
                   )}
-                  <button type="button" onClick={() => removePreview(idx)} className="p-1.5 bg-white rounded-lg text-slate-700 hover:text-rose-600">
+                  <button type="button" onClick={() => removePreview(idx)} className="p-1.5 bg-white rounded-lg text-text-muted hover:text-rose-600">
                     <X size={16} />
                   </button>
                 </div>
@@ -356,7 +356,7 @@ export default function MedicalImages() {
           <div className="relative max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setLightbox(null)}
-              className="absolute -top-3 -right-3 z-10 w-8 h-8 bg-surface rounded-full flex items-center justify-center shadow-lg dark:shadow-none text-slate-700 hover:text-danger-text"
+              className="absolute -top-3 -right-3 z-10 w-8 h-8 bg-surface rounded-full flex items-center justify-center shadow-lg dark:shadow-none text-text-muted hover:text-danger-text"
             >
               <X size={16} />
             </button>
@@ -367,3 +367,4 @@ export default function MedicalImages() {
     </div>
   );
 }
+

@@ -353,7 +353,7 @@ export default function Prescriptions() {
               <button
                 onClick={() => handleDownload(p.id)}
                 disabled={downloadingId === p.id}
-                className="w-full flex items-center justify-center gap-2 bg-background text-slate-700 py-2.5 rounded-xl font-medium hover:bg-success-bg hover:text-success-text transition-colors border border-border hover:border-emerald-200"
+                className="w-full flex items-center justify-center gap-2 bg-background text-text-muted py-2.5 rounded-xl font-medium hover:bg-success-bg hover:text-success-text transition-colors border border-border hover:border-emerald-200"
               >
                 <Download size={18} /> {downloadingId === p.id ? 'Downloading...' : 'Download PDF'}
               </button>
@@ -370,7 +370,7 @@ export default function Prescriptions() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Prescription Notes</label>
+              <label className="block text-sm font-medium text-text-muted mb-1">Prescription Notes</label>
               <textarea
                 rows={2}
                 value={editForm.notes}
@@ -381,7 +381,7 @@ export default function Prescriptions() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-slate-700">Medicines</p>
+                <p className="text-sm font-semibold text-text-muted">Medicines</p>
                 <button type="button" onClick={addItem} className="inline-flex items-center gap-1.5 rounded-lg bg-success-bg px-3 py-1.5 text-xs font-bold text-success-text hover:bg-emerald-100">
                   <Plus size={13} /> Add Medicine
                 </button>
@@ -422,3 +422,4 @@ export default function Prescriptions() {
     </div>
   );
 }
+

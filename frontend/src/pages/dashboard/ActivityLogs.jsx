@@ -8,7 +8,7 @@ import { ShieldCheck, Search, X, Filter, Monitor, AlertTriangle, CheckCircle, Lo
 
 const ACTION_ICONS = {
   'login':       { icon: LogIn,        color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  'logout':      { icon: LogOut,       color: 'text-slate-500',   bg: 'bg-slate-100'  },
+  'logout':      { icon: LogOut,       color: 'text-text-muted',   bg: 'bg-slate-100'  },
   'failed':      { icon: AlertTriangle,color: 'text-rose-600',    bg: 'bg-rose-50'    },
   'unauthorized':{ icon: AlertTriangle,color: 'text-rose-600',    bg: 'bg-rose-50'    },
   'security':    { icon: AlertTriangle,color: 'text-amber-600',   bg: 'bg-amber-50'   },
@@ -35,7 +35,7 @@ const ROLE_BADGE = {
   Doctor:  'bg-sky-100 text-sky-700',
   Staff:   'bg-amber-100 text-amber-700',
   Patient: 'bg-emerald-100 text-emerald-700',
-  System:  'bg-slate-100 text-slate-600',
+  System:  'bg-slate-100 text-text-muted',
 };
 
 function formatDate(ts) {
@@ -328,3 +328,4 @@ export default function ActivityLogs() {
     </div>
   );
 }
+

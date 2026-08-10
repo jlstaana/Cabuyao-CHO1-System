@@ -256,7 +256,7 @@ export default function Notifications() {
             <div className="w-16 h-16 bg-surface-hover/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Bell size={32} className="text-text-light opacity-60" />
             </div>
-            <h3 className="font-semibold text-slate-700 text-lg">No notifications</h3>
+            <h3 className="font-semibold text-text-muted text-lg">No notifications</h3>
             <p className="text-text-light text-sm mt-1">Notifications will appear when system records change.</p>
           </div>
         ) : (
@@ -330,3 +330,4 @@ export default function Notifications() {
     </div>
   );
 }
+

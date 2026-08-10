@@ -45,7 +45,7 @@ class AdminController extends Controller {
                 'end_time' => $request->end_time ?: '17:00',
             ]);
         }
-        AuditLog::create(['user_id' => $request->user()->id, 'action' => "Created Doctor $user->email", 'ip_address' => $request->ip()]);
+        AuditLog::create(['user_id' => $request->user()->id, 'action' => "Created Doctor $user->email", 'description' => "Admin created a new doctor account.", 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Doctor created', 'user' => $user]);
     }
     public function createStaff(Request $request) {
@@ -65,7 +65,7 @@ class AdminController extends Controller {
             'email_verified_at' => now(),
         ]);
         Staff::create(['user_id' => $user->id, 'department' => $request->department]);
-        AuditLog::create(['user_id' => $request->user()->id, 'action' => "Created Staff $user->email", 'ip_address' => $request->ip()]);
+        AuditLog::create(['user_id' => $request->user()->id, 'action' => "Created Staff $user->email", 'description' => "Admin created a new staff account.", 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Staff created', 'user' => $user]);
     }
 
@@ -90,6 +90,7 @@ class AdminController extends Controller {
         AuditLog::create([
             'user_id' => $request->user()->id,
             'action' => "Archived User $user->email",
+            'description' => "Admin archived the user account.",
             'ip_address' => $request->ip(),
         ]);
 
@@ -105,6 +106,7 @@ class AdminController extends Controller {
         AuditLog::create([
             'user_id' => $request->user()->id,
             'action' => "Reactivated User $user->email",
+            'description' => "Admin reactivated the user account.",
             'ip_address' => $request->ip(),
         ]);
 

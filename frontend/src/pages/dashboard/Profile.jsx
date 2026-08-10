@@ -147,13 +147,13 @@ export default function Profile() {
             </div>
             <h2 className="text-xl font-bold text-text">{user?.name}</h2>
             <p className="text-text-muted mb-4">{user?.email}</p>
-            <span className="bg-surface-hover/50 text-slate-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{user?.role}</span>
+            <span className="bg-surface-hover/50 text-text-muted px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{user?.role}</span>
           </div>
 
           <button
             data-tour="page-primary-action"
             onClick={() => setShowPwdModal(true)}
-            className="w-full flex items-center justify-center gap-2 bg-surface border border-border text-slate-700 px-4 py-3 rounded-xl hover:bg-background hover:border-sky-300 transition-all font-medium shadow-sm"
+            className="w-full flex items-center justify-center gap-2 bg-surface border border-border text-text-muted px-4 py-3 rounded-xl hover:bg-background hover:border-sky-300 transition-all font-medium shadow-sm"
           >
             <Key size={16} /> Change Password
           </button>
@@ -168,11 +168,11 @@ export default function Profile() {
             <form data-tour="page-form" onSubmit={handleSave} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-text-muted mb-1">Full Name</label>
                   <input value={profile.name || user?.name || ''} onChange={e => setProfile({ ...profile, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                  <label className="block text-sm font-medium text-text-muted mb-1">Email Address</label>
                   <input defaultValue={user?.email} disabled className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-text-muted cursor-not-allowed outline-none" />
                 </div>
               </div>
@@ -181,16 +181,16 @@ export default function Profile() {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Contact Number</label>
+                      <label className="block text-sm font-medium text-text-muted mb-1">Contact Number</label>
                       <input value={profile.contact_no} onChange={e => setProfile({ ...profile, contact_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                      <label className="block text-sm font-medium text-text-muted mb-1">Date of Birth</label>
                       <input type="date" value={profile.dob} onChange={e => setProfile({ ...profile, dob: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Home Address</label>
+                    <label className="block text-sm font-medium text-text-muted mb-1">Home Address</label>
                     <textarea value={profile.address} onChange={e => setProfile({ ...profile, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" rows="3" />
                   </div>
                 </>
@@ -200,11 +200,11 @@ export default function Profile() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Specialization</label>
+                      <label className="block text-sm font-medium text-text-muted mb-1">Specialization</label>
                       <input value={profile.specialization} onChange={e => setProfile({ ...profile, specialization: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. General Practice" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2"><Clock size={16} /> License Number</label>
+                      <label className="block text-sm font-medium text-text-muted mb-1 flex items-center gap-2"><Clock size={16} /> License Number</label>
                       <input value={profile.license_no} onChange={e => setProfile({ ...profile, license_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
                     </div>
                   </div>
@@ -228,15 +228,15 @@ export default function Profile() {
             <h3 className="text-xl font-bold text-text mb-6 flex items-center gap-2"><Key size={20} className="text-sky-500" /> Change Password</h3>
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+                <label className="block text-sm font-medium text-text-muted mb-1">Current Password</label>
                 <input type="password" required value={pwdForm.current_password} onChange={e => setPwdForm({ ...pwdForm, current_password: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                <label className="block text-sm font-medium text-text-muted mb-1">New Password</label>
                 <input type="password" required value={pwdForm.password} onChange={e => setPwdForm({ ...pwdForm, password: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+                <label className="block text-sm font-medium text-text-muted mb-1">Confirm New Password</label>
                 <input type="password" required value={pwdForm.password_confirmation} onChange={e => setPwdForm({ ...pwdForm, password_confirmation: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
               </div>
               <div className="pt-4 flex justify-end gap-3">
@@ -252,3 +252,4 @@ export default function Profile() {
     </div>
   );
 }
+

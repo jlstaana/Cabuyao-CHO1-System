@@ -98,7 +98,7 @@ function VolumePanel({ stats }) {
               <div className="h-2.5 flex-1 bg-surface-hover/50 rounded-full overflow-hidden">
                 <div className="h-full bg-sky-500 rounded-full" style={{ width: `${(Number(row.count || 0) / max) * 100}%` }} />
               </div>
-              <span className="text-xs font-semibold text-slate-700 w-8 text-right">{row.count}</span>
+              <span className="text-xs font-semibold text-text-muted w-8 text-right">{row.count}</span>
             </div>
           ))}
         </div>
@@ -365,3 +365,4 @@ export default function Overview() {
     </div>
   );
 }
+
