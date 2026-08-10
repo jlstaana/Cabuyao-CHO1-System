@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { User, Clock, Save, Key } from 'lucide-react';
+import { User, Clock, Save, Key, Camera, Pencil } from 'lucide-react';
+import { apiBaseUrl } from '../../utils/api';
 import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
 
 export default function Profile() {
   const { user, fetchUser } = useAuthStore();
   const [saving, setSaving] = useState(false);
+  const [uploadingPic, setUploadingPic] = useState(false);
   const [changingPwd, setChangingPwd] = useState(false);
   const [showPwdModal, setShowPwdModal] = useState(false);
   const [profile, setProfile] = useState({
@@ -84,6 +86,32 @@ export default function Profile() {
     }
   };
 
+  const handlePictureUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+
+    setUploadingPic(true);
+    try {
+      await api.post('/auth/profile-picture', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      await fetchUser();
+      toast.success('Profile picture updated!');
+    } catch (err) {
+      toast.error('Failed to upload picture');
+    } finally {
+      setUploadingPic(false);
+    }
+  };
+
   return (
     <div className="animate-in fade-in duration-500">      <div className="mb-8">
         <PageTitle icon={User} title="Account Profile" description="Manage your personal information and system preferences." iconClassName="bg-primary-bg text-primary-text" />
@@ -93,8 +121,29 @@ export default function Profile() {
         {/* Left Avatar Card */}
         <div className="lg:col-span-1 space-y-4">
           <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border flex flex-col items-center text-center">
-            <div className="w-24 h-24 bg-primary-hover text-primary-text rounded-full flex items-center justify-center font-bold text-3xl mb-4 shadow-inner">
-              {user?.name?.charAt(0)}
+            <div className="relative group mb-4">
+              {user?.profile_picture ? (
+                <img src={`${apiBaseUrl.replace('/api', '')}/storage/${user.profile_picture}`} alt="Profile" className="w-24 h-24 rounded-full object-cover shadow-inner border-2 border-slate-100" />
+              ) : (
+                <div className="w-24 h-24 bg-primary-hover text-primary-text rounded-full flex items-center justify-center font-bold text-3xl shadow-inner border-2 border-dashed border-sky-300">
+                  {user?.name?.charAt(0)}
+                </div>
+              )}
+              <label className={`absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white rounded-full transition-opacity cursor-pointer ${uploadingPic ? 'opacity-100 cursor-not-allowed' : 'opacity-0 group-hover:opacity-100'}`}>
+                <Camera size={20} className={!user?.profile_picture && !uploadingPic ? 'animate-bounce mt-2' : ''} />
+                <span className="text-[10px] font-semibold mt-1 text-center px-1">{uploadingPic ? '...' : user?.profile_picture ? 'Upload' : 'Add Photo'}</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handlePictureUpload} disabled={uploadingPic} />
+              </label>
+              {!user?.profile_picture && (
+                <div className="absolute -bottom-1 -right-2 bg-rose-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full border-2 border-surface shadow-sm animate-pulse pointer-events-none md:hidden">
+                  Add Photo
+                </div>
+              )}
+              {user?.profile_picture && !uploadingPic && (
+                <div className="absolute bottom-1 right-1 bg-sky-500 text-white p-1.5 rounded-full border-2 border-surface shadow-sm pointer-events-none group-hover:scale-110 group-hover:bg-sky-400 transition-all">
+                  <Pencil size={12} />
+                </div>
+              )}
             </div>
             <h2 className="text-xl font-bold text-text">{user?.name}</h2>
             <p className="text-text-muted mb-4">{user?.email}</p>

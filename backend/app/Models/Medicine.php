@@ -21,7 +21,7 @@ class Medicine extends Model {
 
     public function getTotalStockAttribute()
     {
-        return $this->batches()->sum('stock');
+        return $this->batches()->where('expiration_date', '>=', now()->format('Y-m-d'))->sum('stock');
     }
     
     protected $casts = ['status' => 'boolean'];

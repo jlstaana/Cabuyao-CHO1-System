@@ -52,8 +52,13 @@ function BatchManager({ medicine, fetchMedicines }) {
           {batches.length === 0 ? <p className="text-sm text-text-light">No batches recorded.</p> : batches.map(b => (
             <div key={b.id} className="flex justify-between items-center p-3 bg-surface rounded-lg border border-border">
               <div>
-                <p className="text-sm font-semibold text-text">Batch No: {b.batch_number}</p>
-                <p className="text-xs text-text-light">Exp: {new Date(b.expiration_date).toLocaleDateString()} • Stock: {b.stock}</p>
+                <p className="text-sm font-semibold text-text">
+                  Batch No: {b.batch_number}
+                  {new Date(b.expiration_date) < new Date() && (
+                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase tracking-wide">Pullout</span>
+                  )}
+                </p>
+                <p className="text-xs text-text-light">Exp: {new Date(b.expiration_date).toLocaleDateString()} • Stock: {b.stock} {medicine.dosage_form || 'units'}</p>
               </div>
               <button onClick={() => deleteBatch(b.id)} className="text-rose-500 hover:text-rose-700 text-xs font-semibold px-2 py-1 rounded bg-danger-bg">Delete</button>
             </div>
@@ -95,7 +100,7 @@ export default function Medicines() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [editTarget, setEditTarget] = useState(null);
   const [batchTarget, setBatchTarget] = useState(null);
-  const [formData, setFormData] = useState({ name: '', generic_name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '', batch_number: '' });
+  const [formData, setFormData] = useState({ name: '', generic_name: '', category: 'Analgesic', description: '', dosage_form: 'tablets', stock: 0, expiration_date: '', batch_number: '' });
   const [expiryThreshold] = useState(() => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
   const fetchMedicines = async () => {
@@ -128,7 +133,7 @@ export default function Medicines() {
       await api.post('/medicines', formData);
       toast.success('Medicine added to database!');
       setIsAddModalOpen(false);
-      setFormData({ name: '', generic_name: '', category: 'Analgesic', description: '', stock: 0, expiration_date: '', batch_number: '' });
+      setFormData({ name: '', generic_name: '', category: 'Analgesic', description: '', dosage_form: 'tablets', stock: 0, expiration_date: '', batch_number: '' });
       fetchMedicines();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add medicine');
@@ -261,18 +266,27 @@ export default function Medicines() {
                     <span className={`font-semibold ${m.total_stock > 10 ? 'text-text' : m.total_stock > 0 ? 'text-amber-600' : 'text-rose-500'}`}>
                       {m.total_stock || 0}
                     </span>
+                    <span className="text-xs text-text-muted ml-1">
+                      {m.dosage_form ? m.dosage_form : 'units'}
+                    </span>
                   </td>
                   <td className="p-4">
                     {m.batches && m.batches.length > 0 ? (
                       <div>
                         {(() => {
-                           const activeBatches = m.batches.filter(b => b.stock > 0).sort((a,b) => new Date(a.expiration_date) - new Date(b.expiration_date));
-                           if (activeBatches.length === 0) return <span className="text-text-light text-sm italic">Out of Stock</span>;
+                           const today = new Date();
+                           today.setHours(0,0,0,0);
+                           const activeBatches = m.batches.filter(b => b.stock > 0 && new Date(b.expiration_date) >= today).sort((a,b) => new Date(a.expiration_date) - new Date(b.expiration_date));
+                           if (activeBatches.length === 0) {
+                             const hasExpired = m.batches.some(b => b.stock > 0 && new Date(b.expiration_date) < today);
+                             if (hasExpired) return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase tracking-wide">PULL OUT (EXPIRED)</span>;
+                             return <span className="text-text-light text-sm italic">Out of Stock</span>;
+                           }
                            const nearest = activeBatches[0];
                            return (
                              <>
-                               <span className={`text-sm block ${expiryThreshold && new Date(nearest.expiration_date) < expiryThreshold ? 'text-rose-500 font-semibold' : 'text-text-muted'}`}>
-                                 Exp: {new Date(nearest.expiration_date).toLocaleDateString()}
+                               <span className={`text-sm flex items-center gap-2 ${expiryThreshold && new Date(nearest.expiration_date) < expiryThreshold ? 'text-rose-500 font-semibold' : 'text-text-muted'}`}>
+                                 <span>Exp: {new Date(nearest.expiration_date).toLocaleDateString()}</span>
                                </span>
                                <span className="text-xs text-text-light font-medium mt-0.5 block">Batch No: {nearest.batch_number}</span>
                                {activeBatches.length > 1 && <span className="text-xs text-sky-500 mt-1 block">+{activeBatches.length - 1} more batches</span>}
@@ -344,6 +358,10 @@ export default function Medicines() {
             </select>
           </div>
           <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Unit/Dosage Form</label>
+            <input value={formData.dosage_form} onChange={e => setFormData({ ...formData, dosage_form: e.target.value })} placeholder="e.g. tablets, boxes, bottles" className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Description (optional)</label>
             <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
@@ -390,6 +408,10 @@ export default function Medicines() {
               <select value={editTarget.category} onChange={e => setEditTarget({ ...editTarget, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none bg-surface">
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Unit/Dosage Form</label>
+              <input value={editTarget.dosage_form || ''} onChange={e => setEditTarget({ ...editTarget, dosage_form: e.target.value })} placeholder="e.g. tablets, boxes, bottles" className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>

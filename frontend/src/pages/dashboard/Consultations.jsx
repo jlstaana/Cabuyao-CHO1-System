@@ -248,6 +248,9 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
       || c.requested_specialization?.toLowerCase().includes(q)
       || (c.status || '').toLowerCase().includes(q);
     return matchTab && matchSearch;
+  }).sort((a, b) => {
+    if (tab === 'Completed') return new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at);
+    return new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
   });
 
   return (
@@ -391,6 +394,9 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       (c.form?.diagnosis || '').toLowerCase().includes(q) ||
       `cn-${String(c.id).padStart(6, '0')}`.includes(q)
     );
+  }).sort((a, b) => {
+    if (tab === 'Completed') return new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at);
+    return new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
   });
 
   return (
@@ -596,6 +602,9 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
       c.doctor?.user?.name?.toLowerCase().includes(q) ||
       `cn-${String(c.id).padStart(6, '0')}`.includes(q);
     return matchTab && matchSearch;
+  }).sort((a, b) => {
+    if (tab === 'Completed' || tab === 'Cancelled') return new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at);
+    return new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
   });
 
   return (

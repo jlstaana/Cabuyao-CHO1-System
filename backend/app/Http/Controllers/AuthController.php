@@ -198,4 +198,23 @@ class AuthController extends Controller {
         AuditLog::create(['user_id' => $user->id, 'action' => 'Complete Onboarding Tutorial', 'ip_address' => $request->ip()]);
         return response()->json(['message' => 'Onboarding completed', 'user' => $user->fresh()]);
     }
+
+    public function updateProfilePicture(Request $request) {
+        $request->validate([
+            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
+        ]);
+
+        $user = $request->user();
+        
+        if ($request->hasFile('profile_picture')) {
+            $path = $request->file('profile_picture')->store('profiles', 'public');
+            $user->update(['profile_picture' => $path]);
+            AuditLog::create(['user_id' => $user->id, 'action' => 'Update Profile Picture', 'ip_address' => $request->ip()]);
+        }
+
+        return response()->json([
+            'message' => 'Profile picture updated successfully',
+            'user' => $user->fresh()
+        ]);
+    }
 }

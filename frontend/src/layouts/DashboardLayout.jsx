@@ -13,6 +13,7 @@ import {
 import useThemeStore from '../store/useThemeStore';
 
 import { buildNavGroups } from '../utils/navigation';
+import { apiBaseUrl } from '../utils/api';
 
 function consultationPartyName(consultation, role) {
   if (role === 'Patient') {
@@ -312,9 +313,25 @@ export default function DashboardLayout() {
                <p className="text-sm font-semibold leading-tight">{user.name}</p>
                <p className="text-xs text-sky-200 leading-tight">{user.role}</p>
             </div>
-            <Link data-tour="profile" to="/profile" className="w-10 h-10 bg-sky-500 hover:bg-sky-400 text-white rounded-full flex items-center justify-center font-bold shadow-inner transition-colors cursor-pointer border-2 border-sky-400">
-               {user.name.charAt(0)}
-            </Link>
+            <div className="relative group">
+              <Link data-tour="profile" to="/profile" className="w-10 h-10 bg-sky-500 hover:bg-sky-400 text-white rounded-full flex items-center justify-center font-bold shadow-inner transition-colors cursor-pointer border-2 border-sky-400 overflow-hidden block">
+                 {user.profile_picture ? (
+                   <img src={`${apiBaseUrl.replace('/api', '')}/storage/${user.profile_picture}`} alt="Profile" className="w-full h-full object-cover" />
+                 ) : (
+                   user.name.charAt(0)
+                 )}
+              </Link>
+              {!user.profile_picture && (
+                <>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 border-2 border-sky-600 rounded-full animate-pulse z-10"></span>
+                  <div className="absolute top-12 right-0 w-48 bg-slate-800 text-white text-xs rounded-xl p-3 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    <p className="font-semibold mb-1">Add a Profile Picture</p>
+                    <p className="text-slate-300">Upload a photo to personalize your account!</p>
+                    <div className="absolute -top-1.5 right-4 w-3 h-3 bg-slate-800 transform rotate-45"></div>
+                  </div>
+                </>
+              )}
+            </div>
          </div>
       </header>
 
