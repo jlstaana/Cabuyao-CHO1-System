@@ -787,21 +787,28 @@ export default function TeleconsultationRoom() {
         symptoms, diagnosis, notes: 'Completed via Google Meet Style Telehealth Room'
       });
       
-      if (prescriptionItems.length > 0) {
+      const validItems = prescriptionItems.filter(item => item.medicine_id !== '');
+      if (validItems.length > 0) {
+        const svg = buildSignatureSvg();
+        if (!svg) {
+          toast.error('Your e-signature was empty or not captured properly. Please draw it again.');
+          return;
+        }
+
         await api.post('/prescriptions', {
           consultation_id: id,
           patient_id: consultation?.patient_id,
           notes: `Diagnosis: ${diagnosis}`,
-          doctor_signature_svg: buildSignatureSvg(),
-          items: prescriptionItems
+          doctor_signature_svg: svg,
+          items: validItems
         });
         toast.success('E-Prescription generated officially!');
       }
 
       toast.success('Consultation marked as Completed!');
       navigate('/consultations');
-    } catch {
-      toast.error('Error completing consultation');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error completing consultation');
     }
   };
 

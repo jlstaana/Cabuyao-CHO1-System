@@ -18,17 +18,29 @@ class SanitizeInputMiddleware
         $input = $request->all();
 
         if (!empty($input)) {
-            array_walk_recursive($input, function (&$value) {
-                if (is_string($value)) {
-                    // Remove dangerous HTML/script tags and script execution patterns
+            $sanitize = function (&$value, $key) use (&$sanitize) {
+                if (is_array($value)) {
+                    foreach ($value as $k => &$v) {
+                        $sanitize($v, $k);
+                    }
+                } elseif (is_string($value)) {
                     $value = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $value);
                     $value = preg_replace('/javascript:/i', '', $value);
                     $value = preg_replace('/on[a-z]+\s*=/i', '', $value);
-                    $value = trim(strip_tags($value));
+                    
+                    if ($key !== 'doctor_signature_svg') {
+                        $value = trim(strip_tags($value));
+                    } else {
+                        $value = trim($value);
+                    }
                 }
-            });
+            };
+            
+            foreach ($input as $key => &$val) {
+                $sanitize($val, $key);
+            }
 
-            $request->merge($input);
+            $request->replace($input);
         }
 
         return $next($request);

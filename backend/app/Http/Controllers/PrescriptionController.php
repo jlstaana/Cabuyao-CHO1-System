@@ -174,12 +174,40 @@ class PrescriptionController extends Controller {
         $doctorSignatureSrc = null;
 
         if ($doctorSignatureSvg) {
-            // Remove existing width/height from the <svg> opening tag
-            $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+width="[^"]*"/i', '$1', $doctorSignatureSvg);
+            $normalizedSvg = preg_replace('/stroke-width="[^"]*"/i', 'stroke-width="2"', $doctorSignatureSvg);
+            $normalizedSvg = preg_replace('/stroke-linecap="[^"]*"/i', '', $normalizedSvg);
+            $normalizedSvg = preg_replace('/stroke-linejoin="[^"]*"/i', '', $normalizedSvg);
+            $normalizedSvg = preg_replace('/preserveAspectRatio="[^"]*"/i', '', $normalizedSvg);
+            $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+width="[^"]*"/i', '$1', $normalizedSvg);
             $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+height="[^"]*"/i', '$1', $normalizedSvg);
-            // Inject fixed dimensions — small enough to fit under the signature line
-            $normalizedSvg = preg_replace('/(<svg)/i', '$1 width="140" height="28" preserveAspectRatio="xMidYMid meet"', $normalizedSvg, 1);
-            $doctorSignatureSrc = $normalizedSvg; // Pass raw inline SVG, not base64
+            
+            // Dynamically scale down the SVG paths so DOMPDF doesn't blow out the table layout
+            if (preg_match('/viewBox="([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)"/i', $normalizedSvg, $matches)) {
+                $minX = (float) $matches[1];
+                $minY = (float) $matches[2];
+                $vWidth = (float) $matches[3];
+                $vHeight = (float) $matches[4];
+                
+                // Scale to roughly 80x24
+                $scaleX = 80 / max(1, $vWidth);
+                $scaleY = 24 / max(1, $vHeight);
+                $scale = min($scaleX, $scaleY);
+                
+                // Adjust stroke width inversely to scaling
+                $sw = round(2 / $scale, 1);
+                $normalizedSvg = preg_replace('/stroke-width="[^"]*"/i', 'stroke-width="' . $sw . '"', $normalizedSvg);
+                
+                $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+viewBox="[^"]*"/i', '$1', $normalizedSvg);
+                $normalizedSvg = preg_replace('/(<path)/i', '<g transform="scale(' . $scale . ') translate(-' . $minX . ', -' . $minY . ')">$1', $normalizedSvg);
+                $normalizedSvg = preg_replace('/(<\/svg>)/i', '</g>$1', $normalizedSvg);
+                $normalizedSvg = preg_replace('/(<svg)/i', '$1 viewBox="0 0 80 24" width="80" height="24"', $normalizedSvg, 1);
+            } else {
+                // Fallback
+                $normalizedSvg = preg_replace('/(<svg)/i', '$1 width="80" height="24"', $normalizedSvg, 1);
+            }
+            
+            $base64Svg = base64_encode($normalizedSvg);
+            $doctorSignatureSrc = '<img src="data:image/svg+xml;base64,' . $base64Svg . '" width="80" height="24" style="border: none; outline: none; vertical-align: bottom;"/>';
         }
 
         $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))->setPaper('a5', 'portrait');
