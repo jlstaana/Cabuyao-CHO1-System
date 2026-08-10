@@ -4,7 +4,7 @@ import Modal from '../../components/Modal';
 import Skeleton from '../../components/Skeleton';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
-import { Pill, Plus, Search, Archive, Pencil, CheckCircle } from 'lucide-react';
+import { Pill, Plus, Search, Archive, Pencil, CheckCircle, AlertCircle } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 
 const CATEGORIES = [
@@ -280,16 +280,28 @@ export default function Medicines() {
                            if (activeBatches.length === 0) {
                              const hasExpired = m.batches.some(b => b.stock > 0 && new Date(b.expiration_date) < today);
                              if (hasExpired) return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase tracking-wide">PULL OUT (EXPIRED)</span>;
-                             return <span className="text-text-light text-sm italic">Out of Stock</span>;
+                             return (user?.role === 'Admin' || user?.role === 'Staff')
+                               ? <span className="text-rose-500 text-sm font-bold flex items-center gap-1"><AlertCircle size={14} /> NEEDS RESTOCK</span>
+                               : <span className="text-text-light text-sm italic">Out of Stock</span>;
                            }
                            const nearest = activeBatches[0];
+                           const isNearExpiry = expiryThreshold && new Date(nearest.expiration_date) < expiryThreshold;
                            return (
                              <>
-                               <span className={`text-sm flex items-center gap-2 ${expiryThreshold && new Date(nearest.expiration_date) < expiryThreshold ? 'text-rose-500 font-semibold' : 'text-text-muted'}`}>
+                               <span className={`text-sm flex items-center gap-2 ${isNearExpiry ? 'text-amber-600 font-semibold' : 'text-text-muted'}`}>
                                  <span>Exp: {new Date(nearest.expiration_date).toLocaleDateString()}</span>
+                                 {isNearExpiry && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide">Near Expiry</span>}
                                </span>
                                <span className="text-xs text-text-light font-medium mt-0.5 block">Batch No: {nearest.batch_number}</span>
-                               {activeBatches.length > 1 && <span className="text-xs text-sky-500 mt-1 block">+{activeBatches.length - 1} more batches</span>}
+                               {activeBatches.length > 1 ? (
+                                 <span className="text-xs text-emerald-600 font-semibold mt-1 flex items-center gap-1">
+                                   <CheckCircle size={12} /> Backup available ({activeBatches.length - 1})
+                                 </span>
+                               ) : isNearExpiry ? (
+                                 (user?.role === 'Admin' || user?.role === 'Staff')
+                                   ? <span className="text-xs text-rose-500 font-bold mt-1 flex items-center gap-1"><AlertCircle size={12} /> NEEDS RESTOCK</span>
+                                   : <span className="text-xs text-amber-500 font-semibold mt-1 block">No backup batch</span>
+                               ) : null}
                              </>
                            );
                         })()}
