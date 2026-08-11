@@ -58,13 +58,15 @@ function App() {
               <Route path="/register" element={<Register />} />
             </Route>
 
+            {/* Standalone Room Route for Full-Screen Experience */}
+            <Route path="/room/:id" element={<TeleconsultationRoom />} />
+
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Overview />} />
               <Route path="/users" element={<ManageUsers />} />
               <Route path="/consultations" element={<Consultations />} />
               <Route path="/prescriptions" element={<Prescriptions />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/room/:id" element={<TeleconsultationRoom />} />
               <Route path="/medicines" element={<Medicines />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/notifications" element={<Notifications />} />

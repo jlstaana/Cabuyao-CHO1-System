@@ -6,7 +6,7 @@ import Modal from '../../components/Modal';
 import { 
   Video, Mic, MicOff, VideoOff, PhoneOff, Activity, FileText, Pill, 
   Plus, CheckCircle, Wifi, MessageCircle, Send, PenLine, Eraser, 
-  Sparkles, MonitorUp, X, Clock
+  Sparkles, MonitorUp, X, Clock, Settings, Check
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -93,12 +93,24 @@ export default function TeleconsultationRoom() {
   // Google Meet Features & Backgrounds
   const [bgPresetId, setBgPresetId] = useState('none');
   const [isBgModalOpen, setIsBgModalOpen] = useState(false);
-  const [activeSidePanel, setActiveSidePanel] = useState('chat'); // 'chat' | 'clinical' | 'none'
+  const [activeSidePanel, setActiveSidePanel] = useState(user?.role === 'Doctor' ? 'clinical' : 'none'); // 'chat' | 'clinical' | 'none'
   const [isSharingScreen, setIsSharingScreen] = useState(false);
+  const [remoteScreenStream, setRemoteScreenStream] = useState(null);
+  const [isRemoteSharingScreen, setIsRemoteSharingScreen] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isAiActive, setIsAiActive] = useState(false);
 
-  // WebRTC State
+  // WebRTC & Hardware State
+  const [availableCameras, setAvailableCameras] = useState([]);
+  const [availableMics, setAvailableMics] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState('');
+  const [selectedMicId, setSelectedMicId] = useState('');
+  const [lobbyStream, setLobbyStream] = useState(null);
+  const lobbyVideoRef = useRef(null);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [connectionState, setConnectionState] = useState('new');
+  const [isRemoteMuted, setIsRemoteMuted] = useState(false);
+  
   const [remoteStream, setRemoteStream] = useState(null);
   const pcRef = useRef(null);
   const processedSignals = useRef(new Set());
@@ -130,6 +142,7 @@ export default function TeleconsultationRoom() {
   const signatureStrokesRef = useRef([]);
   const selfieSegmentationRef = useRef(null);
   const canvasStreamRef = useRef(null);
+  const screenStreamRef = useRef(null);
 
   const bgPreset = BACKGROUND_PRESETS.find((b) => b.id === bgPresetId) || BACKGROUND_PRESETS[0];
   const bgPresetRef = useRef(bgPreset);
@@ -146,6 +159,140 @@ export default function TeleconsultationRoom() {
       bgImgRef.current = null;
     }
   }, [bgPreset]);
+
+  // Pre-join Lobby Initialization
+  useEffect(() => {
+    let stream;
+    const initDevices = async () => {
+      try {
+        // Request basic permission first
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter(d => d.kind === 'videoinput');
+        const mics = devices.filter(d => d.kind === 'audioinput');
+        
+        setAvailableCameras(cameras);
+        setAvailableMics(mics);
+        
+        if (!selectedCameraId && cameras.length > 0) setSelectedCameraId(cameras[0].deviceId);
+        if (!selectedMicId && mics.length > 0) setSelectedMicId(mics[0].deviceId);
+
+        setLobbyStream(stream);
+        if (lobbyVideoRef.current) {
+          lobbyVideoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error("Failed to init devices:", err);
+      }
+    };
+    if (!callActive) {
+      initDevices();
+    }
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [callActive]); // Only run when we enter/leave lobby
+
+  // Device Selection Change (Lobby only)
+  useEffect(() => {
+    if (callActive || !selectedCameraId || !selectedMicId) return;
+    
+    let active = true;
+    const updateLobbyStream = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: selectedCameraId } },
+          audio: { deviceId: { exact: selectedMicId } }
+        });
+        if (!active) {
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+        
+        setLobbyStream(prev => {
+          if (prev) prev.getTracks().forEach(t => t.stop());
+          return stream;
+        });
+        
+        if (lobbyVideoRef.current) {
+          lobbyVideoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error("Failed to switch device in lobby:", err);
+      }
+    };
+    updateLobbyStream();
+    
+    return () => { active = false; };
+  }, [selectedCameraId, selectedMicId, callActive]);
+
+  // Device Selection Change (Mid-Call Dynamic Switching)
+  useEffect(() => {
+    if (!callActive || !streamRef.current || !pcRef.current) return;
+    let active = true;
+
+    const currentVideoTrack = streamRef.current.getVideoTracks()[0];
+    const currentAudioTrack = streamRef.current.getAudioTracks()[0];
+    
+    const needsVideoSwitch = selectedCameraId && currentVideoTrack && currentVideoTrack.getSettings().deviceId !== selectedCameraId;
+    const needsAudioSwitch = selectedMicId && currentAudioTrack && currentAudioTrack.getSettings().deviceId !== selectedMicId;
+    
+    if (!needsVideoSwitch && !needsAudioSwitch) return;
+
+    const switchDevice = async () => {
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: selectedCameraId ? { deviceId: { exact: selectedCameraId } } : true,
+          audio: selectedMicId ? { deviceId: { exact: selectedMicId }, echoCancellation: true, noiseSuppression: true, autoGainControl: true } : true
+        });
+        
+        if (!active) {
+          newStream.getTracks().forEach(t => t.stop());
+          return;
+        }
+
+        const oldStream = streamRef.current;
+        const senders = pcRef.current.getSenders();
+        
+        // Replace Video Track
+        const newVideoTrack = newStream.getVideoTracks()[0];
+        const oldVideoTrack = oldStream.getVideoTracks()[0];
+        if (newVideoTrack && oldVideoTrack) {
+          const videoSender = senders.find(s => s.track === oldVideoTrack);
+          if (videoSender) await videoSender.replaceTrack(newVideoTrack);
+          oldVideoTrack.stop();
+        }
+
+        // Replace Audio Track
+        const newAudioTrack = newStream.getAudioTracks()[0];
+        const oldAudioTrack = oldStream.getAudioTracks()[0];
+        if (newAudioTrack && oldAudioTrack) {
+          const audioSender = senders.find(s => s.track === oldAudioTrack);
+          if (audioSender) await audioSender.replaceTrack(newAudioTrack);
+          oldAudioTrack.stop();
+        }
+
+        // Apply muting logic
+        if (newVideoTrack) newVideoTrack.enabled = cameraActive;
+        if (newAudioTrack) newAudioTrack.enabled = micActive;
+
+        streamRef.current = newStream;
+        if (videoRef.current && videoRef.current.srcObject !== screenStreamRef.current) {
+          videoRef.current.srcObject = newStream;
+        }
+        toast.success("Devices updated");
+      } catch (err) {
+        console.error("Failed to switch device mid-call:", err);
+        toast.error("Failed to switch devices");
+      }
+    };
+    
+    switchDevice();
+    return () => { active = false; };
+  }, [selectedCameraId, selectedMicId, callActive]); // Intentionally omitting cameraActive/micActive to prevent loops
 
   useEffect(() => {
     if (!callActive) {
@@ -244,7 +391,7 @@ export default function TeleconsultationRoom() {
 
   // Frame Processing Loop sending video frames to MediaPipe AI
   useEffect(() => {
-    if (!callActive || !cameraActive) return;
+    if (!callActive || !cameraActive || isSharingScreen) return;
 
     let frameId;
     const processAiFrame = async () => {
@@ -273,7 +420,7 @@ export default function TeleconsultationRoom() {
     return () => {
       if (frameId) cancelAnimationFrame(frameId);
     };
-  }, [callActive, cameraActive]);
+  }, [callActive, cameraActive, isSharingScreen]);
 
   // WebRTC AI Canvas Track Swapper
   useEffect(() => {
@@ -337,6 +484,13 @@ export default function TeleconsultationRoom() {
         } else {
           iceCandidateQueue.current.push(signal.candidate);
         }
+      } else if (signal.type === 'screen_share_stop') {
+        setIsRemoteSharingScreen(false);
+        setRemoteScreenStream(null);
+      } else if (signal.type === 'screen_share_start') {
+        setIsRemoteSharingScreen(true);
+      } else if (signal.type === 'audio_status') {
+        setIsRemoteMuted(!signal.enabled);
       }
     } catch (err) {
       console.error("WebRTC Error:", err);
@@ -518,30 +672,44 @@ export default function TeleconsultationRoom() {
     };
   }, [applyVideoQuality, callActive]);
 
+  const handleEndCall = () => {
+    if (user?.role === 'Doctor' && consultation?.status !== 'Completed') {
+      const confirmEnd = window.confirm("Are you sure you want to end the call? You have not marked the consultation as Completed yet. (To complete, fill out the Clinical panel and click Finalize)");
+      if (!confirmEnd) return;
+    }
+    toggleCall();
+  };
+
   const toggleCall = async () => {
     if (!callActive) {
       try {
         const initialQuality = getAdaptiveVideoQuality();
         let stream;
 
+        const videoConstraints = {
+          ...VIDEO_QUALITY_PROFILES[initialQuality].constraints,
+          ...(selectedCameraId ? { deviceId: { exact: selectedCameraId } } : {})
+        };
+        const audioConstraints = {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          ...(selectedMicId ? { deviceId: { exact: selectedMicId } } : {})
+        };
+
         try {
           stream = await navigator.mediaDevices.getUserMedia({
-            video: VIDEO_QUALITY_PROFILES[initialQuality].constraints,
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            },
+            video: videoConstraints,
+            audio: audioConstraints,
           });
           setVideoQuality(initialQuality);
         } catch {
           stream = await navigator.mediaDevices.getUserMedia({
-            video: VIDEO_QUALITY_PROFILES.low.constraints,
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
+            video: {
+              ...VIDEO_QUALITY_PROFILES.low.constraints,
+              ...(selectedCameraId ? { deviceId: { exact: selectedCameraId } } : {})
             },
+            audio: audioConstraints,
           });
           setVideoQuality('low');
         }
@@ -569,8 +737,31 @@ export default function TeleconsultationRoom() {
           }
         };
 
+        pc.onnegotiationneeded = async () => {
+          try {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            sendSignal({ type: 'offer', offer });
+          } catch (err) {
+            console.error("Renegotiation error:", err);
+          }
+        };
+
         pc.ontrack = (event) => {
-          setRemoteStream(event.streams[0]);
+          if (event.streams && event.streams[0]) {
+            setRemoteStream((prevStream) => {
+              if (!prevStream || prevStream.id === event.streams[0].id) {
+                return event.streams[0];
+              } else {
+                setRemoteScreenStream(event.streams[0]);
+                return prevStream;
+              }
+            });
+          }
+        };
+
+        pc.oniceconnectionstatechange = () => {
+          setConnectionState(pc.iceConnectionState);
         };
 
         stream.getTracks().forEach(track => {
@@ -614,6 +805,7 @@ export default function TeleconsultationRoom() {
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setMicActive(audioTrack.enabled);
+        sendSignal({ type: 'audio_status', enabled: audioTrack.enabled });
       }
     }
   };
@@ -630,42 +822,46 @@ export default function TeleconsultationRoom() {
 
   const toggleScreenShare = async () => {
     if (isSharingScreen) {
-      try {
-        const camStream = await navigator.mediaDevices.getUserMedia({
-          video: VIDEO_QUALITY_PROFILES[videoQuality].constraints,
-          audio: { echoCancellation: true, noiseSuppression: true },
-        });
-        const enhanced = enhanceAudioStream(camStream);
-        streamRef.current = enhanced;
-
-        const newVideoTrack = enhanced.getVideoTracks()[0];
-        if (pcRef.current && newVideoTrack) {
-          const sender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
-          if (sender) sender.replaceTrack(newVideoTrack);
+        if (screenStreamRef.current) {
+          const screenTrack = screenStreamRef.current.getVideoTracks()[0];
+          if (pcRef.current && screenTrack) {
+            const sender = pcRef.current.getSenders().find(s => s.track === screenTrack);
+            if (sender) pcRef.current.removeTrack(sender);
+          }
+          screenStreamRef.current.getTracks().forEach(track => track.stop());
+          screenStreamRef.current = null;
         }
 
-        if (videoRef.current) videoRef.current.srcObject = enhanced;
         setIsSharingScreen(false);
-        toast.success('Switched back to camera');
-      } catch {
-        toast.error('Failed to restore camera stream');
-      }
+        sendSignal({ type: 'screen_share_stop' });
+        toast.success('Stopped presenting');
     } else {
       try {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-        streamRef.current = screenStream;
+        screenStreamRef.current = screenStream;
 
         const screenTrack = screenStream.getVideoTracks()[0];
         if (pcRef.current && screenTrack) {
-          const sender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
-          if (sender) sender.replaceTrack(screenTrack);
+          pcRef.current.addTrack(screenTrack, screenStream);
         }
 
-        if (videoRef.current) videoRef.current.srcObject = screenStream;
         setIsSharingScreen(true);
+        sendSignal({ type: 'screen_share_start' });
         toast.success('Sharing screen');
+        
         screenTrack.onended = () => {
+          if (screenStreamRef.current) {
+            const track = screenStreamRef.current.getVideoTracks()[0];
+            if (pcRef.current && track) {
+              const sender = pcRef.current.getSenders().find(s => s.track === track);
+              if (sender) pcRef.current.removeTrack(sender);
+            }
+            screenStreamRef.current.getTracks().forEach(t => t.stop());
+            screenStreamRef.current = null;
+          }
+          
           setIsSharingScreen(false);
+          sendSignal({ type: 'screen_share_stop' });
         };
       } catch {
         // User cancelled screen share picker
@@ -842,17 +1038,17 @@ export default function TeleconsultationRoom() {
 
   useEffect(() => {
     if (callActive && videoRef.current && streamRef.current) {
-      if (videoRef.current.srcObject !== streamRef.current) {
+      if (!isSharingScreen && videoRef.current.srcObject !== streamRef.current) {
         videoRef.current.srcObject = streamRef.current;
       }
       videoRef.current.play().catch(() => {});
     }
-  }, [callActive, cameraActive, bgPresetId]);
+  }, [callActive, cameraActive, bgPresetId, isSharingScreen]);
 
   return (
-    <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-7rem)] gap-4 animate-in fade-in duration-500 bg-slate-950 p-2 sm:p-4 rounded-3xl text-white">
+    <div className="flex flex-col lg:flex-row h-screen w-screen overflow-hidden bg-slate-950 text-white">
       {/* ── Main Video Stage (Google Meet Widescreen) ─────────────────────────── */}
-      <div data-tour="page-video" className="flex-1 min-h-[65vh] lg:min-h-0 bg-slate-900 rounded-2xl overflow-hidden relative shadow-2xl flex flex-col border border-slate-800">
+      <div data-tour="page-video" className="flex-1 h-full bg-slate-900 relative shadow-2xl flex flex-col">
         {/* Top Header Status Bar */}
         <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center pointer-events-none flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap pointer-events-auto">
@@ -870,9 +1066,14 @@ export default function TeleconsultationRoom() {
           </div>
 
           <div className="flex items-center gap-2 pointer-events-auto">
+            {isSharingScreen && (
+              <span className="bg-sky-500/90 backdrop-blur-md text-white border border-sky-400/50 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm animate-pulse">
+                <MonitorUp size={12} /> You are presenting to everyone
+              </span>
+            )}
             {callActive && bgPreset.id !== 'none' && (
               <span className="bg-indigo-600/90 backdrop-blur-md text-white border border-indigo-500/50 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-                <Sparkles size={12} /> {isAiActive ? '🤖 AI Person Detection' : 'Visual Effect'}: {bgPreset.label}
+                <Sparkles size={12} /> {bgPreset.label}
               </span>
             )}
             {callActive && (
@@ -886,31 +1087,97 @@ export default function TeleconsultationRoom() {
         {/* Video Viewport Stage */}
         <div className="flex-1 flex items-center justify-center bg-slate-950 relative overflow-hidden">
           {!callActive ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center max-w-md">
-              <div className="w-20 h-20 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-5 border border-emerald-500/20 shadow-inner">
-                <Video size={40} />
+            <div className="flex flex-col items-center justify-center p-6 sm:p-8 text-center w-full max-w-3xl">
+              
+              {/* Lobby Video Preview */}
+              <div className="w-full max-w-lg aspect-video bg-black rounded-2xl overflow-hidden mb-8 border border-slate-700 shadow-2xl relative">
+                <video 
+                  ref={lobbyVideoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  className="w-full h-full object-cover" 
+                  style={{ transform: 'scaleX(-1)' }} 
+                />
+                {!lobbyStream && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-400">
+                    <Video size={36} className="mb-3 animate-pulse opacity-50" />
+                    <p className="text-sm font-medium">Requesting camera access...</p>
+                  </div>
+                )}
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Ready to join consultation?</h2>
-              <p className="text-text-muted text-sm mb-6">
-                Ensure your camera and microphone are connected before entering the meeting.
-              </p>
+
+              {/* Hardware Selection */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-8 w-full max-w-lg">
+                <div className="flex-1 text-left">
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Camera</label>
+                  <select 
+                    value={selectedCameraId}
+                    onChange={(e) => setSelectedCameraId(e.target.value)}
+                    className="w-full bg-slate-800/80 border border-slate-700 text-white text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    {availableCameras.length === 0 && <option value="">Default Camera</option>}
+                    {availableCameras.map(cam => (
+                      <option key={cam.deviceId} value={cam.deviceId}>{cam.label || `Camera ${cam.deviceId.slice(0,5)}`}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1 text-left">
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Microphone</label>
+                  <select 
+                    value={selectedMicId}
+                    onChange={(e) => setSelectedMicId(e.target.value)}
+                    className="w-full bg-slate-800/80 border border-slate-700 text-white text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    {availableMics.length === 0 && <option value="">Default Microphone</option>}
+                    {availableMics.map(mic => (
+                      <option key={mic.deviceId} value={mic.deviceId}>{mic.label || `Microphone ${mic.deviceId.slice(0,5)}`}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-bold text-white mb-6">Ready to join consultation?</h2>
+              
               <button 
                 data-tour="page-primary-action" 
                 onClick={toggleCall} 
-                className="bg-emerald-500 text-white px-8 py-3.5 rounded-full font-bold shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all hover:scale-105 flex items-center gap-3 active:scale-95"
+                disabled={!lobbyStream}
+                className={`px-8 py-3.5 rounded-full font-bold shadow-xl flex items-center gap-3 transition-all ${lobbyStream ? 'bg-emerald-500 text-white shadow-emerald-500/20 hover:bg-emerald-600 hover:scale-105 active:scale-95' : 'bg-slate-700 text-slate-400 cursor-not-allowed'}`}
               >
                 <Video size={22} /> Join Telehealth Call
               </button>
             </div>
           ) : (
             <>
-              {/* Remote Video (Full Stage) */}
+              {/* Connection Status Overlay */}
+              {callActive && (connectionState === 'disconnected' || connectionState === 'failed') && (
+                <div className="absolute top-0 left-0 w-full bg-rose-500 text-white text-sm font-semibold py-2 px-4 flex items-center justify-center gap-2 z-50 animate-pulse shadow-md">
+                  <Wifi size={16} /> Connection lost. Trying to reconnect...
+                </div>
+              )}
+
+              {/* Screen Share (Main Stage if active) */}
+              {(remoteScreenStream || (isSharingScreen && screenStreamRef.current)) && (
+                <video 
+                  ref={(el) => { 
+                    const src = remoteScreenStream || screenStreamRef.current;
+                    if (el && el.srcObject !== src) el.srcObject = src; 
+                  }}
+                  autoPlay 
+                  playsInline 
+                  muted={isSharingScreen}
+                  className="absolute inset-0 w-full h-full object-contain bg-slate-900 z-10"
+                />
+              )}
+
+              {/* Remote Video (Full Stage or PiP) */}
               {remoteStream ? (
                 <video 
                   ref={remoteVideoRef}
                   autoPlay 
                   playsInline 
-                  className="w-full h-full object-cover"
+                  className={(remoteScreenStream || isSharingScreen) ? "absolute bottom-6 left-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 border-white/30 shadow-2xl object-cover z-20 bg-slate-900" : "w-full h-full object-cover"}
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-text-muted bg-slate-900/90 p-6 text-center">
@@ -922,6 +1189,26 @@ export default function TeleconsultationRoom() {
                 </div>
               )}
 
+              {/* Remote PIP Tag & Mute Indicator */}
+              {(remoteScreenStream || isSharingScreen) && remoteStream && (
+                 <div className="absolute bottom-8 left-8 z-30 flex items-center gap-2">
+                   <div className="bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md border border-white/10">
+                     {user.role === 'Patient' ? 'Doctor' : 'Patient'}
+                   </div>
+                   {isRemoteMuted && (
+                     <div className="bg-rose-500/90 text-white rounded-full p-1 shadow-md">
+                       <MicOff size={14} />
+                     </div>
+                   )}
+                 </div>
+              )}
+              
+              {!remoteScreenStream && !isSharingScreen && remoteStream && isRemoteMuted && (
+                 <div className="absolute top-6 right-6 z-30 bg-rose-500/90 text-white rounded-full p-2 shadow-lg animate-pulse border-2 border-white/20">
+                   <MicOff size={24} />
+                 </div>
+              )}
+
               {/* Local Video Tile with AI Person Segmentation or Direct Video */}
               <div 
                 className={`absolute bottom-6 right-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 border-white/30 shadow-2xl overflow-hidden transition-all duration-300 z-20 bg-slate-950 ${cameraActive ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
@@ -931,8 +1218,8 @@ export default function TeleconsultationRoom() {
                   ref={canvasRef}
                   width={640}
                   height={480}
-                  className={`w-full h-full object-cover relative z-10 ${bgPreset.id !== 'none' && isAiActive ? 'block' : 'hidden'}`}
-                  style={{ transform: 'scaleX(-1)' }}
+                  className={`w-full h-full object-cover relative z-10 ${bgPreset.id !== 'none' && isAiActive && !isSharingScreen ? 'block' : 'hidden'}`}
+                  style={{ transform: isSharingScreen ? 'none' : 'scaleX(-1)' }}
                 />
 
                 {/* Direct Video Element */}
@@ -942,19 +1229,18 @@ export default function TeleconsultationRoom() {
                   playsInline 
                   muted 
                   className={`object-cover transition-all duration-300 ${
-                    bgPreset.id === 'none' || !isAiActive
-                      ? 'w-full h-full relative z-10 block' 
+                    bgPreset.id === 'none' || !isAiActive || isSharingScreen
+                      ? 'w-full h-full relative z-10 block opacity-100' 
                       : 'w-full h-full absolute inset-0 opacity-0 pointer-events-none'
                   }`}
                   style={{ 
-                    transform: 'scaleX(-1)',
+                    transform: isSharingScreen ? 'none' : 'scaleX(-1)',
                     filter: (!isAiActive && bgPreset.type === 'blur') ? bgPreset.blurAmount : 'none'
                   }}
                 />
 
-                {/* PIP Tag */}
                 <div className="absolute bottom-2 left-2 z-20 bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md border border-white/10">
-                  You ({user?.name ? user.name.split(' ')[0] : 'You'})
+                  {isSharingScreen ? 'Your Presentation' : `You (${user?.name ? user.name.split(' ')[0] : 'You'})`}
                 </div>
               </div>
 
@@ -1001,6 +1287,15 @@ export default function TeleconsultationRoom() {
               <Sparkles size={20} />
             </button>
 
+            {/* Hardware Settings Button */}
+            <button 
+              onClick={() => setIsSettingsModalOpen(true)} 
+              title="Device Settings"
+              className="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+            >
+              <Settings size={20} />
+            </button>
+
             {/* Screen Share Button */}
             <button 
               onClick={toggleScreenShare} 
@@ -1034,11 +1329,11 @@ export default function TeleconsultationRoom() {
 
             {/* Leave Call Button */}
             <button 
-              onClick={toggleCall} 
-              title="End Call"
-              className="w-14 h-12 rounded-full bg-rose-600 text-white flex items-center justify-center hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/30 active:scale-95 ml-2"
+              onClick={handleEndCall} 
+              title="Leave Consultation"
+              className="w-12 h-12 rounded-full flex items-center justify-center bg-rose-500 text-white hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/30"
             >
-              <PhoneOff size={22} />
+              <PhoneOff size={20} />
             </button>
           </div>
 
@@ -1048,12 +1343,12 @@ export default function TeleconsultationRoom() {
 
       {/* ── Side Drawer Panel (Chat / Vitals / E-Prescription) ──────────────────── */}
       {activeSidePanel !== 'none' && (
-        <div className="w-full lg:w-[26rem] flex flex-col gap-4 lg:overflow-y-auto lg:pr-1 custom-scrollbar shrink-0">
+        <div className="w-full lg:w-[30rem] flex flex-col bg-surface h-full border-l border-border shrink-0 animate-in slide-in-from-right duration-300">
           
           {/* Chat Drawer */}
           {activeSidePanel === 'chat' && (
-            <div data-tour="page-chat" className="bg-surface rounded-2xl p-5 shadow-sm border border-border flex-1 flex flex-col min-h-[22rem]">
-              <div className="flex justify-between items-center mb-3 pb-3 border-b border-border">
+            <div data-tour="page-chat" className="flex-1 flex flex-col h-full bg-surface">
+              <div className="flex justify-between items-center p-4 border-b border-border bg-background shrink-0">
                 <h3 className="font-semibold text-text flex items-center gap-2">
                   <MessageCircle size={18} className="text-teal-500"/> In-Call Chat
                 </h3>
@@ -1062,7 +1357,7 @@ export default function TeleconsultationRoom() {
                 </button>
               </div>
 
-              <div ref={chatListRef} className="flex-1 overflow-y-auto rounded-xl border border-border bg-background p-3 space-y-3 custom-scrollbar min-h-[14rem]">
+              <div ref={chatListRef} className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-background">
                 {chatMessages.length === 0 ? (
                   <p className="text-xs text-text-light text-center py-16">No messages yet. Send a message to participants.</p>
                 ) : chatMessages.map((message) => {
@@ -1078,7 +1373,7 @@ export default function TeleconsultationRoom() {
                 })}
               </div>
 
-              <form onSubmit={sendChatMessage} className="mt-3 flex gap-2">
+              <form onSubmit={sendChatMessage} className="p-4 bg-surface border-t border-border flex gap-2 shrink-0">
                 <input
                   type="text"
                   value={chatMessage}
@@ -1099,8 +1394,8 @@ export default function TeleconsultationRoom() {
 
           {/* Clinical / Vitals Drawer */}
           {activeSidePanel === 'clinical' && (
-            <div data-tour="page-form" className="bg-surface rounded-2xl p-5 shadow-sm border border-border flex-1 flex flex-col space-y-4">
-              <div className="flex justify-between items-center pb-3 border-b border-border">
+            <div data-tour="page-form" className="flex-1 flex flex-col h-full bg-surface">
+              <div className="flex justify-between items-center p-4 border-b border-border bg-background shrink-0">
                 <h3 className="font-semibold text-text flex items-center gap-2">
                   <Activity size={18} className="text-sky-500"/> Vital Signs & Consultation Form
                 </h3>
@@ -1109,8 +1404,9 @@ export default function TeleconsultationRoom() {
                 </button>
               </div>
 
-              {/* Vitals Form / Display */}
-              <div className="space-y-3">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                {/* Vitals Form / Display */}
+                <div className="space-y-3">
                 {user.role === 'Patient' ? (
                   <form className="space-y-3" onSubmit={saveVitals}>
                     <input value={vitals.blood_pressure} onChange={e=>setVitals({...vitals, blood_pressure: e.target.value})} placeholder="Blood Pressure (e.g. 120/80)" className="w-full px-4 py-2 rounded-xl border border-border text-sm focus:ring-2 focus:ring-sky-500/20 outline-none text-text" />
@@ -1202,6 +1498,7 @@ export default function TeleconsultationRoom() {
                   </button>
                 </form>
               )}
+              </div>
             </div>
           )}
         </div>
