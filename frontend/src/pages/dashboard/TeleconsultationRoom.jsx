@@ -85,6 +85,8 @@ function formatDuration(seconds) {
 // Clones the audio track and keeps the monitor enabled so speaking is detected even when the user is muted ("Are you talking?" nudge).
 function useSpeakingIndicator(stream) {
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const holdTimerRef = useRef(null);
+
   useEffect(() => {
     if (!stream || stream.getAudioTracks().length === 0) {
       setIsSpeaking(false);
@@ -106,7 +108,7 @@ function useSpeakingIndicator(stream) {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
       analyser = audioContext.createAnalyser();
       analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.7;
+      analyser.smoothingTimeConstant = 0.6;
       microphone = audioContext.createMediaStreamSource(monitorStream);
       scriptProcessor = audioContext.createScriptProcessor(512, 1, 1);
 
@@ -123,8 +125,21 @@ function useSpeakingIndicator(stream) {
         if (!active) return;
         const data = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(data);
-        const avg = data.reduce((a, b) => a + b, 0) / data.length;
-        setIsSpeaking(avg > 12);
+
+        // Analyze vocal frequency band (approx 100Hz to 3000Hz -> bins 2 to 35 on 512 FFT)
+        const vocalBins = data.slice(2, 36);
+        const vocalAvg = vocalBins.reduce((a, b) => a + b, 0) / vocalBins.length;
+
+        if (vocalAvg > 16) {
+          setIsSpeaking(true);
+          if (holdTimerRef.current) {
+            clearTimeout(holdTimerRef.current);
+          }
+          // Keep speaking state active for 1.2s after last vocal sound to prevent flickering between words
+          holdTimerRef.current = setTimeout(() => {
+            if (active) setIsSpeaking(false);
+          }, 1200);
+        }
       };
     } catch {
       /* AudioContext fallback */
@@ -132,6 +147,7 @@ function useSpeakingIndicator(stream) {
 
     return () => {
       active = false;
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
       scriptProcessor?.disconnect();
       analyser?.disconnect();
       microphone?.disconnect();
@@ -1348,17 +1364,19 @@ export default function TeleconsultationRoom() {
               
               {/* Lobby Video Preview */}
               <div className={`w-full max-w-lg aspect-video bg-black rounded-2xl overflow-hidden mb-8 border transition-all duration-300 shadow-2xl relative group ${localSpeaking && micActive ? 'border-emerald-500 ring-4 ring-emerald-500/30' : 'border-slate-700'}`}>
-                {/* Lobby "Are you talking?" Banner */}
+                {/* Lobby "Your mic is muted" Nudge */}
                 {!micActive && localSpeaking && (
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 border border-amber-500/70 shadow-lg text-amber-300 text-xs font-semibold px-3.5 py-1.5 rounded-full flex items-center gap-2 animate-bounce backdrop-blur-md">
-                    <MicOff size={13} className="text-amber-400" />
-                    <span>Your mic is muted — are you talking?</span>
-                    <button onClick={toggleMic} className="bg-amber-400 text-slate-950 font-bold px-2 py-0.5 rounded-md text-[10px] hover:bg-amber-300">Unmute</button>
+                  <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 bg-[#202124]/95 text-white border border-[#3c4043] shadow-2xl px-4 py-2 rounded-full flex items-center gap-2.5 text-xs font-medium backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    <div className="w-5 h-5 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                      <MicOff size={12} />
+                    </div>
+                    <span className="text-slate-200">Your mic is muted — are you talking?</span>
+                    <button onClick={toggleMic} className="text-sky-400 hover:text-sky-300 font-bold ml-1 hover:underline">Unmute</button>
                   </div>
                 )}
                 {micActive && localSpeaking && (
-                  <div className="absolute top-3 left-3 z-30 bg-emerald-950/80 border border-emerald-500/60 text-emerald-400 text-[10px] font-semibold px-2 py-1 rounded-md flex items-center gap-1.5 animate-pulse backdrop-blur-md">
-                    <Activity size={12} /> Mic Active
+                  <div className="absolute top-3 left-3 z-30 bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 text-[10px] font-semibold px-2 py-1 rounded-md flex items-center gap-1.5 backdrop-blur-md">
+                    <Activity size={12} className="animate-pulse" /> Mic Active
                   </div>
                 )}
 
@@ -1616,21 +1634,18 @@ export default function TeleconsultationRoom() {
                 </div>
               )}
 
-              {/* Google Meet "Are you talking?" Floating Nudge */}
+              {/* Google Meet "Your mic is muted — are you talking?" Pill Toast */}
               {callActive && !micActive && localSpeaking && (
-                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 border border-amber-500/70 shadow-[0_0_30px_rgba(245,158,11,0.4)] backdrop-blur-xl text-white px-5 py-3 rounded-2xl flex items-center gap-3.5 animate-bounce pointer-events-auto">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
-                    <MicOff size={18} className="animate-pulse" />
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 bg-[#202124] text-white border border-[#3c4043] shadow-2xl px-4 py-2.5 rounded-full flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-auto">
+                  <div className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                    <MicOff size={13} />
                   </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-xs font-bold text-slate-100">Your microphone is muted</span>
-                    <span className="text-[11px] text-amber-300 font-medium">Are you talking? Click unmute to speak.</span>
-                  </div>
+                  <span className="text-xs font-medium text-slate-200">Your mic is muted — are you talking?</span>
                   <button
                     onClick={toggleMic}
-                    className="ml-2 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-emerald-500/25 flex items-center gap-1.5 shrink-0"
+                    className="text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors ml-0.5 hover:underline"
                   >
-                    <Mic size={14} /> Unmute
+                    Unmute
                   </button>
                 </div>
               )}
