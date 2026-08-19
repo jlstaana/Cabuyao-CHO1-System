@@ -43,6 +43,7 @@ function buildPatientRecords(patientsData) {
       id: c.id,
       date: formatDate(c.scheduled_at || c.created_at),
       time: formatTime(c.scheduled_at || c.created_at),
+      raw_date: c.scheduled_at,
       status: c.status,
       diagnosis: c.form?.diagnosis,
       notes: c.form?.notes,
@@ -84,11 +85,19 @@ function buildPatientRecords(patientsData) {
   });
 }
 
-const STATUS_STYLE = {
+const STATUS_CONFIG = {
   Completed:  { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
   Scheduled:  { bg: 'bg-sky-50 text-sky-700 border-sky-200', dot: 'bg-sky-500' },
   Pending:    { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  Cancelled:  { bg: 'bg-slate-50 text-text-muted border-slate-200', dot: 'bg-slate-400' },
+  Cancelled:  { bg: 'bg-slate-50 text-slate-700 border-slate-200', dot: 'bg-slate-500' },
+};
+
+const isUpcoming = (dateStr) => {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d >= today;
 };
 
 const IMAGE_STATUS_STYLE = {
@@ -314,7 +323,7 @@ export default function PatientRecords() {
         />
         <StatCard 
           label="Upcoming" 
-          value={patients.filter(p => p.consultations.some(c => c.status === 'Scheduled')).length} 
+          value={patients.filter(p => p.consultations.some(c => c.status === 'Scheduled' && isUpcoming(c.raw_date))).length} 
           icon={Clock} 
           color="amber" 
           sub="Scheduled consultations" 
@@ -407,7 +416,7 @@ export default function PatientRecords() {
                   </div>
 
                   {/* Next scheduled status */}
-                  {patient.consultations.some(c => c.status === 'Scheduled') && (
+                  {patient.consultations.some(c => c.status === 'Scheduled' && isUpcoming(c.raw_date)) && (
                     <span className="hidden sm:flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-primary-hover text-primary-text flex-shrink-0">
                       <Clock size={11} /> Upcoming
                     </span>
@@ -496,9 +505,9 @@ export default function PatientRecords() {
                             >
                               <HeartPulse size={15} /> View Vitals
                             </button>
-                            {patient.consultations.some(c => c.status === 'Scheduled') && (
+                            {patient.consultations.some(c => c.status === 'Scheduled' && isUpcoming(c.raw_date)) && (
                               <Link
-                                to={`/room/${patient.consultations.find(c => c.status === 'Scheduled').id}`}
+                                to={`/room/${patient.consultations.find(c => c.status === 'Scheduled' && isUpcoming(c.raw_date)).id}`}
                                 className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors shadow-sm"
                               >
                                 <Video size={15} /> Join Teleconsultation
