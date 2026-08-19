@@ -93,7 +93,7 @@ export default function TeleconsultationRoom() {
   // Google Meet Features & Backgrounds
   const [bgPresetId, setBgPresetId] = useState('none');
   const [isBgModalOpen, setIsBgModalOpen] = useState(false);
-  const [activeSidePanel, setActiveSidePanel] = useState(user?.role === 'Doctor' ? 'clinical' : 'none'); // 'chat' | 'clinical' | 'none'
+  const [activeSidePanel, setActiveSidePanel] = useState(user?.role === 'Doctor' && window.innerWidth >= 768 ? 'clinical' : 'none'); // 'chat' | 'clinical' | 'none'
   const [isSharingScreen, setIsSharingScreen] = useState(false);
   const [remoteScreenStream, setRemoteScreenStream] = useState(null);
   const [isRemoteSharingScreen, setIsRemoteSharingScreen] = useState(false);
@@ -1471,7 +1471,7 @@ export default function TeleconsultationRoom() {
 
       {/* ── Side Drawer Panel (Chat / Vitals / E-Prescription) ──────────────────── */}
       {activeSidePanel !== 'none' && (
-        <div className="w-full lg:w-[30rem] flex flex-col bg-surface h-full border-l border-border shrink-0 animate-in slide-in-from-right duration-300">
+        <div className="absolute inset-0 z-50 md:relative md:inset-auto w-full md:w-[24rem] lg:w-[30rem] flex flex-col bg-surface h-full border-l border-border shrink-0 animate-in slide-in-from-right duration-300">
           
           {/* Chat Drawer */}
           {activeSidePanel === 'chat' && (

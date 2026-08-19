@@ -273,9 +273,8 @@ function PatientOverview({ user, consultations, prescriptions }) {
   const isUpcoming = (dateStr) => {
     if (!dateStr) return false;
     const d = new Date(dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return d >= today;
+    const now = new Date();
+    return (d.getTime() + 15 * 60 * 1000) > now.getTime();
   };
   const upcoming = consultations.find((c) => c.status === 'Scheduled' && isUpcoming(c.scheduled_at));
   const vitalEntries = consultations.filter((c) => c.vital_signs || c.vitalSigns).length;

@@ -95,9 +95,8 @@ const STATUS_CONFIG = {
 const isUpcoming = (dateStr) => {
   if (!dateStr) return false;
   const d = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return d >= today;
+  const now = new Date();
+  return (d.getTime() + 15 * 60 * 1000) > now.getTime();
 };
 
 const IMAGE_STATUS_STYLE = {

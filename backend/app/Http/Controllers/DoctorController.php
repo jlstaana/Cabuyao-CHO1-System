@@ -106,7 +106,7 @@ class DoctorController extends Controller
             ->where('doctor_id', $doctor->id)
             ->where('status', 'Scheduled')
             ->whereNotNull('scheduled_at')
-            ->where('scheduled_at', '>=', now()->startOfDay())
+            ->where('scheduled_at', '>=', now()->subMinutes(15))
             ->orderBy('scheduled_at')
             ->get(['scheduled_at'])
             ->each(function (Consultation $consultation) use ($doctor, &$bookings, $capacity) {

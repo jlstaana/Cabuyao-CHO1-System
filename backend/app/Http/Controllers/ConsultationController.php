@@ -74,6 +74,7 @@ class ConsultationController extends Controller {
             ->where('doctor_id', $doctor->id)
             ->where('status', 'Scheduled')
             ->whereNotNull('scheduled_at')
+            ->where('scheduled_at', '>=', now()->subMinutes(15))
             ->when($ignoreConsultationId, fn ($query) => $query->where('id', '!=', $ignoreConsultationId))
             ->whereDate('scheduled_at', $date)
             ->whereTime('scheduled_at', '>=', $slot->start_time)
@@ -170,7 +171,6 @@ class ConsultationController extends Controller {
                 VitalSign::create([
                     'patient_id' => $request->user()->patient->id,
                     'consultation_id' => $c->id,
-                    'patient_id' => $request->user()->patient->id,
                     ...array_filter($data['vitals'], fn ($value) => $value !== null && $value !== ''),
                 ]);
             }

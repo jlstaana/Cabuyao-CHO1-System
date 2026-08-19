@@ -17,6 +17,7 @@ const STATUS = {
   Scheduled: { pill: 'bg-sky-50 text-sky-700 border-sky-200 border shadow-sm',       dot: 'bg-sky-500',     icon: Calendar },
   Completed: { pill: 'bg-emerald-50 text-emerald-700 border-emerald-200 border shadow-sm', dot: 'bg-emerald-500', icon: CheckCircle },
   Cancelled: { pill: 'bg-slate-50 text-text-muted border-slate-200 border shadow-sm',   dot: 'bg-slate-400',   icon: XCircle },
+  Missed:    { pill: 'bg-rose-50 text-rose-700 border-rose-200 border shadow-sm',       dot: 'bg-rose-500',    icon: AlertCircle },
 };
 
 const TAB_ICON = {
@@ -57,6 +58,15 @@ const EMPTY_REQUEST_FORM = {
     oxygen: '',
     weight: '',
   },
+};
+
+const getDisplayStatus = (c) => {
+  if (c.status === 'Scheduled' && c.scheduled_at) {
+    const scheduledTime = new Date(c.scheduled_at).getTime();
+    const now = new Date().getTime();
+    if (now > scheduledTime + 15 * 60 * 1000) return 'Missed';
+  }
+  return c.status;
 };
 
 function StatusPill({ status }) {
@@ -335,7 +345,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
                   <p className="font-semibold text-text">
                     {c.doctor?.user?.name ? `Dr. ${(c.doctor.user.name || '').replace(/^Dr\.\s*/i, '')}` : 'Doctor to be assigned'}
                   </p>
-                  <StatusPill status={c.status} />
+                  <StatusPill status={getDisplayStatus(c)} />
                 </div>
                 <div className="flex flex-wrap gap-3 text-xs text-text-light">
                   {c.requested_specialization && <span className="flex items-center gap-1"><Stethoscope size={12} /> {c.requested_specialization}</span>}
@@ -718,7 +728,7 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
                     </td>
                     <td className="px-5 py-3 text-text-light">{new Date(c.created_at).toLocaleDateString()}</td>
                     <td className="px-5 py-3 text-text-light">{c.scheduled_at ? new Date(c.scheduled_at).toLocaleString() : '—'}</td>
-                    <td className="px-5 py-3"><StatusPill status={c.status} /></td>
+                    <td className="px-5 py-3"><StatusPill status={getDisplayStatus(c)} /></td>
                     <td className="px-5 py-3 text-right">
                       {c.status === 'Pending' && (
                         <div className="flex justify-end gap-2">
@@ -1036,7 +1046,7 @@ export default function Consultations() {
                     <span>Requested: {selected.created_at ? new Date(selected.created_at).toLocaleString() : 'N/A'}</span>
                   </div>
                 </div>
-                <StatusPill status={selected.status} />
+                <StatusPill status={getDisplayStatus(selected)} />
               </div>
               {selected.patient?.address && (
                 <p className="mt-2 text-xs text-text-muted">Address: {selected.patient.address}</p>
