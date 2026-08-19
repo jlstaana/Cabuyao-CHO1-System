@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import Modal from '../../components/Modal';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import { 
   Video, Mic, MicOff, VideoOff, PhoneOff, Activity, FileText, Pill, 
   Plus, CheckCircle, Wifi, MessageCircle, Send, PenLine, Eraser, 
@@ -1314,7 +1315,8 @@ export default function TeleconsultationRoom() {
   }, [callActive, cameraActive, bgPresetId, isSharingScreen]);
 
   return (
-    <div className="flex flex-col lg:flex-row h-[100dvh] w-screen overflow-hidden bg-slate-950 text-white">
+    <ErrorBoundary>
+      <div className="flex flex-col lg:flex-row h-[100dvh] w-screen overflow-hidden bg-slate-950 text-white">
       {/* ── Main Video Stage (Google Meet Widescreen) ─────────────────────────── */}
       <div data-tour="page-video" className="flex-1 h-full bg-slate-900 relative shadow-2xl flex flex-col">
         {/* Top Header Status Bar */}
@@ -2058,6 +2060,7 @@ export default function TeleconsultationRoom() {
         </div>
       </Modal>
     </div>
+    </ErrorBoundary>
   );
 }
 
