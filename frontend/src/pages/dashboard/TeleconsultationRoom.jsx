@@ -227,6 +227,7 @@ export default function TeleconsultationRoom() {
   const selfieSegmentationRef = useRef(null);
   const canvasStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
+  const sessionStartedAt = useRef(null); // timestamp when "Join" was clicked — filters out stale signals from previous sessions
 
   const bgPreset = BACKGROUND_PRESETS.find((b) => b.id === bgPresetId) || BACKGROUND_PRESETS[0];
   const bgPresetRef = useRef(bgPreset);
@@ -617,22 +618,34 @@ export default function TeleconsultationRoom() {
   }, [id]);
 
   const processWebRTCSignal = useCallback(async (signal) => {
-    if (!pcRef.current) return false;
+    if (!pcRef.current || !signal) return false;
     try {
-      if (signal.type === 'offer' || signal.type === 'answer') {
-        await pcRef.current.setRemoteDescription(new RTCSessionDescription(signal.offer || signal.answer));
-        if (signal.type === 'offer') {
-          const answer = await pcRef.current.createAnswer();
-          await pcRef.current.setLocalDescription(answer);
-          sendSignal({ type: 'answer', answer });
+      if (signal.type === 'offer') {
+        if (pcRef.current.signalingState !== 'stable' && pcRef.current.signalingState !== 'have-local-offer') {
+          console.warn('Ignoring offer — signaling state:', pcRef.current.signalingState);
+          return true; // Mark handled so it does not loop
         }
+        await pcRef.current.setRemoteDescription(new RTCSessionDescription(signal.offer));
+        const answer = await pcRef.current.createAnswer();
+        await pcRef.current.setLocalDescription(answer);
+        sendSignal({ type: 'answer', answer });
+        while (iceCandidateQueue.current.length > 0) {
+          const candidate = iceCandidateQueue.current.shift();
+          await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error);
+        }
+      } else if (signal.type === 'answer') {
+        if (pcRef.current.signalingState !== 'have-local-offer') {
+          console.warn('Ignoring answer — signaling state:', pcRef.current.signalingState);
+          return true;
+        }
+        await pcRef.current.setRemoteDescription(new RTCSessionDescription(signal.answer));
         while (iceCandidateQueue.current.length > 0) {
           const candidate = iceCandidateQueue.current.shift();
           await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error);
         }
       } else if (signal.type === 'candidate') {
         if (pcRef.current.remoteDescription) {
-          await pcRef.current.addIceCandidate(new RTCIceCandidate(signal.candidate));
+          await pcRef.current.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(console.error);
         } else {
           iceCandidateQueue.current.push(signal.candidate);
         }
@@ -645,9 +658,12 @@ export default function TeleconsultationRoom() {
         setIsRemoteSharingScreen(true);
       } else if (signal.type === 'audio_status') {
         setIsRemoteMuted(!signal.enabled);
+      } else if (signal.type === 'camera_status') {
+        // camera status handled
       }
     } catch (err) {
-      console.error("WebRTC Error:", err);
+      console.error('WebRTC Signal Error:', err, signal);
+      return false;
     }
     return true;
   }, [sendSignal]);
@@ -776,10 +792,26 @@ export default function TeleconsultationRoom() {
         
         for (const msg of allMsgs) {
           if (msg.message.startsWith('[WEBRTC_SIGNAL]')) {
+            // Only process WebRTC signals once the current user has actually joined
+            if (!sessionStartedAt.current) continue;
+
+            const msgTime = new Date(msg.created_at).getTime();
+            if (msgTime < sessionStartedAt.current) {
+              // Mark stale signal from previous sessions as processed so we never touch it
+              processedSignals.current.add(msg.id);
+              continue;
+            }
+
             const signalStr = msg.message.replace('[WEBRTC_SIGNAL]', '');
             if (!processedSignals.current.has(msg.id) && msg.sender_id !== user?.id) {
-              const success = await processWebRTCSignal(JSON.parse(signalStr));
-              if (success) {
+              try {
+                const parsed = JSON.parse(signalStr);
+                const success = await processWebRTCSignal(parsed);
+                if (success) {
+                  processedSignals.current.add(msg.id);
+                }
+              } catch (err) {
+                console.error('Invalid signal JSON', err);
                 processedSignals.current.add(msg.id);
               }
             }
@@ -878,6 +910,13 @@ export default function TeleconsultationRoom() {
 
         stream = enhanceAudioStream(stream);
         streamRef.current = stream;
+
+        // Record the session start time BEFORE creating PeerConnection.
+        // The signal poller uses this to ignore any signals sent before we joined.
+        sessionStartedAt.current = Date.now() - 1000;
+        processedSignals.current.clear();
+        iceCandidateQueue.current = [];
+
         setCallActive(true);
         setTimeout(() => {
           if (videoRef.current) {
@@ -901,15 +940,9 @@ export default function TeleconsultationRoom() {
           }
         };
 
-        pc.onnegotiationneeded = async () => {
-          try {
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            sendSignal({ type: 'offer', offer });
-          } catch (err) {
-            console.error("Renegotiation error:", err);
-          }
-        };
+        // NOTE: onnegotiationneeded is intentionally NOT set here.
+        // It fires automatically after addTrack and would send a duplicate offer
+        // on top of the explicit one we send below, crashing the signaling state machine.
 
         pc.ontrack = (event) => {
           if (event.streams && event.streams[0]) {
@@ -925,7 +958,17 @@ export default function TeleconsultationRoom() {
         };
 
         pc.oniceconnectionstatechange = () => {
-          setConnectionState(pc.iceConnectionState);
+          const state = pc.iceConnectionState;
+          setConnectionState(state);
+          // Auto ICE-restart when connection drops (Patient is the offerer)
+          if ((state === 'disconnected' || state === 'failed') && user?.role === 'Patient') {
+            console.warn('ICE disconnected — attempting restart...');
+            pc.createOffer({ iceRestart: true }).then(offer => {
+              return pc.setLocalDescription(offer).then(() => {
+                sendSignal({ type: 'offer', offer });
+              });
+            }).catch(console.error);
+          }
         };
 
         stream.getTracks().forEach(track => {
@@ -942,6 +985,7 @@ export default function TeleconsultationRoom() {
       } catch (err) {
         toast.error("Camera/Microphone access denied or not found.");
         console.error(err);
+        sessionStartedAt.current = null;
       }
     } else {
       if (streamRef.current) {
@@ -953,6 +997,7 @@ export default function TeleconsultationRoom() {
         pcRef.current.close();
         pcRef.current = null;
       }
+      sessionStartedAt.current = null;
       setRemoteStream(null);
       iceCandidateQueue.current = [];
       processedSignals.current.clear();
@@ -1283,14 +1328,14 @@ export default function TeleconsultationRoom() {
                 <MonitorUp size={12} /> You are presenting to everyone
               </span>
             )}
-            {callActive && bgPreset.id !== 'none' && (
+            {callActive && bgPreset?.id !== 'none' && (
               <span className="bg-indigo-600/90 backdrop-blur-md text-white border border-indigo-500/50 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-                <Sparkles size={12} /> {bgPreset.label}
+                <Sparkles size={12} /> {bgPreset?.label || 'Background'}
               </span>
             )}
             {callActive && (
               <span className="bg-slate-900/80 backdrop-blur-md text-emerald-400 border border-slate-700/60 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
-                <Wifi size={12} /> {VIDEO_QUALITY_PROFILES[videoQuality].label}
+                <Wifi size={12} /> {VIDEO_QUALITY_PROFILES[videoQuality]?.label || 'HD'}
               </span>
             )}
           </div>
