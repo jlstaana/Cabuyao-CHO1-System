@@ -93,7 +93,7 @@ export default function TeleconsultationRoom() {
   // Google Meet Features & Backgrounds
   const [bgPresetId, setBgPresetId] = useState('none');
   const [isBgModalOpen, setIsBgModalOpen] = useState(false);
-  const [activeSidePanel, setActiveSidePanel] = useState(user?.role === 'Doctor' && window.innerWidth >= 768 ? 'clinical' : 'none'); // 'chat' | 'clinical' | 'none'
+  const [activeSidePanel, setActiveSidePanel] = useState('none'); // 'chat' | 'clinical' | 'none' — auto-opens after join
   const [isSharingScreen, setIsSharingScreen] = useState(false);
   const [remoteScreenStream, setRemoteScreenStream] = useState(null);
   const [isRemoteSharingScreen, setIsRemoteSharingScreen] = useState(false);
@@ -111,6 +111,9 @@ export default function TeleconsultationRoom() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [connectionState, setConnectionState] = useState('new');
   const [isRemoteMuted, setIsRemoteMuted] = useState(false);
+  // Hardware health alerts — Google Meet style
+  const [micLost, setMicLost] = useState(false);       // mic track ended unexpectedly
+  const [cameraLost, setCameraLost] = useState(false); // camera track ended unexpectedly
   
   const [remoteStream, setRemoteStream] = useState(null);
   const pcRef = useRef(null);
@@ -340,6 +343,47 @@ export default function TeleconsultationRoom() {
     }, 1000);
     return () => clearInterval(timer);
   }, [callActive]);
+
+  // Auto-open the clinical panel for Doctor on desktop once the call is active
+  useEffect(() => {
+    if (callActive && user?.role === 'Doctor' && window.innerWidth >= 768) {
+      setActiveSidePanel('clinical');
+    }
+  }, [callActive, user?.role]);
+
+  // ── Hardware Track Health Monitor ─────────────────────────────────────────
+  // Watches for unexpected mic/camera shutdowns (device unplugged, browser
+  // permission revoked, another app stealing the device, etc.)
+  useEffect(() => {
+    const stream = callActive ? streamRef.current : lobbyStream;
+    if (!stream) return;
+
+    const audioTrack = stream.getAudioTracks()[0];
+    const videoTrack = stream.getVideoTracks()[0];
+
+    const onAudioEnded = () => {
+      setMicLost(true);
+      setMicActive(false);
+      toast.error('⚠️ Microphone disconnected unexpectedly.', { duration: 8000 });
+    };
+    const onVideoEnded = () => {
+      setCameraLost(true);
+      setCameraActive(false);
+      toast.error('⚠️ Camera disconnected unexpectedly.', { duration: 8000 });
+    };
+
+    if (audioTrack) audioTrack.addEventListener('ended', onAudioEnded);
+    if (videoTrack) videoTrack.addEventListener('ended', onVideoEnded);
+
+    // Clear stale alerts when the stream changes (user recovered by reconnecting)
+    setMicLost(false);
+    setCameraLost(false);
+
+    return () => {
+      if (audioTrack) audioTrack.removeEventListener('ended', onAudioEnded);
+      if (videoTrack) videoTrack.removeEventListener('ended', onVideoEnded);
+    };
+  }, [callActive, lobbyStream]);
 
   // MediaPipe AI Person Segmentation Initialization (Google Meet Body Detection Engine)
   useEffect(() => {
@@ -1303,12 +1347,38 @@ export default function TeleconsultationRoom() {
             </div>
           ) : (
             <>
-              {/* Connection Status Overlay */}
-              {callActive && (connectionState === 'disconnected' || connectionState === 'failed') && (
-                <div className="absolute top-0 left-0 w-full bg-rose-500 text-white text-sm font-semibold py-2 px-4 flex items-center justify-center gap-2 z-50 animate-pulse shadow-md">
-                  <Wifi size={16} /> Connection lost. Trying to reconnect...
-                </div>
-              )}
+              {/* ── Hardware & Connection Alert Banners (Google Meet style) ── */}
+              {/* Stack from the top, each conditionally visible */}
+              <div className="absolute top-0 left-0 w-full z-50 flex flex-col pointer-events-none">
+                {/* Connection lost */}
+                {callActive && (connectionState === 'disconnected' || connectionState === 'failed') && (
+                  <div className="w-full bg-rose-600 text-white text-sm font-semibold py-2 px-4 flex items-center justify-center gap-2 animate-pulse shadow-md">
+                    <Wifi size={15} /> Connection lost — trying to reconnect...
+                  </div>
+                )}
+                {/* Mic hardware failure */}
+                {micLost && (
+                  <div className="w-full bg-amber-500 text-slate-950 text-sm font-semibold py-2 px-4 flex items-center justify-center gap-2 shadow-md pointer-events-auto">
+                    <MicOff size={15} />
+                    Microphone disconnected. Check your device or
+                    <button
+                      onClick={() => { setMicLost(false); toggleMic(); }}
+                      className="underline font-bold hover:opacity-80"
+                    >retry</button>
+                  </div>
+                )}
+                {/* Camera hardware failure */}
+                {cameraLost && (
+                  <div className="w-full bg-amber-500 text-slate-950 text-sm font-semibold py-2 px-4 flex items-center justify-center gap-2 shadow-md pointer-events-auto">
+                    <VideoOff size={15} />
+                    Camera disconnected. Check your device or
+                    <button
+                      onClick={() => { setCameraLost(false); toggleCamera(); }}
+                      className="underline font-bold hover:opacity-80"
+                    >retry</button>
+                  </div>
+                )}
+              </div>
 
               {/* Screen Share (Main Stage if active) */}
               {(remoteScreenStream || (isSharingScreen && screenStreamRef.current)) && (
@@ -1416,21 +1486,39 @@ export default function TeleconsultationRoom() {
 
             {/* Floating Pill Controls */}
             <div className="flex items-center gap-2 sm:gap-3 mx-auto sm:mx-0">
-              <button 
-                onClick={toggleMic} 
-                title={micActive ? 'Mute Microphone' : 'Unmute Microphone'}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${micActive ? 'bg-slate-800 text-white hover:bg-slate-700 active:scale-95' : 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'}`}
-              >
-                {micActive ? <Mic size={20} /> : <MicOff size={20} />}
-              </button>
+              {/* Mic Button — pulses amber ring if mic is hardware-lost */}
+              <div className="relative">
+                <button
+                  onClick={toggleMic}
+                  title={micLost ? 'Microphone disconnected — click to retry' : micActive ? 'Mute Microphone' : 'Unmute Microphone'}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
+                    ${micLost ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-950 animate-pulse'
+                      : micActive ? 'bg-slate-800 text-white hover:bg-slate-700 active:scale-95'
+                      : 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'}`}
+                >
+                  {micActive && !micLost ? <Mic size={20} /> : <MicOff size={20} />}
+                </button>
+                {micLost && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center text-[9px] font-black text-slate-950">!</span>
+                )}
+              </div>
 
-              <button 
-                onClick={toggleCamera} 
-                title={cameraActive ? 'Turn Off Camera' : 'Turn On Camera'}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${cameraActive ? 'bg-slate-800 text-white hover:bg-slate-700 active:scale-95' : 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'}`}
-              >
-                {cameraActive ? <Video size={20} /> : <VideoOff size={20} />}
-              </button>
+              {/* Camera Button — pulses amber ring if camera is hardware-lost */}
+              <div className="relative">
+                <button
+                  onClick={toggleCamera}
+                  title={cameraLost ? 'Camera disconnected — click to retry' : cameraActive ? 'Turn Off Camera' : 'Turn On Camera'}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
+                    ${cameraLost ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-950 animate-pulse'
+                      : cameraActive ? 'bg-slate-800 text-white hover:bg-slate-700 active:scale-95'
+                      : 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'}`}
+                >
+                  {cameraActive && !cameraLost ? <Video size={20} /> : <VideoOff size={20} />}
+                </button>
+                {cameraLost && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center text-[9px] font-black text-slate-950">!</span>
+                )}
+              </div>
 
               {/* Google Meet Backgrounds & Visual Effects Button */}
               <button 
