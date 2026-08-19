@@ -1347,49 +1347,66 @@ function TeleconsultationRoomContent() {
 
   return (
     <div className="flex flex-col lg:flex-row h-[100dvh] w-screen overflow-hidden bg-slate-950 text-white">
-      {/* ── Main Video Stage (Google Meet Widescreen) ─────────────────────────── */}
-            <div data-tour="page-video" className="flex-1 h-full bg-slate-900 relative shadow-2xl flex flex-col">
-        <JitsiMeeting
-          domain="jitsi.riot.im"
-          roomName={`CabuyaoCHO1-Teleconsultation-${id}`}
-          configOverwrite={{
-            startWithAudioMuted: false,
-            startWithVideoMuted: false,
-            prejoinPageEnabled: true,
-            prejoinConfig: { enabled: true, hideDisplayName: true },
-            disableDeepLinking: true,
-          }}
-          interfaceConfigOverwrite={{
-            DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
-            SHOW_PROMOTIONAL_CLOSE_PAGE: false,
-          }}
-          userInfo={{
-            displayName: user?.name || (user?.role === 'Doctor' ? 'Doctor' : 'Patient')
-          }}
-          onApiReady={(externalApi) => {
-            externalApi.addListener('videoConferenceJoined', () => {
-              if (user?.role === 'Doctor' && consultation?.status === 'scheduled') {
-                api.put(`/consultations/${id}`, { status: 'in_progress' }).catch(console.error);
-              }
-            });
-            externalApi.addListener('readyToClose', () => {
-              handleEndCall();
-            });
-          }}
-          getIFrameRef={(iframeRef) => { iframeRef.style.height = '100%'; }}
-        />
-        
-        {/* Floating action button to open sidebar on mobile or if closed */}
-        {activeSidePanel === 'none' && (
-          <div className="absolute top-4 right-4 z-50 flex gap-2">
-            <button onClick={() => setActiveSidePanel('chat')} className="bg-indigo-600 p-3 rounded-full text-white shadow-lg hover:bg-indigo-700">
-              <MessageCircle size={20} />
-            </button>
-            <button onClick={handleEndCall} className="bg-rose-600 p-3 rounded-full text-white shadow-lg hover:bg-rose-700">
-              <PhoneOff size={20} />
-            </button>
-          </div>
-        )}
+      {/* ── App Navigation Strip ── */}
+      <div className="w-full lg:w-16 h-16 lg:h-full bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-800 flex lg:flex-col items-center justify-between lg:justify-start px-4 lg:px-0 py-0 lg:py-4 z-50 shrink-0">
+         <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-bold lg:mb-8 shrink-0 shadow-lg">
+             CHO
+         </div>
+         <div className="flex lg:flex-col gap-2 lg:gap-4 flex-1 justify-center lg:justify-start items-center">
+             <button onClick={() => setActiveSidePanel(prev => prev === 'chat' ? 'none' : 'chat')} className={`p-3 rounded-xl transition-all ${activeSidePanel === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`} title="Consultation Chat">
+                 <MessageCircle size={22} />
+             </button>
+             {user?.role === 'Doctor' && (
+                 <button onClick={() => setActiveSidePanel(prev => prev === 'clinical' ? 'none' : 'clinical')} className={`p-3 rounded-xl transition-all ${activeSidePanel === 'clinical' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`} title="Clinical Tools">
+                     <Activity size={22} />
+                 </button>
+             )}
+         </div>
+         <div className="lg:mt-auto shrink-0 flex items-center">
+             <button onClick={handleEndCall} className="p-3 text-rose-500 hover:text-white hover:bg-rose-600 rounded-xl transition-all" title="Leave Room">
+                 <PhoneOff size={22} />
+             </button>
+         </div>
+      </div>
+
+      {/* ── Main Video Stage ── */}
+      <div data-tour="page-video" className="flex-1 h-full bg-slate-900 relative shadow-2xl flex flex-col">
+        <div className="flex-1 w-full h-full relative">
+          <JitsiMeeting
+            domain="alpha.jitsi.net"
+            roomName={`CabuyaoCHO1-Teleconsultation-${id}`}
+            configOverwrite={{
+              startWithAudioMuted: false,
+              startWithVideoMuted: false,
+              prejoinPageEnabled: true,
+              disableDeepLinking: true,
+              toolbarButtons: [
+                  'camera', 'desktop', 'fullscreen',
+                  'hangup', 'microphone', 'profile',
+                  'raisehand', 'settings', 'tileview',
+                  'videoquality', 'videobackgroundblur'
+              ]
+            }}
+            interfaceConfigOverwrite={{
+              DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+              SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+            }}
+            userInfo={{
+              displayName: user?.name || (user?.role === 'Doctor' ? 'Doctor' : 'Patient')
+            }}
+            onApiReady={(externalApi) => {
+              externalApi.addListener('videoConferenceJoined', () => {
+                if (user?.role === 'Doctor' && consultation?.status === 'scheduled') {
+                  api.put(`/consultations/${id}`, { status: 'in_progress' }).catch(console.error);
+                }
+              });
+              externalApi.addListener('readyToClose', () => {
+                handleEndCall();
+              });
+            }}
+            getIFrameRef={(iframeRef) => { iframeRef.style.height = '100%'; iframeRef.style.width = '100%'; }}
+          />
+        </div>
       </div>
 
       {activeSidePanel !== 'none' && (
