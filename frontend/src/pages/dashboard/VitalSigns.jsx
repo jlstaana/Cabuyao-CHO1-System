@@ -15,12 +15,12 @@ const VITAL_FIELDS = [
 ];
 
 const COLOR_MAP = {
-  sky:     { bg: 'bg-primary-bg',     icon: 'text-sky-500',     border: 'border-sky-200',     badge: 'bg-primary-hover text-primary-text', gradient: 'bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200' },
-  rose:    { bg: 'bg-danger-bg',    icon: 'text-rose-500',    border: 'border-rose-200',    badge: 'bg-rose-100 text-rose-700', gradient: 'bg-gradient-to-br from-rose-500 to-pink-600 shadow-rose-200' },
-  amber:   { bg: 'bg-warning-bg',   icon: 'text-amber-500',   border: 'border-amber-200',   badge: 'bg-amber-100 text-warning-text', gradient: 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-200' },
-  emerald: { bg: 'bg-success-bg', icon: 'text-emerald-500', border: 'border-emerald-200', badge: 'bg-emerald-100 text-success-text', gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200' },
-  indigo:  { bg: 'bg-brand-bg',  icon: 'text-indigo-500',  border: 'border-indigo-200',  badge: 'bg-indigo-100 text-brand-text', gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-200' },
-  purple:  { bg: 'bg-purple-50',  icon: 'text-purple-500',  border: 'border-purple-200',  badge: 'bg-purple-100 text-purple-700', gradient: 'bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-purple-200' },
+  sky:     { bg: 'bg-primary-bg',     icon: 'text-sky-500',     border: 'border-sky-200',     badge: 'bg-primary-hover text-primary-text', gradient: 'bg-gradient-to-br from-sky-500 to-blue-600' },
+  rose:    { bg: 'bg-danger-bg',    icon: 'text-rose-500',    border: 'border-rose-200',    badge: 'bg-rose-100 text-rose-700', gradient: 'bg-gradient-to-br from-rose-500 to-pink-600' },
+  amber:   { bg: 'bg-warning-bg',   icon: 'text-amber-500',   border: 'border-amber-200',   badge: 'bg-amber-100 text-warning-text', gradient: 'bg-gradient-to-br from-amber-500 to-orange-600' },
+  emerald: { bg: 'bg-success-bg', icon: 'text-emerald-500', border: 'border-emerald-200', badge: 'bg-emerald-100 text-success-text', gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600' },
+  indigo:  { bg: 'bg-brand-bg',  icon: 'text-indigo-500',  border: 'border-indigo-200',  badge: 'bg-indigo-100 text-brand-text', gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600' },
+  purple:  { bg: 'bg-purple-50',  icon: 'text-purple-500',  border: 'border-purple-200',  badge: 'bg-purple-100 text-purple-700', gradient: 'bg-gradient-to-br from-purple-500 to-fuchsia-600' },
 };
 
 function mapVitalHistory(vitals) {
@@ -116,7 +116,7 @@ export default function VitalSigns() {
                 const Icon = field.icon;
                 const c = COLOR_MAP[field.color];
                 return (
-                  <div key={field.key} className={`rounded-2xl border shadow-md border-transparent ${c.gradient} p-4`}>
+                  <div key={field.key} className={`rounded-2xl border border-transparent ${c.gradient} p-4`}>
                     <label className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide mb-2 text-white/90">
                       <Icon size={15} /> {field.label}
                       <span className="ml-auto text-xs font-normal normal-case text-white/70">{field.unit}</span>
@@ -160,7 +160,7 @@ export default function VitalSigns() {
               const c = COLOR_MAP[field.color];
               const value = latest[field.key];
               return (
-                <div key={field.key} className={`rounded-2xl border shadow-md border-transparent ${c.gradient} p-4 flex flex-col items-center text-center`}>
+                <div key={field.key} className={`rounded-2xl border border-transparent ${c.gradient} p-4 flex flex-col items-center text-center`}>
                   <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center mb-2">
                     <Icon size={20} />
                   </div>

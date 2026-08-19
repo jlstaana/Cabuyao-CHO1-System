@@ -32,16 +32,16 @@ function StatCard({ label, value, icon: Icon, color, sub }) {
   const isFuchsia = color?.includes('fuchsia');
   const isSlate = color?.includes('slate');
 
-  const bgGradient = isIndigo ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-200' :
-                     isEmerald ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200' :
-                     isRose ? 'bg-gradient-to-br from-rose-500 to-pink-600 shadow-rose-200' :
-                     isAmber ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-200' :
-                     isFuchsia ? 'bg-gradient-to-br from-fuchsia-600 to-purple-700 shadow-fuchsia-200' :
-                     isSlate ? 'bg-gradient-to-br from-slate-600 to-slate-800 shadow-slate-300' :
-                     'bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200';
+  const bgGradient = isIndigo ? 'bg-gradient-to-br from-indigo-500 to-purple-600' :
+                     isEmerald ? 'bg-gradient-to-br from-emerald-500 to-teal-600' :
+                     isRose ? 'bg-gradient-to-br from-rose-500 to-pink-600' :
+                     isAmber ? 'bg-gradient-to-br from-amber-500 to-orange-600' :
+                     isFuchsia ? 'bg-gradient-to-br from-fuchsia-600 to-purple-700' :
+                     isSlate ? 'bg-gradient-to-br from-slate-600 to-slate-800' :
+                     'bg-gradient-to-br from-sky-500 to-blue-600';
 
   return (
-    <div data-tour="page-stats" className={`p-5 rounded-2xl border shadow-md border-transparent ${bgGradient}`}>
+    <div data-tour="page-stats" className={`p-5 rounded-2xl border border-transparent ${bgGradient}`}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</span>
         <div className="p-2 rounded-xl bg-white/20 text-white">

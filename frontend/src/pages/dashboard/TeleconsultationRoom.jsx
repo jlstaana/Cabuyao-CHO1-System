@@ -681,7 +681,7 @@ export default function TeleconsultationRoom() {
       }
     };
     fetchMessages();
-    const interval = setInterval(fetchMessages, 4000);
+    const interval = setInterval(fetchMessages, 2000);
     return () => {
       active = false;
       clearInterval(interval);
@@ -776,7 +776,9 @@ export default function TeleconsultationRoom() {
         const pc = new RTCPeerConnection({
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' },
+            { urls: 'stun:stun.services.mozilla.com' }
           ]
         });
 
@@ -1138,7 +1140,7 @@ export default function TeleconsultationRoom() {
   }, [callActive, cameraActive, bgPresetId, isSharingScreen]);
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen w-screen overflow-hidden bg-slate-950 text-white">
+    <div className="flex flex-col lg:flex-row h-[100dvh] w-screen overflow-hidden bg-slate-950 text-white">
       {/* ── Main Video Stage (Google Meet Widescreen) ─────────────────────────── */}
       <div data-tour="page-video" className="flex-1 h-full bg-slate-900 relative shadow-2xl flex flex-col">
         {/* Top Header Status Bar */}

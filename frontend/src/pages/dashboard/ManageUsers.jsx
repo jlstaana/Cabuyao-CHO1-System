@@ -170,7 +170,8 @@ export default function ManageUsers() {
   }
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">      {/* Header */}
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <PageTitle icon={UserPlus} title="Account Management" description="Create doctor & staff accounts, assign visiting doctor access, and manage credentials." iconClassName="bg-primary-bg text-primary-text" />
         <div data-tour="page-primary-action" className="flex gap-2 flex-wrap">
@@ -192,7 +193,7 @@ export default function ManageUsers() {
       {/* Category Summary Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <div
-          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-transparent shadow-sky-200 shadow-md"
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-transparent"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-sky-100">
@@ -211,7 +212,7 @@ export default function ManageUsers() {
         </div>
 
         <div
-          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white border-transparent shadow-fuchsia-200 shadow-md"
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-fuchsia-600 to-purple-700 text-white border-transparent"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-fuchsia-100">
@@ -230,7 +231,7 @@ export default function ManageUsers() {
         </div>
 
         <div
-          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-transparent shadow-cyan-200 shadow-md"
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-transparent"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-cyan-100">
@@ -249,7 +250,7 @@ export default function ManageUsers() {
         </div>
 
         <div
-          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent shadow-amber-200 shadow-md"
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-100">
@@ -268,7 +269,7 @@ export default function ManageUsers() {
         </div>
 
         <div
-          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent shadow-emerald-200 shadow-md"
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-100">
@@ -287,7 +288,7 @@ export default function ManageUsers() {
         </div>
 
         <div
-          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-slate-600 to-slate-800 text-white border-transparent shadow-slate-300 shadow-md"
+          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-slate-600 to-slate-800 text-white border-transparent"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-200">

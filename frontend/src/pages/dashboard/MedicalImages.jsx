@@ -197,13 +197,14 @@ export default function MedicalImages() {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      {/* Header */}
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+      {/* Header */}
       <header>
         <PageTitle icon={ImagePlus} title="Medical Images" description="Upload X-rays, lab results, and other medical documents for your doctor to review." iconClassName="bg-brand-bg text-indigo-600" />
       </header>
 
       {/* Upload form */}
-      <form data-tour="page-form" onSubmit={handleSubmit} className="rounded-2xl border border-transparent shadow-md bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200 p-6 space-y-5">
+      <form data-tour="page-form" onSubmit={handleSubmit} className="rounded-2xl border border-transparent bg-gradient-to-br from-sky-500 to-blue-600 p-6 space-y-5">
         <h2 className="font-bold text-white flex items-center gap-2">
           <ImagePlus size={18} /> Upload New Image
         </h2>

@@ -79,7 +79,8 @@ export default function ConsultationHistory() {
   const total = history.length;
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      {/* Header */}
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+      {/* Header */}
       <header>
         <PageTitle icon={ClipboardList} title="Consultation History" description="A complete record of all your past and upcoming consultations." iconClassName="bg-primary-bg text-primary-text" />
       </header>
@@ -87,14 +88,14 @@ export default function ConsultationHistory() {
       {/* Summary stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Sessions',     value: total,     icon: ClipboardList, gradient: 'bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200', sub: 'All logged consultations' },
-          { label: 'Completed',          value: completed, icon: CheckCircle,   gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200', sub: 'Successfully finished' },
-          { label: 'Cancelled',          value: history.filter(c => c.status === 'Cancelled').length, icon: XCircle, gradient: 'bg-gradient-to-br from-slate-500 to-slate-700 shadow-slate-200', sub: 'Discontinued requests' },
-          { label: 'Prescriptions',      value: history.filter(c => c.prescription_id).length, icon: FileText, gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-200', sub: 'Received documents' },
+          { label: 'Total Sessions',     value: total,     icon: ClipboardList, gradient: 'bg-gradient-to-br from-sky-500 to-blue-600', sub: 'All logged consultations' },
+          { label: 'Completed',          value: completed, icon: CheckCircle,   gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600', sub: 'Successfully finished' },
+          { label: 'Cancelled',          value: history.filter(c => c.status === 'Cancelled').length, icon: XCircle, gradient: 'bg-gradient-to-br from-slate-500 to-slate-700', sub: 'Discontinued requests' },
+          { label: 'Prescriptions',      value: history.filter(c => c.prescription_id).length, icon: FileText, gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600', sub: 'Received documents' },
         ].map((s) => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className={`p-5 rounded-2xl border shadow-md border-transparent ${s.gradient}`}>
+            <div key={s.label} className={`p-5 rounded-2xl border border-transparent ${s.gradient}`}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-white/80">{s.label}</span>
                 <div className="p-2 rounded-xl bg-white/20 text-white">

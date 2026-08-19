@@ -81,35 +81,35 @@ function StatusPill({ status }) {
 
 const FILTER_STYLES = {
   All: {
-    active: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent shadow-indigo-200 shadow-md',
+    active: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent',
     iconActive: 'bg-white/20 text-white',
     textActive: 'text-white',
     subActive: 'text-indigo-100',
     labelActive: 'text-indigo-100',
   },
   Pending: {
-    active: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent shadow-amber-200 shadow-md',
+    active: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent',
     iconActive: 'bg-white/20 text-white',
     textActive: 'text-white',
     subActive: 'text-amber-100',
     labelActive: 'text-amber-100',
   },
   Scheduled: {
-    active: 'bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent shadow-sky-200 shadow-md',
+    active: 'bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent',
     iconActive: 'bg-white/20 text-white',
     textActive: 'text-white',
     subActive: 'text-sky-100',
     labelActive: 'text-sky-100',
   },
   Completed: {
-    active: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent shadow-emerald-200 shadow-md',
+    active: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent',
     iconActive: 'bg-white/20 text-white',
     textActive: 'text-white',
     subActive: 'text-emerald-100',
     labelActive: 'text-emerald-100',
   },
   Cancelled: {
-    active: 'bg-gradient-to-br from-slate-500 to-gray-600 text-white border-transparent shadow-slate-200 shadow-md',
+    active: 'bg-gradient-to-br from-slate-500 to-gray-600 text-white border-transparent',
     iconActive: 'bg-white/20 text-white',
     textActive: 'text-white',
     subActive: 'text-slate-100',

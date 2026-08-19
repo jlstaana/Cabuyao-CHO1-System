@@ -34,13 +34,13 @@ const maxTotal = (items) => Math.max(...items.map((item) => Number(item.total ||
 
 function StatCard({ label, value, sub, color = 'sky' }) {
   const styles = {
-    sky: 'bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent shadow-sky-200',
-    emerald: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent shadow-emerald-200',
-    indigo: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent shadow-indigo-200',
-    rose: 'bg-gradient-to-br from-rose-500 to-pink-600 text-white border-transparent shadow-rose-200',
+    sky: 'bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent',
+    emerald: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent',
+    indigo: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent',
+    rose: 'bg-gradient-to-br from-rose-500 to-pink-600 text-white border-transparent',
   };
   return (
-    <div className={`p-5 rounded-2xl border shadow-md ${styles[color] || styles.sky}`}>
+    <div className={`p-5 rounded-2xl border ${styles[color] || styles.sky}`}>
       <p className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</p>
       <p className="text-3xl font-black mt-1 text-white">{value}</p>
       {sub && <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">{sub}</p>}
@@ -493,7 +493,7 @@ export default function Analytics() {
             />
 
             {/* Active Doctors — name + consult count */}
-            <div className="p-5 rounded-2xl border shadow-md border-transparent bg-gradient-to-br from-sky-500 to-blue-600 shadow-sky-200 col-span-2 lg:col-span-1">
+            <div className="p-5 rounded-2xl border border-transparent bg-gradient-to-br from-sky-500 to-blue-600 col-span-2 lg:col-span-1">
               <p className="text-xs font-bold uppercase tracking-wider text-white/80">Active Doctors</p>
               <p className="text-3xl font-black mt-1 text-white">{formatNumber(summary.active_doctors)}</p>
               {stats.consultations_by_doctor.length > 0 ? (
@@ -522,7 +522,7 @@ export default function Analytics() {
             </div>
 
             {/* Monthly Consults — month name bolded */}
-            <div className="p-5 rounded-2xl border shadow-md border-transparent bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200">
+            <div className="p-5 rounded-2xl border border-transparent bg-gradient-to-br from-emerald-500 to-teal-600 ">
               <p className="text-xs font-bold uppercase tracking-wider text-white/80">Monthly Consults</p>
               <p className="text-3xl font-black mt-1 text-white">{formatNumber(summary.total_consultations)}</p>
               <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">
