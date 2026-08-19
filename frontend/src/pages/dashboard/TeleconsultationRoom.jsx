@@ -81,6 +81,72 @@ function formatDuration(seconds) {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+// Detects voice activity on a MediaStream using Web Audio AnalyserNode.
+// Clones the audio track and keeps the monitor enabled so speaking is detected even when the user is muted ("Are you talking?" nudge).
+function useSpeakingIndicator(stream) {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  useEffect(() => {
+    if (!stream || stream.getAudioTracks().length === 0) {
+      setIsSpeaking(false);
+      return;
+    }
+    const originalTrack = stream.getAudioTracks()[0];
+    if (!originalTrack) return;
+
+    let active = true;
+    let audioContext, analyser, microphone, scriptProcessor;
+    let monitorTrack;
+
+    try {
+      // Clone track so disabling the main track for WebRTC doesn't mute local speech detection
+      monitorTrack = originalTrack.clone();
+      monitorTrack.enabled = true;
+      const monitorStream = new MediaStream([monitorTrack]);
+
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.7;
+      microphone = audioContext.createMediaStreamSource(monitorStream);
+      scriptProcessor = audioContext.createScriptProcessor(512, 1, 1);
+
+      microphone.connect(analyser);
+      analyser.connect(scriptProcessor);
+
+      // Route to zero gain so no local audio feedback is played through speakers
+      const muteGain = audioContext.createGain();
+      muteGain.gain.value = 0;
+      scriptProcessor.connect(muteGain);
+      muteGain.connect(audioContext.destination);
+
+      scriptProcessor.onaudioprocess = () => {
+        if (!active) return;
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(data);
+        const avg = data.reduce((a, b) => a + b, 0) / data.length;
+        setIsSpeaking(avg > 12);
+      };
+    } catch {
+      /* AudioContext fallback */
+    }
+
+    return () => {
+      active = false;
+      scriptProcessor?.disconnect();
+      analyser?.disconnect();
+      microphone?.disconnect();
+      if (monitorTrack) {
+        monitorTrack.stop();
+      }
+      if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close().catch(() => {});
+      }
+    };
+  }, [stream]);
+
+  return isSpeaking;
+}
+
 export default function TeleconsultationRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -126,6 +192,9 @@ export default function TeleconsultationRoom() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatMessage, setChatMessage] = useState('');
   const [chatSending, setChatSending] = useState(false);
+  // Voice activity detection — drives the "Are you talking?" nudge and green glow
+  const localSpeaking = useSpeakingIndicator(callActive ? streamRef.current : lobbyStream);
+  const remoteSpeaking = useSpeakingIndicator(remoteStream);
   
   // Vitals State
   const [vitals, setVitals] = useState({ blood_pressure: '', heart_rate: '', temperature: '' });
@@ -1193,8 +1262,13 @@ export default function TeleconsultationRoom() {
             <span className="bg-rose-600 text-white px-3 py-1 rounded-full text-xs font-black tracking-wider animate-pulse flex items-center gap-1.5 shadow-md shadow-rose-900/40">
               <span className="w-2 h-2 bg-white rounded-full"></span> LIVE
             </span>
-            <span className="bg-slate-900/80 backdrop-blur-md text-slate-200 border border-slate-700/60 px-3.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-              {consultation ? (user?.role === 'Patient' ? `Dr. ${consultation?.doctor?.user?.name || 'Assigned Doctor'}` : `Patient: ${consultation?.patient?.user?.name}`) : 'Loading...'}
+            <span className="bg-slate-900/80 backdrop-blur-md text-slate-200 border border-slate-700/60 px-3.5 py-1 rounded-full text-xs font-semibold flex items-center gap-2 shadow-sm">
+              <span>{consultation ? (user?.role === 'Patient' ? `Dr. ${consultation?.doctor?.user?.name || 'Assigned Doctor'}` : `Patient: ${consultation?.patient?.user?.name}`) : 'Loading...'}</span>
+              {callActive && remoteSpeaking && !isRemoteMuted && (
+                <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] animate-pulse">
+                  <Activity size={10} /> Speaking
+                </span>
+              )}
             </span>
             {callActive && (
               <span className="bg-slate-900/80 backdrop-blur-md text-slate-300 border border-slate-700/60 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
@@ -1228,7 +1302,21 @@ export default function TeleconsultationRoom() {
             <div className="flex flex-col items-center justify-center p-6 sm:p-8 text-center w-full max-w-3xl">
               
               {/* Lobby Video Preview */}
-              <div className="w-full max-w-lg aspect-video bg-black rounded-2xl overflow-hidden mb-8 border border-slate-700 shadow-2xl relative group">
+              <div className={`w-full max-w-lg aspect-video bg-black rounded-2xl overflow-hidden mb-8 border transition-all duration-300 shadow-2xl relative group ${localSpeaking && micActive ? 'border-emerald-500 ring-4 ring-emerald-500/30' : 'border-slate-700'}`}>
+                {/* Lobby "Are you talking?" Banner */}
+                {!micActive && localSpeaking && (
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 border border-amber-500/70 shadow-lg text-amber-300 text-xs font-semibold px-3.5 py-1.5 rounded-full flex items-center gap-2 animate-bounce backdrop-blur-md">
+                    <MicOff size={13} className="text-amber-400" />
+                    <span>Your mic is muted — are you talking?</span>
+                    <button onClick={toggleMic} className="bg-amber-400 text-slate-950 font-bold px-2 py-0.5 rounded-md text-[10px] hover:bg-amber-300">Unmute</button>
+                  </div>
+                )}
+                {micActive && localSpeaking && (
+                  <div className="absolute top-3 left-3 z-30 bg-emerald-950/80 border border-emerald-500/60 text-emerald-400 text-[10px] font-semibold px-2 py-1 rounded-md flex items-center gap-1.5 animate-pulse backdrop-blur-md">
+                    <Activity size={12} /> Mic Active
+                  </div>
+                )}
+
                 {/* AI Processed Canvas for Lobby */}
                 <canvas 
                   ref={!callActive ? canvasRef : null}
@@ -1400,7 +1488,7 @@ export default function TeleconsultationRoom() {
                   ref={remoteVideoRef}
                   autoPlay 
                   playsInline 
-                  className={(remoteScreenStream || isSharingScreen) ? "absolute bottom-6 left-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 border-white/30 shadow-2xl object-cover z-20 bg-slate-900" : "w-full h-full object-cover"}
+                  className={(remoteScreenStream || isSharingScreen) ? `absolute bottom-6 left-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 object-cover z-20 bg-slate-900 transition-all ${remoteSpeaking && !isRemoteMuted ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)] ring-2 ring-emerald-400/50' : 'border-white/30 shadow-2xl'}` : "w-full h-full object-cover"}
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-text-muted bg-slate-900/90 p-6 text-center">
@@ -1415,8 +1503,11 @@ export default function TeleconsultationRoom() {
               {/* Remote PIP Tag & Mute Indicator */}
               {(remoteScreenStream || isSharingScreen) && remoteStream && (
                  <div className="absolute bottom-8 left-8 z-30 flex items-center gap-2">
-                   <div className="bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md border border-white/10">
-                     {user?.role === 'Patient' ? 'Doctor' : 'Patient'}
+                   <div className="bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md border border-white/10 flex items-center gap-1">
+                     <span>{user?.role === 'Patient' ? 'Doctor' : 'Patient'}</span>
+                     {remoteSpeaking && !isRemoteMuted && (
+                       <Activity size={10} className="text-emerald-400 animate-pulse ml-0.5" />
+                     )}
                    </div>
                    {isRemoteMuted && (
                      <div className="bg-rose-500/90 text-white rounded-full p-1 shadow-md">
@@ -1434,7 +1525,7 @@ export default function TeleconsultationRoom() {
 
               {/* Local Video Tile with AI Person Segmentation or Direct Video */}
               <div 
-                className={`absolute bottom-6 right-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 border-white/30 shadow-2xl overflow-hidden transition-all duration-300 z-20 bg-slate-950 ${cameraActive ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
+                className={`absolute bottom-6 right-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 overflow-hidden transition-all duration-300 z-20 bg-slate-950 ${cameraActive ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'} ${localSpeaking && micActive ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)] ring-2 ring-emerald-400/50' : 'border-white/30 shadow-2xl'}`}
               >
                 {/* AI Processed Canvas (when preset is selected) */}
                 <canvas 
@@ -1462,8 +1553,14 @@ export default function TeleconsultationRoom() {
                   }}
                 />
 
-                <div className="absolute bottom-2 left-2 z-20 bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md border border-white/10">
-                  {isSharingScreen ? 'Your Presentation' : `You (${user?.name ? user.name.split(' ')[0] : 'You'})`}
+                <div className="absolute bottom-2 left-2 z-20 bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md border border-white/10 flex items-center gap-1">
+                  <span>{isSharingScreen ? 'Your Presentation' : `You (${user?.name ? user.name.split(' ')[0] : 'You'})`}</span>
+                  {localSpeaking && micActive && (
+                    <Activity size={10} className="text-emerald-400 animate-pulse ml-0.5" />
+                  )}
+                  {!micActive && (
+                    <MicOff size={10} className="text-rose-400 ml-0.5" />
+                  )}
                 </div>
               </div>
 
@@ -1471,6 +1568,25 @@ export default function TeleconsultationRoom() {
                 <div className="absolute bottom-6 right-6 w-36 sm:w-48 h-48 sm:h-64 bg-slate-900 rounded-2xl border-2 border-white/20 shadow-2xl flex flex-col items-center justify-center text-text-muted text-xs text-center p-3">
                   <VideoOff size={24} className="mb-2 text-rose-400" />
                   <span>Camera Disabled</span>
+                </div>
+              )}
+
+              {/* Google Meet "Are you talking?" Floating Nudge */}
+              {callActive && !micActive && localSpeaking && (
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 border border-amber-500/70 shadow-[0_0_30px_rgba(245,158,11,0.4)] backdrop-blur-xl text-white px-5 py-3 rounded-2xl flex items-center gap-3.5 animate-bounce pointer-events-auto">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
+                    <MicOff size={18} className="animate-pulse" />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-xs font-bold text-slate-100">Your microphone is muted</span>
+                    <span className="text-[11px] text-amber-300 font-medium">Are you talking? Click unmute to speak.</span>
+                  </div>
+                  <button
+                    onClick={toggleMic}
+                    className="ml-2 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md shadow-emerald-500/25 flex items-center gap-1.5 shrink-0"
+                  >
+                    <Mic size={14} /> Unmute
+                  </button>
                 </div>
               )}
             </>
