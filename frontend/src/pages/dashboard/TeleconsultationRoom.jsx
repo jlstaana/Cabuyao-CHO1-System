@@ -362,9 +362,13 @@ export default function TeleconsultationRoom() {
             const canvas = canvasRef.current;
             if (!canvas || !results || !results.image) return;
 
+            // Dynamically match the canvas dimensions to the source frame to prevent distortion
+            if (canvas.width !== results.image.width) canvas.width = results.image.width;
+            if (canvas.height !== results.image.height) canvas.height = results.image.height;
+
             const ctx = canvas.getContext('2d');
-            const width = canvas.width || 640;
-            const height = canvas.height || 480;
+            const width = canvas.width;
+            const height = canvas.height;
             const currentPreset = bgPresetRef.current;
 
             ctx.save();
@@ -1097,7 +1101,7 @@ export default function TeleconsultationRoom() {
   };
 
   const addPrescriptionItem = () => {
-    setPrescriptionItems([...prescriptionItems, { medicine_id: '', dosage: '', frequency: '' }]);
+    setPrescriptionItems([...prescriptionItems, { id: crypto.randomUUID(), medicine_id: '', dosage: '', frequency: '' }]);
   };
 
 
@@ -1622,7 +1626,7 @@ export default function TeleconsultationRoom() {
                     <div className="space-y-3">
                       {prescriptionItems.length === 0 && <p className="text-xs text-text-light text-center py-2">No medicines prescribed yet.</p>}
                       {prescriptionItems.map((item, idx) => (
-                        <div key={idx} className="bg-surface p-2 rounded-lg border border-border space-y-2">
+                        <div key={item.id} className="bg-surface p-2 rounded-lg border border-border space-y-2">
                           <select 
                             className="w-full text-sm p-1.5 border border-border rounded bg-background text-text"
                             value={item.medicine_id}

@@ -55,7 +55,7 @@ export default function ActivityLogs() {
   const [page, setPage]         = useState(1);
 
   const [search, setSearch]     = useState('');
-  const [role, setRole]         = useState('');
+  const [role, setRole]         = useState(''); const [category, setCategory] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo]     = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -65,7 +65,7 @@ export default function ActivityLogs() {
     setLoading(true);
     try {
       const res = await api.get('/admin/activity-logs', {
-        params: { page: params.page ?? page, search, role, date_from: dateFrom, date_to: dateTo },
+        params: { page: params.page ?? page, search, role, category, date_from: dateFrom, date_to: dateTo },
       });
       setLogs(res.data.data);
       setMeta(res.data);
@@ -74,7 +74,7 @@ export default function ActivityLogs() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, role, dateFrom, dateTo, isAdminOrStaff]);
+  }, [page, search, role, category, dateFrom, dateTo, isAdminOrStaff]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -137,18 +137,34 @@ export default function ActivityLogs() {
 
           {/* Role filter — Admin/Staff only */}
           {isAdminOrStaff && (
-            <select
-              id="activity-log-role-filter"
-              value={role}
-              onChange={e => { setRole(e.target.value); setPage(1); }}
-              className="px-3 py-2.5 rounded-xl border border-border bg-surface text-sm outline-none focus:ring-2 focus:ring-violet-500/20"
-            >
-              <option value="">All Roles</option>
-              <option value="Admin">Admin</option>
-              <option value="Doctor">Doctor</option>
-              <option value="Staff">Staff</option>
-              <option value="Patient">Patient</option>
-            </select>
+            <>
+              <select
+                id="activity-log-category-filter"
+                value={category}
+                onChange={e => { setCategory(e.target.value); setPage(1); }}
+                className="px-3 py-2.5 rounded-xl border border-border bg-surface text-sm outline-none focus:ring-2 focus:ring-violet-500/20"
+              >
+                <option value="">All Events</option>
+                <option value="auth">Authentication (Logins, Passwords)</option>
+                <option value="system">System Operations (Reboots, Startups)</option>
+                <option value="software">Software Events (Updates, Crashes)</option>
+                <option value="security">Security Alerts (Firewalls, Access)</option>
+                <option value="hardware">Hardware Status (CPU, Disk)</option>
+              </select>
+
+              <select
+                id="activity-log-role-filter"
+                value={role}
+                onChange={e => { setRole(e.target.value); setPage(1); }}
+                className="px-3 py-2.5 rounded-xl border border-border bg-surface text-sm outline-none focus:ring-2 focus:ring-violet-500/20"
+              >
+                <option value="">All Roles</option>
+                <option value="Admin">Admin</option>
+                <option value="Doctor">Doctor</option>
+                <option value="Staff">Staff</option>
+                <option value="Patient">Patient</option>
+              </select>
+            </>
           )}
 
           <button

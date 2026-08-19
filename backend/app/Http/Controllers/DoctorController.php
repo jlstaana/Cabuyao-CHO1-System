@@ -102,14 +102,18 @@ class DoctorController extends Controller
         $capacity = $this->slotCapacityForDoctor($doctor);
         $bookings = [];
 
-        Consultation::query()
-            ->where('doctor_id', $doctor->id)
-            ->where('status', 'Scheduled')
-            ->whereNotNull('scheduled_at')
-            ->where('scheduled_at', '>=', now()->subMinutes(15))
-            ->orderBy('scheduled_at')
-            ->get(['scheduled_at'])
-            ->each(function (Consultation $consultation) use ($doctor, &$bookings, $capacity) {
+        // Use eager loaded relation if available, otherwise fallback to query
+        $consultations = $doctor->relationLoaded('consultations') 
+            ? $doctor->consultations 
+            : Consultation::query()
+                ->where('doctor_id', $doctor->id)
+                ->where('status', 'Scheduled')
+                ->whereNotNull('scheduled_at')
+                ->where('scheduled_at', '>=', now()->subMinutes(15))
+                ->orderBy('scheduled_at')
+                ->get(['scheduled_at']);
+
+        $consultations->each(function (Consultation $consultation) use ($doctor, &$bookings, $capacity) {
                 $scheduledAt = $consultation->scheduled_at;
                 $day = $scheduledAt->format('l');
                 $time = $scheduledAt->format('H:i:s');
@@ -236,7 +240,17 @@ class DoctorController extends Controller
         $day = $now->format('l');
         $time = $now->format('H:i:s');
 
-        $doctors = Doctor::with(['user:id,name,is_active', 'availability'])
+        $doctors = Doctor::with([
+            'user:id,name,is_active', 
+            'availability',
+            'consultations' => function ($q) {
+                $q->where('status', 'Scheduled')
+                  ->whereNotNull('scheduled_at')
+                  ->where('scheduled_at', '>=', now()->subMinutes(15))
+                  ->orderBy('scheduled_at')
+                  ->select(['id', 'doctor_id', 'scheduled_at', 'status']);
+            }
+        ])
             ->whereHas('user', fn ($q) => $q->where('is_active', true))
             ->where(function ($q) {
                 $q->whereNull('active_until')->orWhere('active_until', '>=', now());

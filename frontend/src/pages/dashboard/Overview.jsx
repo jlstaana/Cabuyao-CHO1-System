@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
+import toast from 'react-hot-toast';
 import {
   Activity, Users, FileText, HeartPulse, Stethoscope,
   Clock, CheckCircle, Calendar, Pill, BarChart2, ShieldCheck,
@@ -164,7 +165,8 @@ function ConsultationQueue({ consultations, className = "lg:col-span-2" }) {
 function AdminOverview({ user, stats }) {
   const summary = stats.summary || {};
   return (
-    <>      <header className="mb-8">
+    <>
+      <header className="mb-8">
         <PageTitle icon={ShieldCheck} title="Health Officer Dashboard" description={`Welcome, ${user?.name}. Here's the current system overview.`} iconClassName="bg-primary-bg text-primary-text" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -193,12 +195,12 @@ function QuickActions({ admin = false, patient = false }) {
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {admin && <QuickLink to="/users" icon={Users} label="Manage Users" color="text-primary-text" bg="bg-primary-bg" />}
-        <QuickLink to="/medicines" icon={Pill} label="Medicine List" color="text-success-text" bg="bg-success-bg" />
-        {admin && <QuickLink to="/analytics" icon={BarChart2} label="View Reports" color="text-brand-text" bg="bg-brand-bg" />}
-        <QuickLink to="/consultations" icon={ClipboardList} label="Consultations" color="text-rose-700" bg="bg-danger-bg" />
-        {patient && <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700" bg="bg-danger-bg" />}
-        {patient && <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-warning-text" bg="bg-warning-bg" />}
+        {admin && <QuickLink to="/users" icon={Users} label="Manage Users" color="text-primary-text"  />}
+        <QuickLink to="/medicines" icon={Pill} label="Medicine List" color="text-success-text"  />
+        {admin && <QuickLink to="/analytics" icon={BarChart2} label="View Reports" color="text-brand-text"  />}
+        <QuickLink to="/consultations" icon={ClipboardList} label="Consultations" color="text-rose-700"  />
+        {patient && <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700"  />}
+        {patient && <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-warning-text"  />}
       </div>
     </div>
   );
@@ -245,9 +247,9 @@ function DoctorOverview({ user, consultations, prescriptions }) {
         <PageTitle icon={Stethoscope} title={`Good day, Dr. ${(user?.name?.split(' ')[0] || '').replace(/^Dr\.\s*/i, '')}!`} description="Here's your consultation overview." iconClassName="bg-success-bg text-emerald-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <StatCard label="Patient Queue" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" sub="Pending requests needing review" />
-        <StatCard label="Scheduled Consultations" value={scheduledToday} icon={Calendar} color="text-sky-500" bg="bg-primary-hover" sub="Upcoming sessions for today" />
-        <StatCard label="Recent Prescriptions" value={prescriptions.length} icon={FileText} color="text-indigo-500" bg="bg-indigo-100" sub="Total generated prescriptions" />
+        <StatCard label="Patient Queue" value={pending} icon={Clock} color="text-amber-500"  sub="Pending requests needing review" />
+        <StatCard label="Scheduled Consultations" value={scheduledToday} icon={Calendar} color="text-sky-500"  sub="Upcoming sessions for today" />
+        <StatCard label="Recent Prescriptions" value={prescriptions.length} icon={FileText} color="text-indigo-500"  sub="Total generated prescriptions" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <DoctorToDoList consultations={consultations} />
@@ -258,10 +260,10 @@ function DoctorOverview({ user, consultations, prescriptions }) {
             <p className="text-xs text-text-light mt-0.5">Frequently used tools and shortcuts.</p>
           </div>
           <div className="space-y-3">
-            <QuickLink to="/consultations" icon={Video} label="Start Teleconsultation" color="text-brand-text" bg="bg-brand-bg" />
-            <QuickLink to="/prescriptions" icon={FileText} label="Create E-Prescription" color="text-success-text" bg="bg-success-bg" />
-            <QuickLink to="/medicines" icon={Pill} label="Browse Medicines" color="text-primary-text" bg="bg-primary-bg" />
-            <QuickLink to="/patient-records" icon={ClipboardList} label="Patient Records" color="text-warning-text" bg="bg-warning-bg" />
+            <QuickLink to="/consultations" icon={Video} label="Start Teleconsultation" color="text-brand-text"  />
+            <QuickLink to="/prescriptions" icon={FileText} label="Create E-Prescription" color="text-success-text"  />
+            <QuickLink to="/medicines" icon={Pill} label="Browse Medicines" color="text-primary-text"  />
+            <QuickLink to="/patient-records" icon={ClipboardList} label="Patient Records" color="text-warning-text"  />
           </div>
         </div>
       </div>
@@ -287,10 +289,10 @@ function PatientOverview({ user, consultations, prescriptions }) {
         <PageTitle icon={HeartPulse} title={`Hello, ${user?.name?.split(' ')[0]}!`} description="Here's your health summary and upcoming activities." iconClassName="bg-danger-bg text-danger-text" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Total Consultations" value={totalRequests} icon={Stethoscope} color="text-sky-500" bg="bg-primary-hover" sub="Consultation history" />
-        <StatCard label="E-Prescriptions" value={prescriptions.length} icon={FileText} color="text-emerald-500" bg="bg-emerald-100" sub="Generated prescriptions" />
-        <StatCard label="Vital Sign Records" value={vitalEntries} icon={HeartPulse} color="text-rose-500" bg="bg-rose-100" sub="Recorded health logs" />
-        <StatCard label="Upcoming Appointment" value={upcoming?.scheduled_at ? new Date(upcoming.scheduled_at).toLocaleDateString() : 'None'} icon={Calendar} color="text-indigo-500" bg="bg-indigo-100" sub="Scheduled consultation" />
+        <StatCard label="Total Consultations" value={totalRequests} icon={Stethoscope} color="text-sky-500"  sub="Consultation history" />
+        <StatCard label="E-Prescriptions" value={prescriptions.length} icon={FileText} color="text-emerald-500"  sub="Generated prescriptions" />
+        <StatCard label="Vital Sign Records" value={vitalEntries} icon={HeartPulse} color="text-rose-500"  sub="Recorded health logs" />
+        <StatCard label="Upcoming Appointment" value={upcoming?.scheduled_at ? new Date(upcoming.scheduled_at).toLocaleDateString() : 'None'} icon={Calendar} color="text-indigo-500"  sub="Scheduled consultation" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <ConsultationQueue consultations={consultations} />
@@ -300,10 +302,10 @@ function PatientOverview({ user, consultations, prescriptions }) {
             <p className="text-xs text-text-light mt-0.5">Frequently used tools and shortcuts.</p>
           </div>
           <div className="space-y-3">
-            <QuickLink to="/consultations" icon={Video} label="Request Teleconsult" color="text-primary-text" bg="bg-primary-bg" />
-            <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700" bg="bg-danger-bg" />
-            <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-warning-text" bg="bg-warning-bg" />
-            <QuickLink to="/prescriptions" icon={FileText} label="View Prescriptions" color="text-success-text" bg="bg-success-bg" />
+            <QuickLink to="/consultations" icon={Video} label="Request Teleconsult" color="text-primary-text"  />
+            <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700"  />
+            <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-warning-text"  />
+            <QuickLink to="/prescriptions" icon={FileText} label="View Prescriptions" color="text-success-text"  />
           </div>
         </div>
       </div>
@@ -328,14 +330,15 @@ function PatientOverview({ user, consultations, prescriptions }) {
 function StaffOverview({ user, stats, consultations, medicines }) {
   const pending = consultations.filter((c) => c.status === 'Pending').length;
   return (
-    <>      <header className="mb-8">
+    <>
+      <header className="mb-8">
         <PageTitle icon={Users} title="Staff Dashboard" description={`Welcome, ${user?.name}. Here's the current workload.`} iconClassName="bg-warning-bg text-amber-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Pending Requests" value={pending} icon={Clock} color="text-amber-500" bg="bg-amber-100" sub="Needs assignment" />
-        <StatCard label="Active Patients" value={formatNumber(stats.summary?.registered_patients)} icon={Users} color="text-sky-500" bg="bg-primary-hover" sub="Registered accounts" />
-        <StatCard label="Active Medicines" value={medicines.filter((m) => m.status).length} icon={AlertCircle} color="text-emerald-500" bg="bg-emerald-100" sub="In-stock inventory" />
-        <StatCard label="Scheduled Today" value={consultations.filter((c) => c.status === 'Scheduled' && isToday(c.scheduled_at)).length} icon={Calendar} color="text-emerald-500" bg="bg-emerald-100" sub="Upcoming sessions" />
+        <StatCard label="Pending Requests" value={pending} icon={Clock} color="text-amber-500"  sub="Needs assignment" />
+        <StatCard label="Active Patients" value={formatNumber(stats.summary?.registered_patients)} icon={Users} color="text-sky-500"  sub="Registered accounts" />
+        <StatCard label="Active Medicines" value={medicines.filter((m) => m.status).length} icon={AlertCircle} color="text-emerald-500"  sub="In-stock inventory" />
+        <StatCard label="Scheduled Today" value={consultations.filter((c) => c.status === 'Scheduled' && isToday(c.scheduled_at)).length} icon={Calendar} color="text-emerald-500"  sub="Upcoming sessions" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RecentActivity stats={stats} />
@@ -353,11 +356,21 @@ export default function Overview() {
   const [medicines, setMedicines] = useState([]);
 
   useEffect(() => {
-    api.get('/consultations').then((res) => setConsultations(res.data || [])).catch(() => setConsultations([]));
-    api.get('/prescriptions').then((res) => setPrescriptions(res.data || [])).catch(() => setPrescriptions([]));
-    api.get('/medicines').then((res) => setMedicines(res.data || [])).catch(() => setMedicines([]));
+    let hasShownError = false;
+    const handleError = (msg, fallback) => (err) => {
+      console.error(msg, err);
+      if (!hasShownError) {
+        toast.error('Failed to load dashboard data. Check your connection.');
+        hasShownError = true;
+      }
+      return fallback;
+    };
+
+    api.get('/consultations').then((res) => setConsultations(res.data || [])).catch((err) => setConsultations(handleError('Consultations API Error', [])(err)));
+    api.get('/prescriptions').then((res) => setPrescriptions(res.data || [])).catch((err) => setPrescriptions(handleError('Prescriptions API Error', [])(err)));
+    api.get('/medicines').then((res) => setMedicines(res.data || [])).catch((err) => setMedicines(handleError('Medicines API Error', [])(err)));
     if (user?.role === 'Admin' || user?.role === 'Staff') {
-      api.get('/analytics/stats').then((res) => setStats({ ...EMPTY_STATS, ...res.data })).catch(() => setStats(EMPTY_STATS));
+      api.get('/analytics/stats').then((res) => setStats({ ...EMPTY_STATS, ...res.data })).catch((err) => setStats(handleError('Stats API Error', EMPTY_STATS)(err)));
     }
   }, [user]);
 

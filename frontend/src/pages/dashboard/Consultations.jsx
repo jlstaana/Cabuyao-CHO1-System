@@ -779,7 +779,7 @@ export default function Consultations() {
   const [requestForm, setRequestForm] = useState(EMPTY_REQUEST_FORM);
   const [availabilityForm, setAvailabilityForm] = useState({
     doctor_type: 'Resident',
-    availability: [{ ...EMPTY_AVAILABILITY_SLOT }],
+    availability: [{ ...EMPTY_AVAILABILITY_SLOT, _id: crypto.randomUUID() }],
   });
 
   const fetchConsultations = async () => {
@@ -796,7 +796,7 @@ export default function Consultations() {
       .then(res => {
         if (isActive) setConsultations(res.data);
       })
-      .catch(() => toast.error('Failed to load consultations'))
+      .catch(() => { if (isActive) toast.error('Failed to load consultations'); })
       .finally(() => {
         if (isActive) setLoading(false);
       });
@@ -932,7 +932,7 @@ export default function Consultations() {
         ? current.availability.map((slot) => ({
             day_of_week: slot.day_of_week,
             start_time: String(slot.start_time || '08:00').slice(0, 5),
-            end_time: String(slot.end_time || '12:00').slice(0, 5),
+            end_time: String(slot.end_time || '12:00').slice(0, 5), _id: crypto.randomUUID(),
           }))
         : [{ ...EMPTY_AVAILABILITY_SLOT }],
     });
@@ -951,7 +951,7 @@ export default function Consultations() {
   const addAvailabilitySlot = () => {
     setAvailabilityForm((form) => ({
       ...form,
-      availability: [...form.availability, { ...EMPTY_AVAILABILITY_SLOT }],
+      availability: [...form.availability, { ...EMPTY_AVAILABILITY_SLOT, _id: crypto.randomUUID() }],
     }));
   };
 
@@ -1181,7 +1181,7 @@ export default function Consultations() {
             </div>
 
             {availabilityForm.availability.map((slot, index) => (
-              <div key={`${slot.day_of_week}-${index}`} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_120px_auto] gap-2 rounded-xl border border-border bg-background p-3">
+              <div key={slot._id || index} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_120px_auto] gap-2 rounded-xl border border-border bg-background p-3">
                 <select
                   required
                   value={slot.day_of_week}

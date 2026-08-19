@@ -4,7 +4,7 @@ import Modal from '../../components/Modal';
 import Skeleton from '../../components/Skeleton';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
-import { Pill, Plus, Search, Archive, Pencil, CheckCircle, AlertCircle } from 'lucide-react';
+import { Pill, Plus, Search, Archive, Pencil, CheckCircle, AlertCircle, MoreVertical } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 
 const CATEGORIES = [
@@ -319,27 +319,15 @@ export default function Medicines() {
                   </td>
                   {(user?.role === 'Admin' || user?.role === 'Staff') && (
                     <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => { setBatchTarget(m); setIsBatchesModalOpen(true); }}
-                          className="text-emerald-600 hover:text-emerald-800 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-1"
-                        >
-                          <Pill size={14} /> Batches
+                      <div className="relative group flex items-center justify-end">
+                        <button className="p-2 text-text-muted hover:text-text hover:bg-surface-hover rounded-lg transition-colors">
+                          <MoreVertical size={18} />
                         </button>
-                        <button
-                          onClick={() => { setEditTarget({ ...m }); setIsEditModalOpen(true); }}
-                          className="text-primary-text hover:text-sky-800 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-bg transition-colors flex items-center gap-1"
-                        >
-                          <Pencil size={14} /> Edit
-                        </button>
-                        {m.status && (
-                          <button
-                            onClick={() => handleDeactivate(m)}
-                            className="text-rose-500 hover:text-rose-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-danger-bg transition-colors flex items-center gap-1"
-                          >
-                            <Archive size={14} /> Deactivate
-                          </button>
-                        )}
+                        <div className="absolute right-0 top-full mt-1 w-40 bg-surface border border-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 flex flex-col overflow-hidden">
+                          <button onClick={() => { setBatchTarget(m); setIsBatchesModalOpen(true); }} className="w-full text-left text-emerald-600 hover:text-emerald-800 text-sm font-semibold px-4 py-2.5 hover:bg-emerald-50 transition-colors flex items-center gap-2"><Pill size={14} /> Batches</button>
+                          <button onClick={() => { setEditTarget({ ...m }); setIsEditModalOpen(true); }} className="w-full text-left text-primary-text hover:text-sky-800 text-sm font-semibold px-4 py-2.5 hover:bg-primary-bg transition-colors flex items-center gap-2"><Pencil size={14} /> Edit</button>
+                          {m.status && <button onClick={() => handleDeactivate(m)} className="w-full text-left text-rose-500 hover:text-rose-700 text-sm font-semibold px-4 py-2.5 hover:bg-danger-bg transition-colors flex items-center gap-2"><Archive size={14} /> Deactivate</button>}
+                        </div>
                       </div>
                     </td>
                   )}
