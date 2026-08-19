@@ -1350,12 +1350,13 @@ function TeleconsultationRoomContent() {
       {/* ── Main Video Stage (Google Meet Widescreen) ─────────────────────────── */}
             <div data-tour="page-video" className="flex-1 h-full bg-slate-900 relative shadow-2xl flex flex-col">
         <JitsiMeeting
-          domain="meet.jit.si"
+          domain="meet.ffmuc.net"
           roomName={`CabuyaoCHO1-Teleconsultation-${id}`}
           configOverwrite={{
             startWithAudioMuted: false,
             startWithVideoMuted: false,
             prejoinPageEnabled: true,
+            prejoinConfig: { enabled: true, hideDisplayName: true },
             disableDeepLinking: true,
           }}
           interfaceConfigOverwrite={{
