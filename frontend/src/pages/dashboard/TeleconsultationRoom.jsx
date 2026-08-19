@@ -6,7 +6,7 @@ import Modal from '../../components/Modal';
 import { 
   Video, Mic, MicOff, VideoOff, PhoneOff, Activity, FileText, Pill, 
   Plus, CheckCircle, Wifi, MessageCircle, Send, PenLine, Eraser, 
-  Sparkles, MonitorUp, X, Clock, Settings, Check
+  Sparkles, MonitorUp, X, Clock, Settings, Check, MoreVertical
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -108,6 +108,7 @@ export default function TeleconsultationRoom() {
   const [lobbyStream, setLobbyStream] = useState(null);
   const lobbyVideoRef = useRef(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [connectionState, setConnectionState] = useState('new');
   const [isRemoteMuted, setIsRemoteMuted] = useState(false);
   
@@ -260,8 +261,8 @@ export default function TeleconsultationRoom() {
 
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: newCameraId ? { deviceId: { exact: newCameraId } } : true,
-        audio: newMicId ? { deviceId: { exact: newMicId }, echoCancellation: true, noiseSuppression: true, autoGainControl: true } : true
+        video: cameraActive ? (newCameraId ? { deviceId: { exact: newCameraId } } : true) : false,
+        audio: micActive ? (newMicId ? { deviceId: { exact: newMicId }, echoCancellation: true, noiseSuppression: true, autoGainControl: true } : true) : false
       });
       
       const oldStream = streamRef.current;
@@ -277,6 +278,8 @@ export default function TeleconsultationRoom() {
           await videoSender.replaceTrack(newVideoTrack);
         }
         oldVideoTrack.stop();
+      } else if (oldVideoTrack) {
+         // We shouldn't stop the old video track if we aren't replacing it, because the user might just be changing the mic while camera is off (which means oldVideoTrack is already stopped/undefined)
       }
 
       // Replace Audio Track (Process it first!)
@@ -293,6 +296,15 @@ export default function TeleconsultationRoom() {
           await audioSender.replaceTrack(processedAudioTrack);
         }
         oldAudioTrack.stop();
+      }
+
+      // We must preserve tracks that we didn't request!
+      if (!cameraActive && oldStream.getVideoTracks().length > 0) {
+         // wait, if cameraActive is false, the oldStream video track is ALREADY stopped. We just carry it over so stream structure doesn't break, or we don't carry it over.
+         // Actually, it's better to just construct finalStream from whatever new tracks we have.
+         // Wait! newStream doesn't have a video track if cameraActive is false!
+         // If we do streamRef.current = finalStream (which has no video track), then when the user clicks 'Turn On Camera', `videoTrack` will be undefined!
+         // This is correct! `toggleCamera` checks `if (!videoTrack)` and requests a new one!
       }
 
       streamRef.current = finalStream;
@@ -851,22 +863,22 @@ export default function TeleconsultationRoom() {
     if (streamToToggle) {
       let videoTrack = streamToToggle.getVideoTracks()[0];
       if (!videoTrack && !cameraActive) {
-        // If track was stopped completely, we need to get a new one
         try {
           const newStream = await navigator.mediaDevices.getUserMedia({
-            video: selectedCameraId ? { deviceId: selectedCameraId } : true
+            video: selectedCameraId ? { deviceId: { exact: selectedCameraId } } : true
           });
           const newVideoTrack = newStream.getVideoTracks()[0];
           streamToToggle.addTrack(newVideoTrack);
           
           if (callActive && pcRef.current) {
-            const sender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
+            const sender = pcRef.current.getSenders().find(s => s.track?.kind === 'video' || s.track === null);
             if (sender) await sender.replaceTrack(newVideoTrack);
           }
           if (callActive && videoRef.current) videoRef.current.srcObject = streamToToggle;
           if (!callActive && lobbyVideoRef.current) lobbyVideoRef.current.srcObject = streamToToggle;
           
           setCameraActive(true);
+          if (callActive) sendSignal({ type: 'camera_status', enabled: true });
         } catch (err) {
           console.error("Camera restart error:", err);
           toast.error(`Could not restart camera: ${err.message || err.name}`);
@@ -874,8 +886,17 @@ export default function TeleconsultationRoom() {
       } else if (videoTrack) {
         if (cameraActive) {
           videoTrack.stop();
-          streamToToggle.removeTrack(videoTrack); // Fully remove so we know it's gone
+          streamToToggle.removeTrack(videoTrack);
+          
+          if (callActive && pcRef.current) {
+            const sender = pcRef.current.getSenders().find(s => s.track === videoTrack);
+            if (sender) {
+              await sender.replaceTrack(null).catch(() => {});
+            }
+          }
+
           setCameraActive(false);
+          if (callActive) sendSignal({ type: 'camera_status', enabled: false });
         }
       }
     }
@@ -1409,7 +1430,7 @@ export default function TeleconsultationRoom() {
               <button 
                 onClick={() => setIsBgModalOpen(true)} 
                 title="Apply Visual Effects & AI Background Blur"
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${bgPresetId !== 'none' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                className={`hidden sm:flex w-12 h-12 rounded-full items-center justify-center transition-all ${bgPresetId !== 'none' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
               >
                 <Sparkles size={20} />
               </button>
@@ -1418,7 +1439,7 @@ export default function TeleconsultationRoom() {
               <button 
                 onClick={() => setIsSettingsModalOpen(true)} 
                 title="Device Settings"
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                className="hidden sm:flex w-12 h-12 rounded-full items-center justify-center transition-all bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               >
                 <Settings size={20} />
               </button>
@@ -1427,7 +1448,7 @@ export default function TeleconsultationRoom() {
               <button 
                 onClick={toggleScreenShare} 
                 title={isSharingScreen ? 'Stop Presenting' : 'Present Screen'}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isSharingScreen ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                className={`hidden sm:flex w-12 h-12 rounded-full items-center justify-center transition-all ${isSharingScreen ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
               >
                 <MonitorUp size={20} />
               </button>
@@ -1449,10 +1470,41 @@ export default function TeleconsultationRoom() {
               <button 
                 onClick={() => setActiveSidePanel(activeSidePanel === 'clinical' ? 'none' : 'clinical')} 
                 title="Toggle Vitals & E-Prescription Panel"
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${activeSidePanel === 'clinical' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                className={`hidden sm:flex w-12 h-12 rounded-full items-center justify-center transition-all ${activeSidePanel === 'clinical' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
               >
                 {user?.role === 'Doctor' ? <FileText size={20} /> : <Activity size={20} />}
               </button>
+
+              {/* Mobile More Actions Menu */}
+              <div className="relative sm:hidden">
+                <button 
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isMobileMenuOpen ? 'bg-slate-700 text-white shadow-lg' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                >
+                  <MoreVertical size={20} />
+                </button>
+                
+                {isMobileMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsMobileMenuOpen(false)}></div>
+                    <div className="absolute bottom-[4.5rem] right-0 z-50 mb-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in slide-in-from-bottom-2 fade-in">
+                      <button onClick={() => { setIsBgModalOpen(true); setIsMobileMenuOpen(false); }} className="px-4 py-3 text-sm text-left flex items-center gap-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-b border-slate-800/50">
+                        <Sparkles size={16} /> Visual Effects
+                      </button>
+                      <button onClick={() => { setIsSettingsModalOpen(true); setIsMobileMenuOpen(false); }} className="px-4 py-3 text-sm text-left flex items-center gap-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-b border-slate-800/50">
+                        <Settings size={16} /> Device Settings
+                      </button>
+                      <button onClick={() => { toggleScreenShare(); setIsMobileMenuOpen(false); }} className="px-4 py-3 text-sm text-left flex items-center gap-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-b border-slate-800/50">
+                        <MonitorUp size={16} /> {isSharingScreen ? 'Stop Presenting' : 'Present Screen'}
+                      </button>
+                      <button onClick={() => { setActiveSidePanel(activeSidePanel === 'clinical' ? 'none' : 'clinical'); setIsMobileMenuOpen(false); }} className="px-4 py-3 text-sm text-left flex items-center gap-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                        {user?.role === 'Doctor' ? <FileText size={16} /> : <Activity size={16} />} 
+                        {user?.role === 'Doctor' ? 'Consultation Form' : 'Vital Signs'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* Leave Call Button */}
               <button 
