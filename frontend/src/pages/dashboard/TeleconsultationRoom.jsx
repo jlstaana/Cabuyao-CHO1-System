@@ -202,6 +202,8 @@ function TeleconsultationRoomContent() {
   const [remoteStream, setRemoteStream] = useState(null);
   const pcRef = useRef(null);
   const processedSignals = useRef(new Set());
+  const mySessionId = useRef(null);
+  const targetSessionId = useRef(null);
   const iceCandidateQueue = useRef([]);
   const remoteVideoRef = useRef(null);
   const [medicines, setMedicines] = useState([]);
@@ -629,7 +631,13 @@ function TeleconsultationRoomContent() {
 
   const sendSignal = useCallback(async (payload) => {
     try {
-      const signalPayload = { ...payload, timestamp: Date.now(), senderId: user?.id };
+      const signalPayload = { 
+        ...payload, 
+        timestamp: Date.now(), 
+        senderId: user?.id,
+        sessionId: mySessionId.current,
+        targetSessionId: targetSessionId.current
+      };
       await api.post(`/consultations/${id}/messages`, {
         message: `[WEBRTC_SIGNAL]${JSON.stringify(signalPayload)}`
       });
@@ -646,13 +654,19 @@ function TeleconsultationRoomContent() {
       return;
     }
 
-    // Ignore signals older than 2 minutes to prevent processing stale offers from previous failed attempts
-    if (signal.timestamp && Date.now() - signal.timestamp > 2 * 60 * 1000) {
+    // Ignore signals intended for a different session
+    if (signal.targetSessionId && signal.targetSessionId !== mySessionId.current) {
+      return;
+    }
+
+    // Ignore signals from a different remote session, EXCEPT if it's a new offer (which restarts the session)
+    if (signal.type !== 'offer' && targetSessionId.current && signal.sessionId !== targetSessionId.current) {
       return;
     }
 
     try {
       if (signal.type === 'offer' && user?.role === 'Doctor') {
+        targetSessionId.current = signal.sessionId;
         if (pcRef.current.signalingState !== 'stable' && pcRef.current.signalingState !== 'have-local-offer') {
           console.warn('Ignoring offer - signaling state:', pcRef.current.signalingState);
           return true; // Mark handled so it does not loop
@@ -666,8 +680,9 @@ function TeleconsultationRoomContent() {
           await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error);
         }
       } else if (signal.type === 'answer' && user?.role === 'Patient') {
+        targetSessionId.current = signal.sessionId;
         if (pcRef.current.signalingState !== 'have-local-offer') {
-          console.warn('Ignoring answer — signaling state:', pcRef.current.signalingState);
+          console.warn('Ignoring answer - signaling state:', pcRef.current.signalingState);
           return true;
         }
         await pcRef.current.setRemoteDescription(new RTCSessionDescription(signal.answer));
@@ -947,6 +962,8 @@ function TeleconsultationRoomContent() {
         // The signal poller uses this to ignore any signals sent before we joined.
         sessionStartedAt.current = Date.now() - 1000;
         processedSignals.current.clear();
+        mySessionId.current = Math.random().toString(36).substring(7);
+        targetSessionId.current = null;
         iceCandidateQueue.current = [];
 
         setCallActive(true);
