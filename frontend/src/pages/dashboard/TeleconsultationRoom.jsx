@@ -164,7 +164,7 @@ function useSpeakingIndicator(stream) {
   return isSpeaking;
 }
 
-export default function TeleconsultationRoom() {
+function TeleconsultationRoomContent() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -307,7 +307,7 @@ export default function TeleconsultationRoom() {
         stream.getTracks().forEach(t => t.stop());
       }
     };
-  }, [callActive]);
+  }, []);
 
   // Device Selection Change (Lobby only)
   useEffect(() => {
@@ -1315,8 +1315,7 @@ export default function TeleconsultationRoom() {
   }, [callActive, cameraActive, bgPresetId, isSharingScreen]);
 
   return (
-    <ErrorBoundary>
-      <div className="flex flex-col lg:flex-row h-[100dvh] w-screen overflow-hidden bg-slate-950 text-white">
+    <div className="flex flex-col lg:flex-row h-[100dvh] w-screen overflow-hidden bg-slate-950 text-white">
       {/* ── Main Video Stage (Google Meet Widescreen) ─────────────────────────── */}
       <div data-tour="page-video" className="flex-1 h-full bg-slate-900 relative shadow-2xl flex flex-col">
         {/* Top Header Status Bar */}
@@ -2060,6 +2059,13 @@ export default function TeleconsultationRoom() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+export default function TeleconsultationRoom() {
+  return (
+    <ErrorBoundary>
+      <TeleconsultationRoomContent />
     </ErrorBoundary>
   );
 }
