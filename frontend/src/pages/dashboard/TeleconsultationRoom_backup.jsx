@@ -1347,49 +1347,493 @@ function TeleconsultationRoomContent() {
   return (
     <div className="flex flex-col lg:flex-row h-[100dvh] w-screen overflow-hidden bg-slate-950 text-white">
       {/* ── Main Video Stage (Google Meet Widescreen) ─────────────────────────── */}
-            <div data-tour="page-video" className="flex-1 h-full bg-slate-900 relative shadow-2xl flex flex-col">
-        <JitsiMeeting
-          domain="meet.jit.si"
-          roomName={`CabuyaoCHO1-Teleconsultation-${id}`}
-          configOverwrite={{
-            startWithAudioMuted: false,
-            startWithVideoMuted: false,
-            prejoinPageEnabled: true,
-            disableDeepLinking: true,
-          }}
-          interfaceConfigOverwrite={{
-            DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
-            SHOW_PROMOTIONAL_CLOSE_PAGE: false,
-          }}
-          userInfo={{
-            displayName: user?.name || (user?.role === 'Doctor' ? 'Doctor' : 'Patient')
-          }}
-          onApiReady={(externalApi) => {
-            externalApi.addListener('videoConferenceJoined', () => {
-              if (user?.role === 'Doctor' && consultation?.status === 'scheduled') {
-                api.put(`/consultations/${id}`, { status: 'in_progress' }).catch(console.error);
-              }
-            });
-            externalApi.addListener('readyToClose', () => {
-              handleEndCall();
-            });
-          }}
-          getIFrameRef={(iframeRef) => { iframeRef.style.height = '100%'; }}
-        />
-        
-        {/* Floating action button to open sidebar on mobile or if closed */}
-        {activeSidePanel === 'none' && (
-          <div className="absolute top-4 right-4 z-50 flex gap-2">
-            <button onClick={() => setActiveSidePanel('chat')} className="bg-indigo-600 p-3 rounded-full text-white shadow-lg hover:bg-indigo-700">
-              <MessageCircle size={20} />
-            </button>
-            <button onClick={handleEndCall} className="bg-rose-600 p-3 rounded-full text-white shadow-lg hover:bg-rose-700">
-              <PhoneOff size={20} />
-            </button>
+      <div data-tour="page-video" className="flex-1 h-full bg-slate-900 relative shadow-2xl flex flex-col">
+        {/* Top Header Status Bar */}
+        <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center pointer-events-none flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap pointer-events-auto">
+            <span className="bg-rose-600 text-white px-3 py-1 rounded-full text-xs font-black tracking-wider animate-pulse flex items-center gap-1.5 shadow-md shadow-rose-900/40">
+              <span className="w-2 h-2 bg-white rounded-full"></span> LIVE
+            </span>
+            <span className="bg-slate-900/80 backdrop-blur-md text-slate-200 border border-slate-700/60 px-3.5 py-1 rounded-full text-xs font-semibold flex items-center gap-2 shadow-sm">
+              <span>{consultation ? (user?.role === 'Patient' ? `Dr. ${consultation?.doctor?.user?.name || 'Assigned Doctor'}` : `Patient: ${consultation?.patient?.user?.name}`) : 'Loading...'}</span>
+              {callActive && remoteSpeaking && !isRemoteMuted && (
+                <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] animate-pulse">
+                  <Activity size={10} /> Speaking
+                </span>
+              )}
+            </span>
+            {callActive && (
+              <span className="bg-slate-900/80 backdrop-blur-md text-slate-300 border border-slate-700/60 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
+                <Clock size={12} className="text-sky-400" /> {formatDuration(callDuration)}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 pointer-events-auto">
+            {isSharingScreen && (
+              <span className="bg-sky-500/90 backdrop-blur-md text-white border border-sky-400/50 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm animate-pulse">
+                <MonitorUp size={12} /> You are presenting to everyone
+              </span>
+            )}
+            {callActive && bgPreset?.id !== 'none' && (
+              <span className="bg-indigo-600/90 backdrop-blur-md text-white border border-indigo-500/50 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+                <Sparkles size={12} /> {bgPreset?.label || 'Background'}
+              </span>
+            )}
+            {callActive && (
+              <span className="bg-slate-900/80 backdrop-blur-md text-emerald-400 border border-slate-700/60 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
+                <Wifi size={12} /> {VIDEO_QUALITY_PROFILES[videoQuality]?.label || 'HD'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Video Viewport Stage */}
+        <div className="flex-1 flex items-center justify-center bg-slate-950 relative overflow-hidden">
+          {!callActive ? (
+            <div className="flex flex-col items-center justify-center p-6 sm:p-8 text-center w-full max-w-3xl">
+              
+              {/* Lobby Video Preview */}
+              <div className={`w-full max-w-lg aspect-video bg-black rounded-2xl overflow-hidden mb-8 border transition-all duration-300 shadow-2xl relative group ${localSpeaking && micActive ? 'border-emerald-500 ring-4 ring-emerald-500/30' : 'border-slate-700'}`}>
+                {/* Lobby "Your mic is muted" Nudge */}
+                {!micActive && localSpeaking && (
+                  <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 bg-[#202124]/95 text-white border border-[#3c4043] shadow-2xl px-4 py-2 rounded-full flex items-center gap-2.5 text-xs font-medium backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    <div className="w-5 h-5 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                      <MicOff size={12} />
+                    </div>
+                    <span className="text-slate-200">Your mic is muted — are you talking?</span>
+                    <button onClick={toggleMic} className="text-sky-400 hover:text-sky-300 font-bold ml-1 hover:underline">Unmute</button>
+                  </div>
+                )}
+                {micActive && localSpeaking && (
+                  <div className="absolute top-3 left-3 z-30 bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 text-[10px] font-semibold px-2 py-1 rounded-md flex items-center gap-1.5 backdrop-blur-md">
+                    <Activity size={12} className="animate-pulse" /> Mic Active
+                  </div>
+                )}
+
+                {/* AI Processed Canvas for Lobby */}
+                <canvas 
+                  ref={!callActive ? canvasRef : null}
+                  width={640}
+                  height={480}
+                  className={`w-full h-full object-cover relative z-10 ${bgPreset.id !== 'none' && isAiActive ? 'block' : 'hidden'}`}
+                  style={{ transform: 'scaleX(-1)' }}
+                />
+
+                <video 
+                  ref={lobbyVideoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  className={`object-cover transition-all duration-300 ${
+                    bgPreset.id === 'none' || !isAiActive
+                      ? 'w-full h-full relative z-10 block opacity-100' 
+                      : 'w-full h-full absolute inset-0 opacity-0 pointer-events-none'
+                  }`}
+                  style={{ 
+                    transform: 'scaleX(-1)',
+                    filter: (!isAiActive && bgPreset.type === 'blur') ? bgPreset.blurAmount : 'none'
+                  }}
+                />
+                
+                {!lobbyStream && cameraActive && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-400 z-0">
+                    <Video size={36} className="mb-3 animate-pulse opacity-50" />
+                    <p className="text-sm font-medium">Requesting camera access...</p>
+                  </div>
+                )}
+                
+                {!cameraActive && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-400 z-20">
+                    <VideoOff size={48} className="mb-4 text-rose-500/80" />
+                    <p className="text-base font-semibold">Camera is off</p>
+                  </div>
+                )}
+
+                {/* Floating Lobby Controls */}
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-4 z-30">
+                  <button 
+                    onClick={toggleMic} 
+                    title={micActive ? 'Mute Microphone' : 'Unmute Microphone'}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${micActive ? 'bg-slate-800/80 backdrop-blur-md text-white hover:bg-slate-700 border border-white/10' : 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'}`}
+                  >
+                    {micActive ? <Mic size={20} /> : <MicOff size={20} />}
+                  </button>
+
+                  <button 
+                    onClick={toggleCamera} 
+                    title={cameraActive ? 'Turn Off Camera' : 'Turn On Camera'}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${cameraActive ? 'bg-slate-800/80 backdrop-blur-md text-white hover:bg-slate-700 border border-white/10' : 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'}`}
+                  >
+                    {cameraActive ? <Video size={20} /> : <VideoOff size={20} />}
+                  </button>
+
+                  <button 
+                    onClick={() => setIsBgModalOpen(true)} 
+                    title="Visual Effects"
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${bgPresetId !== 'none' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-800/80 backdrop-blur-md text-slate-200 hover:bg-slate-700 border border-white/10'}`}
+                  >
+                    <Sparkles size={20} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Hardware Selection */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-8 w-full max-w-lg">
+                <div className="flex-1 text-left">
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Camera</label>
+                  <select 
+                    value={selectedCameraId}
+                    onChange={(e) => setSelectedCameraId(e.target.value)}
+                    className="w-full bg-slate-800/80 border border-slate-700 text-white text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    {availableCameras.length === 0 && <option value="">Default Camera</option>}
+                    {availableCameras.map(cam => (
+                      <option key={cam.deviceId} value={cam.deviceId}>{cam.label || `Camera ${cam.deviceId.slice(0,5)}`}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1 text-left">
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 block">Microphone</label>
+                  <select 
+                    value={selectedMicId}
+                    onChange={(e) => setSelectedMicId(e.target.value)}
+                    className="w-full bg-slate-800/80 border border-slate-700 text-white text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    {availableMics.length === 0 && <option value="">Default Microphone</option>}
+                    {availableMics.map(mic => (
+                      <option key={mic.deviceId} value={mic.deviceId}>{mic.label || `Microphone ${mic.deviceId.slice(0,5)}`}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-bold text-white mb-6">Ready to join consultation?</h2>
+              
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => navigate('/consultations')} 
+                  className="px-6 py-3.5 rounded-full font-bold shadow-md bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-all flex items-center gap-2"
+                >
+                  <X size={20} /> Cancel
+                </button>
+                <button 
+                  data-tour="page-primary-action" 
+                  onClick={toggleCall} 
+                  disabled={!lobbyStream && cameraActive} // allow joining if camera off and stream didn't init yet
+                  className={`px-8 py-3.5 rounded-full font-bold shadow-xl flex items-center gap-3 transition-all ${lobbyStream || !cameraActive ? 'bg-emerald-500 text-white shadow-emerald-500/20 hover:bg-emerald-600 hover:scale-105 active:scale-95' : 'bg-slate-700 text-slate-400 cursor-not-allowed'}`}
+                >
+                  <Video size={22} /> Join Telehealth Call
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* ── Hardware & Connection Alert Banners (Google Meet style) ── */}
+              {/* Stack from the top, each conditionally visible */}
+              <div className="absolute top-0 left-0 w-full z-50 flex flex-col pointer-events-none">
+                {/* Connection lost */}
+                {callActive && (connectionState === 'disconnected' || connectionState === 'failed') && (
+                  <div className="w-full bg-rose-600 text-white text-sm font-semibold py-2 px-4 flex items-center justify-center gap-2 animate-pulse shadow-md">
+                    <Wifi size={15} /> Connection lost — trying to reconnect...
+                  </div>
+                )}
+                {/* Mic hardware failure */}
+                {micLost && (
+                  <div className="w-full bg-amber-500 text-slate-950 text-sm font-semibold py-2 px-4 flex items-center justify-center gap-2 shadow-md pointer-events-auto">
+                    <MicOff size={15} />
+                    Microphone disconnected. Check your device or
+                    <button
+                      onClick={() => { setMicLost(false); toggleMic(); }}
+                      className="underline font-bold hover:opacity-80"
+                    >retry</button>
+                  </div>
+                )}
+                {/* Camera hardware failure */}
+                {cameraLost && (
+                  <div className="w-full bg-amber-500 text-slate-950 text-sm font-semibold py-2 px-4 flex items-center justify-center gap-2 shadow-md pointer-events-auto">
+                    <VideoOff size={15} />
+                    Camera disconnected. Check your device or
+                    <button
+                      onClick={() => { setCameraLost(false); toggleCamera(); }}
+                      className="underline font-bold hover:opacity-80"
+                    >retry</button>
+                  </div>
+                )}
+              </div>
+
+              {/* Screen Share (Main Stage if active) */}
+              {(remoteScreenStream || (isSharingScreen && screenStreamRef.current)) && (
+                <video 
+                  ref={(el) => { 
+                    const src = remoteScreenStream || screenStreamRef.current;
+                    if (el && el.srcObject !== src) el.srcObject = src; 
+                  }}
+                  autoPlay 
+                  playsInline 
+                  muted={isSharingScreen}
+                  className="absolute inset-0 w-full h-full object-contain bg-slate-900 z-10"
+                />
+              )}
+
+              {/* Remote Video (Full Stage or PiP) */}
+              {remoteStream ? (
+                <>
+                  <video 
+                    ref={remoteVideoRef}
+                    autoPlay 
+                    playsInline 
+                    className={(remoteScreenStream || isSharingScreen) ? `absolute bottom-6 left-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 object-cover z-20 bg-slate-900 transition-all ${remoteSpeaking && !isRemoteMuted ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)] ring-2 ring-emerald-400/50' : 'border-white/30 shadow-2xl'} ${isRemoteCameraOff ? 'opacity-0' : 'opacity-100'}` : `w-full h-full object-contain bg-black ${isRemoteCameraOff ? 'opacity-0' : 'opacity-100'}`}
+                  />
+                  {isRemoteCameraOff && (
+                    <div className={(remoteScreenStream || isSharingScreen) ? "absolute bottom-6 left-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 border-white/30 z-20 bg-slate-900 flex flex-col items-center justify-center text-text-muted text-center shadow-2xl" : "absolute inset-0 flex flex-col items-center justify-center text-text-muted bg-slate-900 p-6 text-center"}>
+                      <div className={(remoteScreenStream || isSharingScreen) ? "w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-text-muted mb-2" : "w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-text-muted mb-3"}>
+                        <VideoOff size={(remoteScreenStream || isSharingScreen) ? 18 : 28} />
+                      </div>
+                      <p className={(remoteScreenStream || isSharingScreen) ? "text-xs font-semibold text-slate-200 px-2" : "text-base font-semibold text-slate-200"}>Camera Off</p>
+                      {!(remoteScreenStream || isSharingScreen) && <p className="text-xs text-text-muted mt-1">{user?.role === 'Doctor' ? 'Patient' : 'Doctor'}'s camera is turned off</p>}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-text-muted bg-slate-900/90 p-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-text-muted mb-3 animate-pulse">
+                    <Video size={28} />
+                  </div>
+                  <p className="text-base font-semibold text-slate-200">Waiting for participant to join...</p>
+                  <p className="text-xs text-text-muted mt-1">The video stream will connect automatically as soon as both participants enter.</p>
+                </div>
+              )}
+
+              {/* Remote PIP Tag & Mute Indicator */}
+              {(remoteScreenStream || isSharingScreen) && remoteStream && (
+                 <div className="absolute bottom-8 left-8 z-30 flex items-center gap-2">
+                   <div className="bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md border border-white/10 flex items-center gap-1">
+                     <span>{user?.role === 'Patient' ? 'Doctor' : 'Patient'}</span>
+                     {remoteSpeaking && !isRemoteMuted && (
+                       <Activity size={10} className="text-emerald-400 animate-pulse ml-0.5" />
+                     )}
+                   </div>
+                   {isRemoteMuted && (
+                     <div className="bg-rose-500/90 text-white rounded-full p-1 shadow-md">
+                       <MicOff size={14} />
+                     </div>
+                   )}
+                 </div>
+              )}
+              
+              {!remoteScreenStream && !isSharingScreen && remoteStream && isRemoteMuted && (
+                 <div className="absolute top-6 right-6 z-30 bg-rose-500/90 text-white rounded-full p-2 shadow-lg animate-pulse border-2 border-white/20">
+                   <MicOff size={24} />
+                 </div>
+              )}
+
+              {/* Local Video Tile with AI Person Segmentation or Direct Video */}
+              <div 
+                className={`absolute bottom-6 right-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 overflow-hidden transition-all duration-300 z-20 bg-slate-950 ${cameraActive ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'} ${localSpeaking && micActive ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)] ring-2 ring-emerald-400/50' : 'border-white/30 shadow-2xl'}`}
+              >
+                {/* AI Processed Canvas (when preset is selected) */}
+                <canvas 
+                  ref={canvasRef}
+                  width={640}
+                  height={480}
+                  className={`w-full h-full object-cover relative z-10 ${bgPreset.id !== 'none' && isAiActive && !isSharingScreen ? 'block' : 'hidden'}`}
+                  style={{ transform: isSharingScreen ? 'none' : 'scaleX(-1)' }}
+                />
+
+                {/* Direct Video Element */}
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  className={`object-cover transition-all duration-300 ${
+                    bgPreset.id === 'none' || !isAiActive || isSharingScreen
+                      ? 'w-full h-full relative z-10 block opacity-100' 
+                      : 'w-full h-full absolute inset-0 opacity-0 pointer-events-none'
+                  }`}
+                  style={{ 
+                    transform: isSharingScreen ? 'none' : 'scaleX(-1)',
+                    filter: (!isAiActive && bgPreset.type === 'blur') ? bgPreset.blurAmount : 'none'
+                  }}
+                />
+
+                <div className="absolute bottom-2 left-2 z-20 bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-0.5 rounded-md border border-white/10 flex items-center gap-1">
+                  <span>{isSharingScreen ? 'Your Presentation' : `You (${user?.name ? user.name.split(' ')[0] : 'You'})`}</span>
+                  {localSpeaking && micActive && (
+                    <Activity size={10} className="text-emerald-400 animate-pulse ml-0.5" />
+                  )}
+                  {!micActive && (
+                    <MicOff size={10} className="text-rose-400 ml-0.5" />
+                  )}
+                </div>
+              </div>
+
+              {!cameraActive && (
+                <div className="absolute bottom-6 right-6 w-36 sm:w-48 h-48 sm:h-64 bg-slate-900 rounded-2xl border-2 border-white/20 shadow-2xl flex flex-col items-center justify-center text-text-muted text-xs text-center p-3">
+                  <VideoOff size={24} className="mb-2 text-rose-400" />
+                  <span>Camera Disabled</span>
+                </div>
+              )}
+
+              {/* Google Meet "Your mic is muted — are you talking?" Pill Toast */}
+              {callActive && !micActive && localSpeaking && (
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 bg-[#202124] text-white border border-[#3c4043] shadow-2xl px-4 py-2.5 rounded-full flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-auto">
+                  <div className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                    <MicOff size={13} />
+                  </div>
+                  <span className="text-xs font-medium text-slate-200">Your mic is muted — are you talking?</span>
+                  <button
+                    onClick={toggleMic}
+                    className="text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors ml-0.5 hover:underline"
+                  >
+                    Unmute
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* 🚀 Google Meet Floating Control Bar 🚀 */}
+        {callActive && (
+          <div data-tour="page-actions" className="h-20 bg-slate-950 border-t border-slate-800/80 flex items-center justify-between px-4 sm:px-8 z-30">
+            <div className="hidden sm:flex items-center text-xs font-semibold text-text-muted gap-2">
+              <span>Cabuyao CHO Telehealth</span>
+            </div>
+
+            {/* Floating Pill Controls */}
+            <div className="flex items-center gap-2 sm:gap-3 mx-auto sm:mx-0">
+              {/* Mic Button — pulses amber ring if mic is hardware-lost */}
+              <div className="relative">
+                <button
+                  onClick={toggleMic}
+                  title={micLost ? 'Microphone disconnected — click to retry' : micActive ? 'Mute Microphone' : 'Unmute Microphone'}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
+                    ${micLost ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-950 animate-pulse'
+                      : micActive ? 'bg-slate-800 text-white hover:bg-slate-700 active:scale-95'
+                      : 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'}`}
+                >
+                  {micActive && !micLost ? <Mic size={20} /> : <MicOff size={20} />}
+                </button>
+                {micLost && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center text-[9px] font-black text-slate-950">!</span>
+                )}
+              </div>
+
+              {/* Camera Button — pulses amber ring if camera is hardware-lost */}
+              <div className="relative">
+                <button
+                  onClick={toggleCamera}
+                  title={cameraLost ? 'Camera disconnected — click to retry' : cameraActive ? 'Turn Off Camera' : 'Turn On Camera'}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
+                    ${cameraLost ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-400 ring-offset-2 ring-offset-slate-950 animate-pulse'
+                      : cameraActive ? 'bg-slate-800 text-white hover:bg-slate-700 active:scale-95'
+                      : 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'}`}
+                >
+                  {cameraActive && !cameraLost ? <Video size={20} /> : <VideoOff size={20} />}
+                </button>
+                {cameraLost && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center text-[9px] font-black text-slate-950">!</span>
+                )}
+              </div>
+
+              {/* Google Meet Backgrounds & Visual Effects Button */}
+              <button 
+                onClick={() => setIsBgModalOpen(true)} 
+                title="Apply Visual Effects & AI Background Blur"
+                className={`hidden sm:flex w-12 h-12 rounded-full items-center justify-center transition-all ${bgPresetId !== 'none' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+              >
+                <Sparkles size={20} />
+              </button>
+
+              {/* Hardware Settings Button */}
+              <button 
+                onClick={() => setIsSettingsModalOpen(true)} 
+                title="Device Settings"
+                className="hidden sm:flex w-12 h-12 rounded-full items-center justify-center transition-all bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+              >
+                <Settings size={20} />
+              </button>
+
+              {/* Screen Share Button */}
+              <button 
+                onClick={toggleScreenShare} 
+                title={isSharingScreen ? 'Stop Presenting' : 'Present Screen'}
+                className={`hidden sm:flex w-12 h-12 rounded-full items-center justify-center transition-all ${isSharingScreen ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+              >
+                <MonitorUp size={20} />
+              </button>
+
+              {/* Side Drawer Toggles */}
+              <button 
+                onClick={() => setActiveSidePanel(activeSidePanel === 'chat' ? 'none' : 'chat')} 
+                title="Toggle Live Chat"
+                className={`w-12 h-12 rounded-full flex items-center justify-center relative transition-all ${activeSidePanel === 'chat' ? 'bg-teal-500 text-white shadow-md shadow-teal-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+              >
+                <MessageCircle size={20} />
+                {chatMessages.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-teal-400 text-slate-950 font-extrabold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                    {chatMessages.length}
+                  </span>
+                )}
+              </button>
+
+              <button 
+                onClick={() => setActiveSidePanel(activeSidePanel === 'clinical' ? 'none' : 'clinical')} 
+                title="Toggle Vitals & E-Prescription Panel"
+                className={`hidden sm:flex w-12 h-12 rounded-full items-center justify-center transition-all ${activeSidePanel === 'clinical' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+              >
+                {user?.role === 'Doctor' ? <FileText size={20} /> : <Activity size={20} />}
+              </button>
+
+              {/* Mobile More Actions Menu */}
+              <div className="relative sm:hidden">
+                <button 
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isMobileMenuOpen ? 'bg-slate-700 text-white shadow-lg' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                >
+                  <MoreVertical size={20} />
+                </button>
+                
+                {isMobileMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsMobileMenuOpen(false)}></div>
+                    <div className="absolute bottom-[4.5rem] right-0 z-50 mb-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col w-56 animate-in slide-in-from-bottom-2 fade-in">
+                      <button onClick={() => { setIsBgModalOpen(true); setIsMobileMenuOpen(false); }} className="px-4 py-3 text-sm text-left flex items-center gap-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-b border-slate-800/50">
+                        <Sparkles size={16} /> Visual Effects
+                      </button>
+                      <button onClick={() => { setIsSettingsModalOpen(true); setIsMobileMenuOpen(false); }} className="px-4 py-3 text-sm text-left flex items-center gap-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-b border-slate-800/50">
+                        <Settings size={16} /> Device Settings
+                      </button>
+                      <button onClick={() => { toggleScreenShare(); setIsMobileMenuOpen(false); }} className="px-4 py-3 text-sm text-left flex items-center gap-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border-b border-slate-800/50">
+                        <MonitorUp size={16} /> {isSharingScreen ? 'Stop Presenting' : 'Present Screen'}
+                      </button>
+                      <button onClick={() => { setActiveSidePanel(activeSidePanel === 'clinical' ? 'none' : 'clinical'); setIsMobileMenuOpen(false); }} className="px-4 py-3 text-sm text-left flex items-center gap-3 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                        {user?.role === 'Doctor' ? <FileText size={16} /> : <Activity size={16} />} 
+                        {user?.role === 'Doctor' ? 'Consultation Form' : 'Vital Signs'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Leave Call Button */}
+              <button 
+                onClick={handleEndCall} 
+                title="Leave Consultation"
+                className="w-12 h-12 rounded-full flex items-center justify-center bg-rose-500 text-white hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/30"
+              >
+                <PhoneOff size={20} />
+              </button>
+            </div>
+
+            <div className="hidden sm:block"></div>
           </div>
         )}
       </div>
 
+      {/* ── Side Drawer Panel (Chat / Vitals / E-Prescription) ──────────────────── */}
       {activeSidePanel !== 'none' && (
         <div className="absolute inset-0 z-50 md:relative md:inset-auto w-full md:w-[24rem] lg:w-[30rem] flex flex-col bg-surface h-full border-l border-border shrink-0 animate-in slide-in-from-right duration-300">
           
