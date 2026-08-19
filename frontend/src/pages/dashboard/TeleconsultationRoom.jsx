@@ -209,9 +209,7 @@ function TeleconsultationRoomContent() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatMessage, setChatMessage] = useState('');
   const [chatSending, setChatSending] = useState(false);
-  // Voice activity detection — drives the "Are you talking?" nudge and green glow
-  const localSpeaking = useSpeakingIndicator(callActive ? streamRef.current : lobbyStream);
-  const remoteSpeaking = useSpeakingIndicator(remoteStream);
+
   
   // Vitals State
   const [vitals, setVitals] = useState({ blood_pressure: '', heart_rate: '', temperature: '' });
@@ -245,6 +243,10 @@ function TeleconsultationRoomContent() {
   const canvasStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
   const sessionStartedAt = useRef(null); // timestamp when "Join" was clicked — filters out stale signals from previous sessions
+
+  // Voice activity detection — drives the "Are you talking?" nudge and green glow
+  const localSpeaking = useSpeakingIndicator(callActive ? streamRef.current : lobbyStream);
+  const remoteSpeaking = useSpeakingIndicator(remoteStream);
 
   const bgPreset = BACKGROUND_PRESETS.find((b) => b.id === bgPresetId) || BACKGROUND_PRESETS[0];
   const bgPresetRef = useRef(bgPreset);
