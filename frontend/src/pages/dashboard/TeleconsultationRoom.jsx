@@ -194,6 +194,7 @@ function TeleconsultationRoomContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [connectionState, setConnectionState] = useState('new');
   const [isRemoteMuted, setIsRemoteMuted] = useState(false);
+  const [isRemoteCameraOff, setIsRemoteCameraOff] = useState(false);
   // Hardware health alerts — Google Meet style
   const [micLost, setMicLost] = useState(false);       // mic track ended unexpectedly
   const [cameraLost, setCameraLost] = useState(false); // camera track ended unexpectedly
@@ -628,8 +629,9 @@ function TeleconsultationRoomContent() {
 
   const sendSignal = useCallback(async (payload) => {
     try {
+      const signalPayload = { ...payload, timestamp: Date.now(), senderId: user?.id };
       await api.post(`/consultations/${id}/messages`, {
-        message: `[WEBRTC_SIGNAL]${JSON.stringify(payload)}`
+        message: `[WEBRTC_SIGNAL]${JSON.stringify(signalPayload)}`
       });
     } catch (err) {
       console.error('Failed to send signal', err);
@@ -637,11 +639,22 @@ function TeleconsultationRoomContent() {
   }, [id]);
 
   const processWebRTCSignal = useCallback(async (signal) => {
-    if (!pcRef.current || !signal) return false;
+    if (!pcRef.current || !callActive) return;
+
+    // Ignore signals sent by ourselves
+    if (signal.senderId && signal.senderId === user?.id) {
+      return;
+    }
+
+    // Ignore signals older than 2 minutes to prevent processing stale offers from previous failed attempts
+    if (signal.timestamp && Date.now() - signal.timestamp > 2 * 60 * 1000) {
+      return;
+    }
+
     try {
-      if (signal.type === 'offer') {
+      if (signal.type === 'offer' && user?.role === 'Doctor') {
         if (pcRef.current.signalingState !== 'stable' && pcRef.current.signalingState !== 'have-local-offer') {
-          console.warn('Ignoring offer — signaling state:', pcRef.current.signalingState);
+          console.warn('Ignoring offer - signaling state:', pcRef.current.signalingState);
           return true; // Mark handled so it does not loop
         }
         await pcRef.current.setRemoteDescription(new RTCSessionDescription(signal.offer));
@@ -652,7 +665,7 @@ function TeleconsultationRoomContent() {
           const candidate = iceCandidateQueue.current.shift();
           await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error);
         }
-      } else if (signal.type === 'answer') {
+      } else if (signal.type === 'answer' && user?.role === 'Patient') {
         if (pcRef.current.signalingState !== 'have-local-offer') {
           console.warn('Ignoring answer — signaling state:', pcRef.current.signalingState);
           return true;
@@ -678,7 +691,7 @@ function TeleconsultationRoomContent() {
       } else if (signal.type === 'audio_status') {
         setIsRemoteMuted(!signal.enabled);
       } else if (signal.type === 'camera_status') {
-        // camera status handled
+        setIsRemoteCameraOff(!signal.enabled);
       }
     } catch (err) {
       console.error('WebRTC Signal Error:', err, signal);
@@ -1001,6 +1014,11 @@ function TeleconsultationRoomContent() {
           await pc.setLocalDescription(offer);
           sendSignal({ type: 'offer', offer });
         }
+
+        // Broadcast initial hardware state to the other peer
+        sendSignal({ type: 'camera_status', enabled: cameraActive });
+        sendSignal({ type: 'audio_status', enabled: micActive });
+
       } catch (err) {
         toast.error("Camera/Microphone access denied or not found.");
         console.error(err);
@@ -1550,12 +1568,23 @@ function TeleconsultationRoomContent() {
 
               {/* Remote Video (Full Stage or PiP) */}
               {remoteStream ? (
-                <video 
-                  ref={remoteVideoRef}
-                  autoPlay 
-                  playsInline 
-                  className={(remoteScreenStream || isSharingScreen) ? `absolute bottom-6 left-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 object-cover z-20 bg-slate-900 transition-all ${remoteSpeaking && !isRemoteMuted ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)] ring-2 ring-emerald-400/50' : 'border-white/30 shadow-2xl'}` : "w-full h-full object-cover"}
-                />
+                <>
+                  <video 
+                    ref={remoteVideoRef}
+                    autoPlay 
+                    playsInline 
+                    className={(remoteScreenStream || isSharingScreen) ? `absolute bottom-6 left-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 object-cover z-20 bg-slate-900 transition-all ${remoteSpeaking && !isRemoteMuted ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)] ring-2 ring-emerald-400/50' : 'border-white/30 shadow-2xl'} ${isRemoteCameraOff ? 'opacity-0' : 'opacity-100'}` : `w-full h-full object-contain bg-black ${isRemoteCameraOff ? 'opacity-0' : 'opacity-100'}`}
+                  />
+                  {isRemoteCameraOff && (
+                    <div className={(remoteScreenStream || isSharingScreen) ? "absolute bottom-6 left-6 w-36 sm:w-48 h-48 sm:h-64 rounded-2xl border-2 border-white/30 z-20 bg-slate-900 flex flex-col items-center justify-center text-text-muted text-center shadow-2xl" : "absolute inset-0 flex flex-col items-center justify-center text-text-muted bg-slate-900 p-6 text-center"}>
+                      <div className={(remoteScreenStream || isSharingScreen) ? "w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-text-muted mb-2" : "w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-text-muted mb-3"}>
+                        <VideoOff size={(remoteScreenStream || isSharingScreen) ? 18 : 28} />
+                      </div>
+                      <p className={(remoteScreenStream || isSharingScreen) ? "text-xs font-semibold text-slate-200 px-2" : "text-base font-semibold text-slate-200"}>Camera Off</p>
+                      {!(remoteScreenStream || isSharingScreen) && <p className="text-xs text-text-muted mt-1">{user?.role === 'Doctor' ? 'Patient' : 'Doctor'}'s camera is turned off</p>}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-text-muted bg-slate-900/90 p-6 text-center">
                   <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-text-muted mb-3 animate-pulse">
