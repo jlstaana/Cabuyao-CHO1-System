@@ -10,7 +10,6 @@ export function buildNavGroups(role) {
         label: 'My Health',
         links: [
           { path: '/dashboard',            label: 'Overview',            icon: Home },
-          { path: '/vitals',               label: 'Record Vital Signs',  icon: HeartPulse },
           { path: '/medical-images',       label: 'Medical Images',      icon: ImagePlus },
         ],
       },
@@ -43,6 +42,7 @@ export function buildNavGroups(role) {
         label: 'Consultations',
         links: [
           { path: '/consultations',  label: 'Consultation Queue',      icon: Stethoscope },
+          { path: '/consultation-history', label: 'Consultation History', icon: Clock },
           { path: '/patient-records', label: 'Patient Records',        icon: ClipboardList },
         ],
       },

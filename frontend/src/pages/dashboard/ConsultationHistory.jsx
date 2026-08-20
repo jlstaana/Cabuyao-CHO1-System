@@ -22,6 +22,7 @@ function toHistoryItem(c) {
   return {
     id: c.id,
     doctor: c.doctor?.user?.name ? `Dr. ${(c.doctor.user.name || '').replace(/^Dr\.\s*/i, '')}` : 'Doctor to be assigned',
+    patient: c.patient?.user?.name || 'Unknown Patient',
     specialization: c.doctor?.specialization || 'General Practice',
     date: when ? new Date(when).toLocaleDateString() : 'N/A',
     time: when ? new Date(when).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
@@ -43,7 +44,7 @@ export default function ConsultationHistory() {
 
   useEffect(() => {
     let isActive = true;
-    api.get('/patients/history')
+    api.get('/history')
       .then((res) => {
         if (isActive) setHistory((res.data || []).map(toHistoryItem));
       })

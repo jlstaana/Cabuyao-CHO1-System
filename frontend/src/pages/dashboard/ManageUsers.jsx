@@ -87,7 +87,7 @@ export default function ManageUsers() {
     e.preventDefault();
     const tmpPass = generateTempPassword();
     try {
-      const endpoint = formData.role === 'Doctor' ? '/admin/doctors' : '/admin/staff';
+      const endpoint = '/admin/doctors';
       await api.post(endpoint, { ...formData, password: tmpPass });
       toast.success('Account created successfully!');
       setIsCreateOpen(false);
@@ -141,7 +141,6 @@ export default function ManageUsers() {
   const totalCount = users.length;
   const adminCount = users.filter((u) => u.role === 'Admin').length;
   const doctorCount = users.filter((u) => u.role === 'Doctor').length;
-  const staffCount = users.filter((u) => u.role === 'Staff').length;
   const patientCount = users.filter((u) => u.role === 'Patient').length;
   const inactiveCount = users.filter((u) => !u.is_active).length;
 
@@ -173,7 +172,7 @@ export default function ManageUsers() {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <PageTitle icon={UserPlus} title="Account Management" description="Create doctor & staff accounts, assign visiting doctor access, and manage credentials." iconClassName="bg-primary-bg text-primary-text" />
+        <PageTitle icon={UserPlus} title="Account Management" description="Create doctor accounts, assign visiting doctor access, and manage credentials." iconClassName="bg-primary-bg text-primary-text" />
         <div data-tour="page-primary-action" className="flex gap-2 flex-wrap">
           <button
             onClick={() => { setFormData(f => ({ ...f, role: 'Doctor', access_type: 'visiting' })); setIsCreateOpen(true); }}
@@ -249,24 +248,7 @@ export default function ManageUsers() {
           </p>
         </div>
 
-        <div
-          className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-100">
-              Staff
-            </span>
-            <div className="p-2 rounded-xl bg-white/20 text-white">
-              <UserCog size={18} />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-white">
-            {loading ? '...' : staffCount}
-          </p>
-          <p className="text-xs mt-1 text-amber-100">
-            Health officers & staff
-          </p>
-        </div>
+        
 
         <div
           className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent"
@@ -321,7 +303,7 @@ export default function ManageUsers() {
                />
             </div>
             <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-               {['All', 'Admin', 'Doctor', 'Staff', 'Patient', 'Inactive'].map((role) => (
+               {['All', 'Admin', 'Doctor', 'Patient', 'Inactive'].map((role) => (
                  <button
                    key={role}
                    onClick={() => setRoleFilter(role)}
@@ -450,7 +432,7 @@ export default function ManageUsers() {
                 onClick={() => setFormData(f => ({ ...f, access_type: t }))}
                 className={`flex-1 py-1.5 rounded-lg text-sm font-semibold capitalize transition-all ${formData.access_type === t ? 'bg-surface shadow text-primary-text' : 'text-text-muted hover:text-text-muted'}`}
               >
-                {t === 'visiting' ? '🩺 Visiting Doctor' : '🏥 Permanent Staff'}
+                {t === 'visiting' ? '\uD83E\uDE7A Visiting Doctor' : '\uD83C\uDFE5 Permanent'}
               </button>
             ))}
           </div>
@@ -469,7 +451,7 @@ export default function ManageUsers() {
               <label className="block text-sm font-medium text-text-muted mb-1">Assign Role</label>
               <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface outline-none">
                 <option value="Doctor">Doctor</option>
-                <option value="Staff">Staff</option>
+                
               </select>
             </div>
           )}
@@ -517,12 +499,7 @@ export default function ManageUsers() {
             </div>
           )}
 
-          {formData.role === 'Staff' && formData.access_type === 'permanent' && (
-            <div>
-              <label className="block text-sm font-medium text-text-muted mb-1">Department</label>
-              <input required value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. Outpatient, Pharmacy" />
-            </div>
-          )}
+          
 
           {formData.access_type === 'visiting' && (
             <div>

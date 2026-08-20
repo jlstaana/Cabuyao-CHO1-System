@@ -22,7 +22,7 @@ const IMAGE_MIME_PREFIX = 'image/';
 
 const IMAGE_TYPES = [
   'X-Ray',
-  'Lab Result',
+  'Lab Test Results',
   'Prescription Photo',
   'Medical Certificate',
   'CT Scan',
@@ -200,7 +200,7 @@ export default function MedicalImages() {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
       {/* Header */}
       <header>
-        <PageTitle icon={ImagePlus} title="Medical Images" description="Upload X-rays, lab results, and other medical documents for your doctor to review." iconClassName="bg-brand-bg text-indigo-600" />
+        <PageTitle icon={ImagePlus} title="Medical Images" description="Upload X-rays, lab test results, and other medical documents for your doctor to review." iconClassName="bg-brand-bg text-indigo-600" />
       </header>
 
       {/* Upload form */}

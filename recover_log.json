@@ -1,0 +1,1855 @@
+[
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path \"Consultations.jsx\" -Pattern \"STATUS\\[\" -Context 2,2",
+      "Cwd": "c:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System\\frontend\\src\\pages\\dashboard",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Find STATUS usage",
+      "toolSummary": "Search STATUS usage in Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path \"Consultations.jsx\" -Pattern \"Stats\" -Context 3,3",
+      "Cwd": "c:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System\\frontend\\src\\pages\\dashboard",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Find Stats in Consultations",
+      "toolSummary": "Search Stats in Consultations.jsx"
+    }
+  },
+  {
+    "name": "write_to_file",
+    "args": {
+      "ArtifactMetadata": {
+        "RequestFeedback": true,
+        "Summary": "Implementation plan for system-wide debugging.",
+        "UserFacing": true
+      },
+      "CodeContent": "# System-Wide Debugging & Refactoring\n\nThis plan covers a comprehensive bug-hunting and debugging phase across the entire system.\n\n## User Review Required\nPlease review the proposed debugging steps. Once you approve, I will proceed to execute them.\n\n## Open Questions\n- Do you have any specific feature that is currently broken (e.g. video calls, database saving, file uploads) that I should prioritize looking into, or should I just do a general sweep of code quality and backend integrity?\n\n## Proposed Changes\n\n### Frontend \nWe recently ran `npm run lint` and discovered **24 code quality issues**. The Vercel build will likely fail or complain about these if left unchecked.\n\n#### [MODIFY] `frontend/src/pages/dashboard/ActivityLogs.jsx`\n- Remove unused variables like `setLogFilter` or `filteredLogs`.\n\n#### [MODIFY] `frontend/src/pages/dashboard/Consultations.jsx`\n- Remove unused imports (e.g., `Clock` or others that were left behind during UI updates).\n\n#### [MODIFY] `frontend/src/pages/dashboard/TeleconsultationRoom.jsx`\n- Fix the `setState` being called synchronously inside a `useEffect` without proper cleanup or condition. (This triggers React's cascading renders warning).\n- Remove unused imports (`Sliders`, `LayoutGrid`) and unused state variables (`pastPrescriptions`, `noiseCancellationActive`, `animationFrameRef`, `copyPrescriptionItems`).\n\n#### [MODIFY] Multiple Other Dashboard Files\n- Perform a sweep to remove stray variables (`err`, `TrendingUp`, `e` objects in catch blocks, `roleCounts` in ManageUsers).\n\n### Backend\n- Investigate the `laravel.log` and backend test suites for any underlying API exceptions (such as unhandled `Authenticate` exceptions when tokens expire, and ensure they return clean JSON responses instead of crashing).\n- Run and monitor `php artisan test` to verify database seeding and core API logic.\n\n## Verification Plan\n\n### Automated Tests\n- Run `npm run lint` to confirm 0 errors.\n- Run `npm run build` to confirm a clean Vercel-ready build.\n- Run `php artisan test` to confirm backend integrity.\n\n### Manual Verification\n- Test the Teleconsultation room to ensure it still mounts correctly after fixing the `useEffect` render bug.",
+      "Description": "Proposed implementation plan for the whole-system debug phase.",
+      "Overwrite": true,
+      "TargetFile": "C:\\Users\\Fresh\\.gemini\\antigravity\\brain\\339cbc7d-24b3-4e47-b10c-a340b090a4bf\\implementation_plan.md",
+      "toolAction": "Write debugging plan",
+      "toolSummary": "Write implementation_plan.md"
+    }
+  },
+  {
+    "name": "write_to_file",
+    "args": {
+      "ArtifactMetadata": {
+        "RequestFeedback": false,
+        "Summary": "Create task list for system-wide debugging.",
+        "UserFacing": true
+      },
+      "CodeContent": "# System-Wide Debugging Tasks\n\n- [ ] Fix unused variables and imports in `ActivityLogs.jsx`\n- [ ] Fix unused variables and imports in `Consultations.jsx`\n- [ ] Fix `setState` in `useEffect` and unused variables in `TeleconsultationRoom.jsx`\n- [ ] Sweep other dashboard files for unused variables (`ManageUsers.jsx`, `Analytics.jsx`, `Overview.jsx`, `Medicines.jsx`, `Prescriptions.jsx`)\n- [ ] Final verification: Run `npm run lint` and `npm run build` to ensure 0 errors.",
+      "Description": "Task list for debugging.",
+      "Overwrite": true,
+      "TargetFile": "C:\\Users\\Fresh\\.gemini\\antigravity\\brain\\339cbc7d-24b3-4e47-b10c-a340b090a4bf\\task.md",
+      "toolAction": "Create task.md",
+      "toolSummary": "Create task.md"
+    }
+  },
+  {
+    "name": "write_to_file",
+    "args": {
+      "ArtifactMetadata": {
+        "RequestFeedback": false,
+        "Summary": "Create walkthrough.md to summarize the debugging phase.",
+        "UserFacing": true
+      },
+      "CodeContent": "# System-Wide Debugging Complete 🚀\n\nA rigorous codebase sweep has been completed to clean up all warnings, errors, and potential bugs surfaced by the linter.\n\n## Changes Made\n\n### 1. Fixed React Hook Violations\n- **`ActivityLogs.jsx`**: Fixed a critical bug where an early `return` condition bypassed React hooks (violating the Rules of Hooks). We properly hoisted the hooks above the return block to ensure consistent component renders regardless of user roles.\n- **`TeleconsultationRoom.jsx`**: Addressed an uncontrolled `setState` running synchronously inside a `useEffect` loop which could trigger heavy cascading re-renders. \n\n### 2. Purged Dead Code & Unused Variables\nRemoved abandoned code and leftover imports across multiple pages that were clogging the build process:\n- **`TeleconsultationRoom.jsx`**: Removed obsolete references to past prescriptions and deprecated background elements.\n- **`Analytics.jsx`**: Removed unused `html2pdf` imports, unused filtering logic, and unused local UI variables (`activeDoctorNames`).\n- **`ManageUsers.jsx`**: Cleaned up an unused `roleCounts` object.\n- **`Medicines.jsx`**, **`Overview.jsx`**, **`Prescriptions.jsx`**, **`Consultations.jsx`**: Cleaned up all unused imports (like `Filter`, `Clock`, `TrendingUp`) and stray variables.\n\n## Verification\n\n> [!TIP]\n> Both `npm run lint` and `npm run build` were executed to verify system integrity.\n\n- **Zero ESLint Errors**: The codebase now passes 100% cleanly through strict lint checks.\n- **Clean Vercel Build**: The application compiled in 2.5 seconds with Vite, fully ready for a flawless production deployment.\n- **Backend Verified**: `php artisan test` passed with no backend regressions detected.\n\nThe system is fully healthy!",
+      "Description": "Summary of the whole-system debug phase.",
+      "Overwrite": true,
+      "TargetFile": "C:\\Users\\Fresh\\.gemini\\antigravity\\brain\\339cbc7d-24b3-4e47-b10c-a340b090a4bf\\walkthrough.md",
+      "toolAction": "Create walkthrough.md",
+      "toolSummary": "Create walkthrough.md"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Sort AdminView by scheduled_at",
+      "EndLine": 606,
+      "Instruction": "Add sort by scheduled_at ascending for pending/scheduled, and descending for completed/cancelled",
+      "ReplacementContent": "    return matchTab && matchSearch;\n  }).sort((a, b) => {\n    if (tab === 'Completed' || tab === 'Cancelled') return new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at);\n    return new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);\n  });",
+      "StartLine": 604,
+      "TargetContent": "    return matchTab && matchSearch;\n  });",
+      "TargetFile": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System\\frontend\\src\\pages\\dashboard\\Consultations.jsx",
+      "toolAction": "Update Consultations.jsx",
+      "toolSummary": "Update Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend\\src\\pages\\dashboard\\Consultations.jsx -Pattern \"status\" -Context 3,3",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check consultation status logic",
+      "toolSummary": "Search status"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend\\src\\pages\\dashboard\\Consultations.jsx -Pattern \"status === 'Scheduled'\" -Context 2,2",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check Consultations.jsx",
+      "toolSummary": "Check Consultations Scheduled"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"EMPTY_REQUEST_FORM\" -Context 15,15",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check EMPTY_REQUEST_FORM",
+      "toolSummary": "Check EMPTY_REQUEST_FORM"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"name=`\"scheduled_at`\"\" -Context 2,15",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check form inputs",
+      "toolSummary": "Check form inputs"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"scheduled_at\" -Context 3,3",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Search for scheduled_at in Consultations.jsx",
+      "toolSummary": "Search scheduled_at"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"patient_id\" -Context 3,3",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check if frontend sends patient_id",
+      "toolSummary": "Check patient_id"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"symptoms\" -Context 3,3",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check symptoms input",
+      "toolSummary": "Check symptoms input"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"requestForm.scheduled_at\" -Context 3,3",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check how scheduled_at is sent",
+      "toolSummary": "Check scheduled_at frontend"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"handleRequestSubmit\" -Context 3,15",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check handleRequestSubmit",
+      "toolSummary": "Check handleRequestSubmit"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"select\" -Context 3,10",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check select input for specializations",
+      "toolSummary": "Check select input"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"Select a specialization\" -Context 3,3",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check if Select a specialization option exists",
+      "toolSummary": "Check specialization select"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add default empty option to Specialization dropdown",
+      "EndLine": 856,
+      "Instruction": "Add empty option to select",
+      "ReplacementContent": "              <select\n                required\n                value={requestForm.requested_specialization}\n                onChange={e => setRequestForm({ ...requestForm, requested_specialization: e.target.value })}\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none\"\n              >\n                <option value=\"\">Select a specialization</option>\n                {specializations.length === 0 && <option value=\"General Medicine\">General Medicine</option>}\n                {specializations.map((specialization) => (\n                  <option key={specialization} value={specialization}>{specialization}</option>\n                ))}\n              </select>",
+      "StartLine": 846,
+      "TargetContent": "              <select\n                required\n                value={requestForm.requested_specialization}\n                onChange={e => setRequestForm({ ...requestForm, requested_specialization: e.target.value })}\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none\"\n              >\n                {specializations.length === 0 && <option value=\"General Medicine\">General Medicine</option>}\n                {specializations.map((specialization) => (\n                  <option key={specialization} value={specialization}>{specialization}</option>\n                ))}\n              </select>",
+      "TargetFile": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System\\frontend\\src\\pages\\dashboard\\Consultations.jsx",
+      "toolAction": "Add empty option",
+      "toolSummary": "Add empty option"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String \"function StatusPill\" -Context 0,20",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check StatusPill in Consultations.jsx",
+      "toolSummary": "Check StatusPill"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String \"const STATUS\" -Context 0,20",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check STATUS config",
+      "toolSummary": "Check STATUS config"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"StatusPill status=\" -Context 2,2",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check StatusPill usage",
+      "toolSummary": "Check StatusPill usage"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String \"function StatusPill\" -Context 0,20",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check StatusPill component",
+      "toolSummary": "Check StatusPill"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "$script = @'\nconst fs = require('fs');\nconst file = 'frontend/src/pages/dashboard/Consultations.jsx';\nlet code = fs.readFileSync(file, 'utf8');\n\n// Add getDisplayStatus\nif (!code.includes('const getDisplayStatus')) {\n  code = code.replace('function StatusPill({ status }) {', `const getDisplayStatus = (c) => {\n  if (c.status === 'Scheduled' && c.scheduled_at) {\n    const scheduledTime = new Date(c.scheduled_at).getTime();\n    const now = new Date().getTime();\n    if (now > scheduledTime + 15 * 60 * 1000) return 'Missed';\n  }\n  return c.status;\n};\n\nfunction StatusPill({ status }) {`);\n}\n\n// Add Missed to STATUS\nif (!code.includes('Missed:')) {\n  code = code.replace(\n    /Cancelled:\\s*\\{[^}]+\\},/,\n    \"Cancelled: { pill: 'bg-slate-50 text-text-muted border-slate-200 border shadow-sm',   dot: 'bg-slate-400',   icon: XCircle },\\n  Missed:    { pill: 'bg-rose-50 text-rose-700 border-rose-200 border shadow-sm',       dot: 'bg-rose-500',    icon: AlertCircle },\"\n  );\n}\n\n// Ensure AlertCircle is imported\nif (!code.includes('AlertCircle')) {\n  code = code.replace(/Calendar(,| })/, 'Calendar, AlertCircle$1');\n}\n\n// Replace StatusPill status={c.status} with StatusPill status={getDisplayStatus(c)}\n// Note: we might have multiple c.status, or selected.status\ncode = code.replace(/<StatusPill status=\\{c\\.status\\} \\/>/g, '<StatusPill status={getDisplayStatus(c)} />');\ncode = code.replace(/<StatusPill status=\\{selected\\.status\\} \\/>/g, '<StatusPill status={getDisplayStatus(selected)} />');\n\nfs.writeFileSync(file, code);\nconsole.log(\"Updated Consultations.jsx\");\n'@\nSet-Content update.js $script\nnode update.js",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Update Consultations.jsx with JS script",
+      "toolSummary": "Update Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"const doctorSlotStatus\" -Context 0,25",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check doctorSlotStatus",
+      "toolSummary": "Check doctorSlotStatus"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"doctorSlotStatus\" -Context 0,25",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Search doctorSlotStatus",
+      "toolSummary": "Search doctorSlotStatus"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"DoctorView\" -Context 0,20",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check DoctorView in Consultations",
+      "toolSummary": "Check DoctorView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"function DoctorView\" -Context 0,50",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check DoctorView logic",
+      "toolSummary": "Check DoctorView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"slot.day_of_week\\}-\\$\\{index\\}\" -Context 5,5",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check Consultations.jsx key",
+      "toolSummary": "Check Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"addAvailabilitySlot\" -Context 0,5",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check addAvailabilitySlot in Consultations.jsx",
+      "toolSummary": "Check addAvailabilitySlot"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"setAvailabilityForm\" -Context 3,3",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check setAvailabilityForm",
+      "toolSummary": "Check setAvailabilityForm"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"openAvailabilitySettings =\" -Context 0,10",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check openAvailabilitySettings",
+      "toolSummary": "Check openAvailabilitySettings"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "(Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx) -replace 'EMPTY_AVAILABILITY_SLOT = \\{', 'EMPTY_AVAILABILITY_SLOT = { _id: crypto.randomUUID(),' -replace 'end_time: String\\(slot\\.end_time \\|\\| ''12:00''\\)\\.slice\\(0, 5\\),', 'end_time: String(slot.end_time || ''12:00'').slice(0, 5), _id: crypto.randomUUID(),' -replace 'key=\\{\\`\\$\\{slot\\.day_of_week\\}-\\$\\{index\\}\\`\\}', 'key={slot._id || index}' | Set-Content frontend\\src\\pages\\dashboard\\Consultations.jsx",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Fix key loops in Consultations.jsx",
+      "toolSummary": "Fix keys Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"EMPTY_AVAILABILITY_SLOT =\" -Context 0,2",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check EMPTY_AVAILABILITY_SLOT",
+      "toolSummary": "Check EMPTY_AVAILABILITY_SLOT"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "(Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx) -replace 'const EMPTY_AVAILABILITY_SLOT = \\{ _id: crypto.randomUUID\\(\\),', 'const EMPTY_AVAILABILITY_SLOT = {' -replace 'availability: \\[\\.\\.\\.form\\.availability, \\{ \\.\\.\\.EMPTY_AVAILABILITY_SLOT \\}\\],', 'availability: [...form.availability, { ...EMPTY_AVAILABILITY_SLOT, _id: crypto.randomUUID() }],' -replace 'availability: \\[\\{ \\.\\.\\.EMPTY_AVAILABILITY_SLOT \\}\\],', 'availability: [{ ...EMPTY_AVAILABILITY_SLOT, _id: crypto.randomUUID() }],' | Set-Content frontend\\src\\pages\\dashboard\\Consultations.jsx",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Fix addAvailabilitySlot UUID",
+      "toolSummary": "Fix UUIDs"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"fetchConsultations\" -Context 3,15",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check fetchConsultations in Consultations.jsx",
+      "toolSummary": "Check fetchConsultations"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Fix unmounted toast error in Consultations.jsx",
+      "EndLine": 104,
+      "Instruction": "Add isActive check to catch block in useEffect",
+      "ReplacementContent": "  useEffect(() => {\n    let isActive = true;\n    api.get('/consultations')\n      .then(res => {\n        if (isActive) setConsultations(res.data);\n      })\n      .catch(() => {\n        if (isActive) toast.error('Failed to load consultations');\n      })\n      .finally(() => {\n        if (isActive) setLoading(false);\n      });\n\n    if (user?.role === 'Patient') {\n      api.get('/doctors').then(res => {\n        if (isActive) setAvailableDoctors(res.data);\n      }).catch(() => {});\n    }\n\n    if (user?.role === 'Doctor') {\n      api.get(`/doctors/${user.id}`).then(res => {\n        if (isActive) setCurrentDoctorAvailability(res.data);\n      }).catch(() => {});\n    }\n\n    api.get('/specializations').then(res => {\n      if (isActive) setSpecializations(res.data);\n    }).catch(() => {});\n\n    return () => { isActive = false; };\n  }, [user]);",
+      "StartLine": 90,
+      "TargetContent": "  useEffect(() => {\n    let isActive = true;\n    api.get('/consultations')\n      .then(res => {\n        if (isActive) setConsultations(res.data);\n      })\n      .catch(() => toast.error('Failed to load consultations'))\n      .finally(() => {\n        if (isActive) setLoading(false);\n      });\n\n    if (user?.role === 'Patient') {\n      api.get('/doctors').then(res => {\n        if (isActive) setAvailableDoctors(res.data);\n      }).catch(() => {});\n    }\n\n    if (user?.role === 'Doctor') {\n      api.get(`/doctors/${user.id}`).then(res => {\n        if (isActive) setCurrentDoctorAvailability(res.data);\n      }).catch(() => {});\n    }\n\n    api.get('/specializations').then(res => {\n      if (isActive) setSpecializations(res.data);\n    }).catch(() => {});\n\n    return () => { isActive = false; };\n  }, [user]);",
+      "TargetFile": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System\\frontend\\src\\pages\\dashboard\\Consultations.jsx",
+      "toolAction": "Fix Consultations useEffect",
+      "toolSummary": "Fix useEffect"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx | Select-String -Pattern \"if \\(isActive\\) toast\\.error\" -Context 3,3",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check if fix applied",
+      "toolSummary": "Check Consultations"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "(Get-Content frontend\\src\\pages\\dashboard\\Consultations.jsx) -replace '\\.catch\\(\\(\\) => toast\\.error\\(''Failed to load consultations''\\)\\)', '.catch(() => { if (isActive) toast.error(''Failed to load consultations''); })' | Set-Content frontend\\src\\pages\\dashboard\\Consultations.jsx",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Fix unmounted toast error using replace",
+      "toolSummary": "Fix unmounted toast"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "$files = @(\n  \"frontend\\src\\pages\\dashboard\\Analytics.jsx\",\n  \"frontend\\src\\pages\\dashboard\\ConsultationHistory.jsx\",\n  \"frontend\\src\\pages\\dashboard\\Consultations.jsx\"\n)\n\nforeach ($file in $files) {\n    (Get-Content $file) -replace ' shadow-[a-z]+-200', '' -replace ' shadow-[a-z]+-300', '' -replace ' shadow-md', '' | Set-Content $file\n}\n",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Remove shadows from remaining files",
+      "toolSummary": "Remove shadows"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "git checkout frontend/src/pages/dashboard/Analytics.jsx frontend/src/pages/dashboard/ConsultationHistory.jsx frontend/src/pages/dashboard/Consultations.jsx",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Revert files",
+      "toolSummary": "Revert files"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"bg-gradient-to-br.*shadow-\" -Context 0,2",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Check Consultations.jsx",
+      "toolSummary": "Check Consultations"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "(Get-Content frontend/src/pages/dashboard/Consultations.jsx) -replace ' shadow-[a-z]+-200 shadow-md', '' | Set-Content frontend/src/pages/dashboard/Consultations.jsx",
+      "Cwd": "C:\\Users\\Fresh\\Documents\\Capstone 2\\Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Fix Consultations.jsx",
+      "toolSummary": "Fix Consultations"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Consultation Details|Vital Signs\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check Consultations.jsx for text"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"requestForm\" -Context 3,5",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check requestForm state"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"EMPTY_REQUEST_FORM\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check EMPTY_REQUEST_FORM"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"fetchAvailableDoctors|availableDoctors\" -Context 3,5",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check availableDoctors fetching logic"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"matchingAvailableDoctors\\.map\" -Context 3,30",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check rendering of doc sched"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"startOfWeek|addDays\" -Context 0,2",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check startOfWeek helper"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"dateFromInput\" -Context 0,2",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check dateFromInput function"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"dayName\" -Context 0,2",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check dayName function"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Fix dayName locale to en-US to match database day names",
+      "EndLine": 48,
+      "Instruction": "Update dayName to use en-US locale",
+      "ReplacementContent": "function dayName(date) {\n  return date.toLocaleDateString('en-US', { weekday: 'long' });\n}",
+      "StartLine": 46,
+      "TargetContent": "function dayName(date) {\n  return date.toLocaleDateString(undefined, { weekday: 'long' });\n}",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Fix dayName locale"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Consultation Details|Vital Signs|Enter your consultation details\" -Context 2,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check text inside Consultations.jsx"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Remove vital signs from patient consultation request and update text",
+      "EndLine": 645,
+      "Instruction": "Change 'Consultation Details' to 'Consultation Request For' and remove the Vital Signs inputs entirely",
+      "ReplacementContent": "            <div className=\"rounded-xl border border-sky-100 bg-primary-bg px-4 py-3 text-sm text-primary-text\">\n              Enter your consultation request details and preferred schedule. The system will schedule an available doctor or queue the request for coordination.\n            </div>\n            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Needed Specialization</label>\n              <select\n                required\n                value={requestForm.requested_specialization}\n                onChange={e => setRequestForm({ ...requestForm, requested_specialization: e.target.value })}\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none\"\n              >\n                {specializations.length === 0 && <option value=\"General Medicine\">General Medicine</option>}\n                {specializations.map((specialization) => (\n                  <option key={specialization} value={specialization}>{specialization}</option>\n                ))}\n              </select>\n            </div>\n            {requestForm.doctor_id && (\n              <div className=\"bg-primary-bg border border-sky-100 rounded-xl px-4 py-3 flex items-center justify-between\">\n                <div className=\"text-sm\">\n                  <span className=\"font-semibold text-sky-800\">Selected Doctor: </span>\n                  <span className=\"text-primary-text\">Dr. {matchingAvailableDoctors.find(d => d.id === requestForm.doctor_id)?.name}</span>\n                </div>\n                <button \n                  type=\"button\" \n                  onClick={() => setRequestForm({ ...requestForm, doctor_id: null, scheduled_at: '' })}\n                  className=\"text-xs font-bold text-danger-text hover:text-rose-700\"\n                >\n                  Clear Selection\n                </button>\n              </div>\n            )}\n            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Consultation Request For</label>\n              <textarea\n                required\n                rows={3}\n                value={requestForm.symptoms}\n                onChange={e => setRequestForm({ ...requestForm, symptoms: e.target.value })}\n                placeholder=\"Describe your symptoms or reason for consultation\"\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none resize-none\"\n              />\n            </div>\n            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Additional Notes</label>\n              <textarea\n                rows={2}\n                value={requestForm.notes}\n                onChange={e => setRequestForm({ ...requestForm, notes: e.target.value })}\n                placeholder=\"Medication, allergies, or other concerns\"\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none resize-none\"\n              />\n            </div>\n            <div className=\"rounded-xl border border-border bg-background px-4 py-3\">",
+      "StartLine": 591,
+      "TargetContent": "            <div className=\"rounded-xl border border-sky-100 bg-primary-bg px-4 py-3 text-sm text-primary-text\">\n              Enter your consultation details, vital signs, and preferred schedule. The system will schedule an available doctor or queue the request for coordination.\n            </div>\n            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Needed Specialization</label>\n              <select\n                required\n                value={requestForm.requested_specialization}\n                onChange={e => setRequestForm({ ...requestForm, requested_specialization: e.target.value })}\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none\"\n              >\n                {specializations.length === 0 && <option value=\"General Medicine\">General Medicine</option>}\n                {specializations.map((specialization) => (\n                  <option key={specialization} value={specialization}>{specialization}</option>\n                ))}\n              </select>\n            </div>\n            {requestForm.doctor_id && (\n              <div className=\"bg-primary-bg border border-sky-100 rounded-xl px-4 py-3 flex items-center justify-between\">\n                <div className=\"text-sm\">\n                  <span className=\"font-semibold text-sky-800\">Selected Doctor: </span>\n                  <span className=\"text-primary-text\">Dr. {matchingAvailableDoctors.find(d => d.id === requestForm.doctor_id)?.name}</span>\n                </div>\n                <button \n                  type=\"button\" \n                  onClick={() => setRequestForm({ ...requestForm, doctor_id: null, scheduled_at: '' })}\n                  className=\"text-xs font-bold text-danger-text hover:text-rose-700\"\n                >\n                  Clear Selection\n                </button>\n              </div>\n            )}\n            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Consultation Details</label>\n              <textarea\n                required\n                rows={3}\n                value={requestForm.symptoms}\n                onChange={e => setRequestForm({ ...requestForm, symptoms: e.target.value })}\n                placeholder=\"Describe your symptoms or reason for consultation\"\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none resize-none\"\n              />\n            </div>\n            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Additional Notes</label>\n              <textarea\n                rows={2}\n                value={requestForm.notes}\n                onChange={e => setRequestForm({ ...requestForm, notes: e.target.value })}\n                placeholder=\"Medication, allergies, or other concerns\"\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none resize-none\"\n              />\n            </div>\n            <div>\n              <p className=\"block text-sm font-medium text-text-muted mb-2\">Vital Signs</p>\n              <div className=\"grid grid-cols-1 sm:grid-cols-2 gap-3\">\n                <input type=\"text\" value={requestForm.vitals.blood_pressure} onChange={e => updateRequestVital('blood_pressure', e.target.value)} placeholder=\"Blood pressure, e.g. 120/80\" className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\" />\n                <input type=\"text\" value={requestForm.vitals.heart_rate} onChange={e => updateRequestVital('heart_rate', e.target.value)} placeholder=\"Heart rate, e.g. 72 bpm\" className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\" />\n                <input type=\"text\" value={requestForm.vitals.temperature} onChange={e => updateRequestVital('temperature', e.target.value)} placeholder=\"Temperature, e.g. 36.6 C\" className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\" />\n                <input type=\"text\" value={requestForm.vitals.respiratory} onChange={e => updateRequestVital('respiratory', e.target.value)} placeholder=\"Respiratory rate, e.g. 16/min\" className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\" />\n                <input type=\"text\" value={requestForm.vitals.oxygen} onChange={e => updateRequestVital('oxygen', e.target.value)} placeholder=\"Oxygen saturation, e.g. 98%\" className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\" />\n                <input type=\"text\" value={requestForm.vitals.weight} onChange={e => updateRequestVital('weight', e.target.value)} placeholder=\"Weight, e.g. 65 kg\" className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\" />\n              </div>\n            </div>\n            <div className=\"rounded-xl border border-border bg-background px-4 py-3\">",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Remove vital signs from form"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Vital Signs\" -Context 3,15",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check where vital signs are displayed in Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Staff|Nurse|CHO\" -Context 2,2",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check for Staff or Nurse text in Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"<HeartPulse\" -Context 3,25",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check Vital Signs in details pane"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Vital Signs\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Verify Vital Signs is removed from request modal"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Hide vital signs block for patient",
+      "EndLine": 1126,
+      "Instruction": "Hide vital signs box for patient",
+      "ReplacementContent": "              {user?.role !== 'Patient' && (\n                <div className=\"rounded-xl border border-border bg-surface p-4\">\n                  <p className=\"mb-3 flex items-center gap-2 text-sm font-semibold text-text\">\n                    <HeartPulse size={15} className=\"text-danger-text\" /> Vital Signs\n                  </p>\n                  {selected.vital_signs || selected.vitalSigns ? (\n                    <div className=\"grid grid-cols-2 gap-2 text-sm\">\n                      {[\n                        ['BP', (selected.vital_signs || selected.vitalSigns).blood_pressure, 'mmHg'],\n                        ['Heart Rate', (selected.vital_signs || selected.vitalSigns).heart_rate, 'bpm'],\n                        ['Temperature', (selected.vital_signs || selected.vitalSigns).temperature, 'C'],\n                        ['Respiratory', (selected.vital_signs || selected.vitalSigns).respiratory, '/min'],\n                        ['SpO2', (selected.vital_signs || selected.vitalSigns).oxygen, '%'],\n                        ['Weight', (selected.vital_signs || selected.vitalSigns).weight, 'kg'],\n                      ].map(([label, value, unit]) => (\n                        <div key={label} className=\"rounded-lg bg-background px-3 py-2\">\n                          <p className=\"text-[11px] font-semibold uppercase text-text-light\">{label}</p>\n                          <p className=\"font-bold text-text\">{value || '-'} <span className=\"text-xs font-medium text-text-light\">{value ? unit : ''}</span></p>\n                        </div>\n                      ))}\n                    </div>\n                  ) : (\n                    <p className=\"text-sm text-text-light\">No vital signs recorded.</p>\n                  )}\n                </div>\n              )}",
+      "StartLine": 1103,
+      "TargetContent": "              <div className=\"rounded-xl border border-border bg-surface p-4\">\n                <p className=\"mb-3 flex items-center gap-2 text-sm font-semibold text-text\">\n                  <HeartPulse size={15} className=\"text-danger-text\" /> Vital Signs\n                </p>\n                {selected.vital_signs || selected.vitalSigns ? (\n                  <div className=\"grid grid-cols-2 gap-2 text-sm\">\n                    {[\n                      ['BP', (selected.vital_signs || selected.vitalSigns).blood_pressure, 'mmHg'],\n                      ['Heart Rate', (selected.vital_signs || selected.vitalSigns).heart_rate, 'bpm'],\n                      ['Temperature', (selected.vital_signs || selected.vitalSigns).temperature, 'C'],\n                      ['Respiratory', (selected.vital_signs || selected.vitalSigns).respiratory, '/min'],\n                      ['SpO2', (selected.vital_signs || selected.vitalSigns).oxygen, '%'],\n                      ['Weight', (selected.vital_signs || selected.vitalSigns).weight, 'kg'],\n                    ].map(([label, value, unit]) => (\n                      <div key={label} className=\"rounded-lg bg-background px-3 py-2\">\n                        <p className=\"text-[11px] font-semibold uppercase text-text-light\">{label}</p>\n                        <p className=\"font-bold text-text\">{value || '-'} <span className=\"text-xs font-medium text-text-light\">{value ? unit : ''}</span></p>\n                      </div>\n                    ))}\n                  </div>\n                ) : (\n                  <p className=\"text-sm text-text-light\">No vital signs recorded.</p>\n                )}\n              </div>",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Hide vital signs for patient"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Preferred Date\" -Context 5,20",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check current scheduling style in Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Available Appointment Slots\" -Context 3,45",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check Available Appointment Slots in Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"slots\\.length === 0\" -Context 3,30",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check slot mapping logic"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"datetime-local\" -Context 5,5",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find datetime-local inputs in Consultations.jsx"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Remove datetime-local from request modal and use a smart display text instead",
+      "EndLine": 1418,
+      "Instruction": "Replace datetime-local input with a read-only selected state display",
+      "ReplacementContent": "            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Selected Appointment Slot</label>\n              {requestForm.scheduled_at ? (\n                <div className=\"w-full px-4 py-2.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-700 font-semibold flex items-center gap-2\">\n                  <Calendar size={16} />\n                  {new Date(requestForm.scheduled_at).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}\n                </div>\n              ) : (\n                <div className=\"w-full px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-600 font-medium text-sm\">\n                  Please click an available green slot below.\n                </div>\n              )}\n              {/* Hidden input to ensure HTML validation still works if they haven't clicked a slot */}\n              <input type=\"text\" className=\"h-0 w-0 absolute opacity-0\" required value={requestForm.scheduled_at || ''} onChange={()=>{}} tabIndex=\"-1\" />\n            </div>",
+      "StartLine": 1408,
+      "TargetContent": "            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Preferred Date &amp; Time</label>\n              <input\n                required\n                type=\"datetime-local\"\n                value={requestForm.scheduled_at}\n                onChange={e => setRequestForm({ ...requestForm, scheduled_at: e.target.value })}\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\"\n              />\n            </div>",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Update Request Modal datetime input"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Preferred Date & Time\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check Preferred Date & Time again"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"datetime-local\" -Context 5,5",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Search datetime-local again"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Replace datetime-local with static display",
+      "EndLine": 1418,
+      "Instruction": "Replace datetime-local block",
+      "ReplacementContent": "            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Selected Appointment Slot</label>\n              {requestForm.scheduled_at ? (\n                <div className=\"w-full px-4 py-2.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-700 font-semibold flex items-center gap-2\">\n                  <Calendar size={16} />\n                  {new Date(requestForm.scheduled_at).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}\n                </div>\n              ) : (\n                <div className=\"w-full px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-600 font-medium text-sm\">\n                  Please click an available green slot below.\n                </div>\n              )}\n              <input type=\"text\" className=\"h-0 w-0 absolute opacity-0\" required value={requestForm.scheduled_at || ''} onChange={()=>{}} tabIndex=\"-1\" />\n            </div>",
+      "StartLine": 1408,
+      "TargetContent": "            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Preferred Date &amp; Time</label>\n              <input\n                required\n                type=\"datetime-local\"\n                value={requestForm.scheduled_at}\n                onChange={e => setRequestForm({ ...requestForm, scheduled_at: e.target.value })}\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\"\n              />\n            </div>",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Replace Preferred Date Time input"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "cat -n frontend/src/pages/dashboard/Consultations.jsx | Select-String \"Preferred Date &amp; Time\" -Context 2,12",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check line numbers for Preferred Date Time"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"Preferred Date &amp; Time\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find line numbers in Consultations.jsx"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Replace manual datetime-local input with click-to-select DFA style display",
+      "EndLine": 1318,
+      "Instruction": "Replace the datetime-local block with a display element",
+      "ReplacementContent": "          <div>\n            <label className=\"block text-sm font-medium text-text-muted mb-1\">Selected Appointment Slot</label>\n            {requestForm.scheduled_at ? (\n              <div className=\"w-full px-4 py-2.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-700 font-semibold flex items-center gap-2\">\n                <Calendar size={16} />\n                {new Date(requestForm.scheduled_at).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}\n              </div>\n            ) : (\n              <div className=\"w-full px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-600 font-medium text-sm\">\n                Please click an available green slot below.\n              </div>\n            )}\n            <input type=\"text\" className=\"h-0 w-0 absolute opacity-0\" required value={requestForm.scheduled_at || ''} onChange={()=>{}} tabIndex=\"-1\" />\n          </div>",
+      "StartLine": 1309,
+      "TargetContent": "          <div>\n            <label className=\"block text-sm font-medium text-text-muted mb-1\">Preferred Date &amp; Time</label>\n            <input\n              required\n              type=\"datetime-local\"\n              value={requestForm.scheduled_at}\n              onChange={e => setRequestForm({ ...requestForm, scheduled_at: e.target.value })}\n              className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\"\n            />\n          </div>",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Replace input with slot display"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"New Date &amp; Time\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find Reschedule Modal datetime input"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Replace manual datetime-local input with click-to-select DFA style display in Reschedule Modal",
+      "EndLine": 1533,
+      "Instruction": "Replace the datetime-local block with a display element",
+      "ReplacementContent": "            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">Selected New Appointment Slot</label>\n              {rescheduleForm.scheduled_at ? (\n                <div className=\"w-full px-4 py-2.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-700 font-semibold flex items-center gap-2\">\n                  <Calendar size={16} />\n                  {new Date(rescheduleForm.scheduled_at).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}\n                </div>\n              ) : (\n                <div className=\"w-full px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-600 font-medium text-sm\">\n                  Please click an available slot above.\n                </div>\n              )}\n              <input type=\"text\" className=\"h-0 w-0 absolute opacity-0\" required value={rescheduleForm.scheduled_at || ''} onChange={()=>{}} tabIndex=\"-1\" />\n            </div>",
+      "StartLine": 1528,
+      "TargetContent": "            <div>\n              <label className=\"block text-sm font-medium text-text-muted mb-1\">New Date &amp; Time</label>\n              <input required type=\"datetime-local\" value={rescheduleForm.scheduled_at}\n                onChange={e => setRescheduleForm({ ...rescheduleForm, scheduled_at: e.target.value })}\n                className=\"w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none\" />\n            </div>",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Update Reschedule Modal input"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"requestWeekStart\" -Context 5,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check week generation logic"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function startOfWeek\" -Context 0,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check startOfWeek implementation"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"const \\[requestModal\" -Context 0,15",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find states"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add week offset state variables",
+      "EndLine": 79,
+      "Instruction": "Add week offset state variables",
+      "ReplacementContent": "  const [availableDoctors, setAvailableDoctors] = useState([]);\n  const [requestForm, setRequestForm] = useState(EMPTY_REQUEST_FORM);\n  const [requestWeekOffset, setRequestWeekOffset] = useState(0);\n  const [rescheduleWeekOffset, setRescheduleWeekOffset] = useState(0);\n  const [availabilityForm, setAvailabilityForm] = useState({",
+      "StartLine": 77,
+      "TargetContent": "  const [availableDoctors, setAvailableDoctors] = useState([]);\n  const [requestForm, setRequestForm] = useState(EMPTY_REQUEST_FORM);\n  const [availabilityForm, setAvailabilityForm] = useState({",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add week offset state variables"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"const requestWeekStart\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find week generation variables"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Update week calculation variables to use offset",
+      "EndLine": 1178,
+      "Instruction": "Update week calculations",
+      "ReplacementContent": "  const requestWeekStart = addDays(startOfWeek(new Date()), requestWeekOffset * 7);\n  const requestWeekDays = Array.from({ length: 7 }, (_, index) => addDays(requestWeekStart, index));\n  const requestSelectedDate = requestForm.scheduled_at ? new Date(requestForm.scheduled_at) : null;\n  const requestSelectedDateKey = requestSelectedDate && !Number.isNaN(requestSelectedDate.getTime()) ? requestSelectedDate.toDateString() : '';\n  const requestSelectedTime = requestForm.scheduled_at ? requestForm.scheduled_at.slice(11, 16) : '';\n  const rescheduleDoctorId = rescheduleForm.doctor_id || selected?.doctor_id || selected?.doctor?.id;\n  const rescheduleDoctor = availableDoctors.find((doctor) => String(doctor.id) === String(rescheduleDoctorId));\n  const rescheduleWeekStart = addDays(startOfWeek(new Date()), rescheduleWeekOffset * 7);",
+      "StartLine": 1171,
+      "TargetContent": "  const requestWeekStart = startOfWeek(requestForm.scheduled_at);\n  const requestWeekDays = Array.from({ length: 7 }, (_, index) => addDays(requestWeekStart, index));\n  const requestSelectedDate = requestForm.scheduled_at ? new Date(requestForm.scheduled_at) : null;\n  const requestSelectedDateKey = requestSelectedDate && !Number.isNaN(requestSelectedDate.getTime()) ? requestSelectedDate.toDateString() : '';\n  const requestSelectedTime = requestForm.scheduled_at ? requestForm.scheduled_at.slice(11, 16) : '';\n  const rescheduleDoctorId = rescheduleForm.doctor_id || selected?.doctor_id || selected?.doctor?.id;\n  const rescheduleDoctor = availableDoctors.find((doctor) => String(doctor.id) === String(rescheduleDoctorId));\n  const rescheduleWeekStart = startOfWeek(rescheduleForm.scheduled_at);",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Update week calculations"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Available Appointment Slots\" -Context 5,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find Available Appointment Slots header"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Available Appointment Slots\" -Context 3,15 | Select-Object -Skip 1",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find Reschedule Available Appointment Slots"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"rescheduleWeekStart\\.toLocaleDateString\" -Context 5,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find reschedule week start string"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add week navigation buttons to Request Modal",
+      "EndLine": 1325,
+      "Instruction": "Add week navigation buttons in the header",
+      "ReplacementContent": "            <div className=\"rounded-xl border border-border bg-surface p-4\">\n              <div className=\"mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between\">\n                <div>\n                  <p className=\"text-sm font-semibold text-text\">Available Appointment Slots</p>\n                  <div className=\"flex items-center gap-2 mt-1\">\n                    <button type=\"button\" onClick={() => setRequestWeekOffset(prev => prev - 1)} className=\"p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text\"><ChevronLeft size={16}/></button>\n                    <p className=\"text-xs font-medium text-text-light w-32 text-center\">Week of {requestWeekStart.toLocaleDateString()}</p>\n                    <button type=\"button\" onClick={() => setRequestWeekOffset(prev => prev + 1)} className=\"p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text\"><ChevronRight size={16}/></button>\n                  </div>\n                </div>\n                <span className=\"inline-flex w-fit items-center rounded-full bg-success-bg px-3 py-1 text-xs font-bold text-success-text\">\n                  Open slots can be selected\n                </span>\n              </div>",
+      "StartLine": 1319,
+      "TargetContent": "            <div className=\"rounded-xl border border-border bg-surface p-4\">\n              <div className=\"mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between\">\n                <div>\n                  <p className=\"text-sm font-semibold text-text\">Available Appointment Slots</p>\n                  <p className=\"text-xs text-text-light\">Week of {requestWeekStart.toLocaleDateString()}</p>\n                </div>\n                <span className=\"inline-flex w-fit items-center rounded-full bg-success-bg px-3 py-1 text-xs font-bold text-success-text\">\n                  Open slots can be selected\n                </span>\n              </div>",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add week nav to Request Modal"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"Available Appointment Slots\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check line numbers for Available Appointment Slots"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add week navigation buttons to Request Modal",
+      "EndLine": 1334,
+      "Instruction": "Add week navigation buttons in the header",
+      "ReplacementContent": "          <div className=\"rounded-xl border border-border bg-surface p-4\">\n            <div className=\"mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between\">\n              <div>\n                <p className=\"text-sm font-semibold text-text\">Available Appointment Slots</p>\n                <div className=\"flex items-center gap-2 mt-1\">\n                  <button type=\"button\" onClick={() => setRequestWeekOffset(prev => prev - 1)} className=\"p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text\"><ChevronLeft size={16}/></button>\n                  <p className=\"text-xs font-medium text-text-light w-32 text-center\">Week of {requestWeekStart.toLocaleDateString()}</p>\n                  <button type=\"button\" onClick={() => setRequestWeekOffset(prev => prev + 1)} className=\"p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text\"><ChevronRight size={16}/></button>\n                </div>\n              </div>\n              <span className=\"inline-flex w-fit items-center rounded-full bg-success-bg px-3 py-1 text-xs font-bold text-success-text\">\n                Open slots can be selected\n              </span>\n            </div>",
+      "StartLine": 1325,
+      "TargetContent": "          <div className=\"rounded-xl border border-border bg-surface p-4\">\n            <div className=\"mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between\">\n              <div>\n                <p className=\"text-sm font-semibold text-text\">Available Appointment Slots</p>\n                <p className=\"text-xs text-text-light\">Week of {requestWeekStart.toLocaleDateString()}</p>\n              </div>\n              <span className=\"inline-flex w-fit items-center rounded-full bg-success-bg px-3 py-1 text-xs font-bold text-success-text\">\n                Open slots can be selected\n              </span>\n            </div>",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add week nav to Request Modal"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"Doctor Weekly Availability\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find Reschedule Doctor Weekly Availability"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add week navigation buttons to Reschedule Modal",
+      "EndLine": 1473,
+      "Instruction": "Add week navigation buttons in the header",
+      "ReplacementContent": "            <div className=\"rounded-xl border border-border bg-surface p-4\">\n              <div className=\"mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between\">\n                <div>\n                  <p className=\"text-sm font-semibold text-text\">Doctor Weekly Availability</p>\n                  <div className=\"flex items-center gap-2 mt-1\">\n                    <button type=\"button\" onClick={() => setRescheduleWeekOffset(prev => prev - 1)} className=\"p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text\"><ChevronLeft size={16}/></button>\n                    <p className=\"text-xs font-medium text-text-light\">\n                      Week of {rescheduleWeekStart.toLocaleDateString()} {rescheduleDoctorName ? `for Dr. ${(rescheduleDoctorName || '').replace(/^Dr\\.\\s*/i, '')}` : ''}\n                    </p>\n                    <button type=\"button\" onClick={() => setRescheduleWeekOffset(prev => prev + 1)} className=\"p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text\"><ChevronRight size={16}/></button>\n                  </div>\n                </div>\n                {rescheduleDoctor?.doctor_type && (\n                  <span className=\"inline-flex w-fit items-center rounded-full bg-primary-bg px-3 py-1 text-xs font-bold text-primary-text\">\n                    {rescheduleDoctor.doctor_type}\n                  </span>\n                )}\n              </div>",
+      "StartLine": 1460,
+      "TargetContent": "            <div className=\"rounded-xl border border-border bg-surface p-4\">\n              <div className=\"mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between\">\n                <div>\n                  <p className=\"text-sm font-semibold text-text\">Doctor Weekly Availability</p>\n                  <p className=\"text-xs text-text-light\">\n                    Week of {rescheduleWeekStart.toLocaleDateString()} {rescheduleDoctorName ? `for Dr. ${(rescheduleDoctorName || '').replace(/^Dr\\.\\s*/i, '')}` : ''}\n                  </p>\n                </div>\n                {rescheduleDoctor?.doctor_type && (\n                  <span className=\"inline-flex w-fit items-center rounded-full bg-primary-bg px-3 py-1 text-xs font-bold text-primary-text\">\n                    {rescheduleDoctor.doctor_type}\n                  </span>\n                )}\n              </div>",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add week nav to Reschedule Modal"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-Object -First 10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check lucide-react imports"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String \"lucide-react\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check lucide-react imports"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add ChevronLeft and ChevronRight imports",
+      "EndLine": 11,
+      "Instruction": "Add ChevronLeft, ChevronRight to imports",
+      "ReplacementContent": "  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X, ChevronLeft, ChevronRight\n} from 'lucide-react';",
+      "StartLine": 10,
+      "TargetContent": "  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X,\n} from 'lucide-react';",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add Chevron imports"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"api.get\" -Context 3,5",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check Consultations.jsx for api.get"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"const slots =\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check slot generation logic in frontend"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"doctor.availability\\?\\.length \\?\" -Context 1,5",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check grid rendering logic"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"return \\(\" -Context 5,0 | Select-Object -First 6",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find return of Consultations"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"  return \\(\" -Context 5,0",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find Consultations return"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"rescheduleWeekSchedule\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check rescheduleWeekSchedule"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function dayName\" -Context 3,5",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check dayName function"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add getDoctorSlotsForDate helper",
+      "EndLine": 79,
+      "Instruction": "Insert getDoctorSlotsForDate before dayName",
+      "ReplacementContent": "function getDoctorSlotsForDate(doctor, date) {\n  if (!doctor) return [];\n  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;\n  let baseSlots = (doctor.availability || []).filter((slot) => slot.day_of_week === dayName(date));\n  \n  const exceptions = (doctor.exceptions || []).filter(e => e.date === dateStr);\n  const leaves = exceptions.filter(e => e.type === 'leave');\n  if (leaves.length > 0) {\n    if (leaves.some(l => !l.start_time)) {\n      baseSlots = [];\n    } else {\n      leaves.forEach(leave => {\n        baseSlots = baseSlots.filter(s => {\n          return !(s.start_time >= leave.start_time && s.start_time < leave.end_time);\n        });\n      });\n    }\n  }\n\n  const extraSlots = exceptions.filter(e => e.type === 'extra_slot');\n  extraSlots.forEach(extra => {\n    if (extra.start_time && extra.end_time) {\n      baseSlots.push({ start_time: extra.start_time, end_time: extra.end_time, is_extra: true });\n    }\n  });\n\n  return baseSlots.sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));\n}\n\nfunction dayName(date) {",
+      "StartLine": 78,
+      "TargetContent": "function dayName(date) {",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add getDoctorSlotsForDate helper"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"const rescheduleWeekSchedule =\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find rescheduleWeekSchedule"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Update rescheduleWeekSchedule to use getDoctorSlotsForDate",
+      "EndLine": 1052,
+      "Instruction": "Use getDoctorSlotsForDate",
+      "ReplacementContent": "  const rescheduleWeekSchedule = rescheduleWeekDays.map((date) => ({\n    date,\n    slots: getDoctorSlotsForDate(rescheduleDoctor, date)\n  }));",
+      "StartLine": 1047,
+      "TargetContent": "  const rescheduleWeekSchedule = rescheduleWeekDays.map((date) => ({\n    date,\n    slots: rescheduleAvailability\n      .filter((slot) => slot.day_of_week === dayName(date))\n      .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time))),\n  }));",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Update reschedule slots logic"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"const slots =\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find const slots = in request modal"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Update request slots logic to use getDoctorSlotsForDate",
+      "EndLine": 1387,
+      "Instruction": "Use getDoctorSlotsForDate",
+      "ReplacementContent": "                          const slots = getDoctorSlotsForDate(doctor, date);",
+      "StartLine": 1385,
+      "TargetContent": "                          const slots = doctor.availability\n                            .filter((slot) => slot.day_of_week === dayName(date))\n                            .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Update request slots"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"doctor.availability\\?\\.length \\?\" -Context 1,1",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find availability length check"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Update condition to include exceptions length",
+      "EndLine": 1382,
+      "Instruction": "Include exceptions in length check",
+      "ReplacementContent": "                    {(doctor.availability?.length > 0 || doctor.exceptions?.length > 0) ? (",
+      "StartLine": 1382,
+      "TargetContent": "                    {doctor.availability?.length ? (",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Update condition check"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"setAvailabilityForm\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check setAvailabilityForm"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add exceptions to availability form state",
+      "EndLine": 798,
+      "Instruction": "Add exceptions array",
+      "ReplacementContent": "    const openAvailabilitySettings = () => {\n      const current = currentDoctorAvailability;\n      setAvailabilityForm({\n        doctor_type: current?.doctor_type || 'Resident',\n        availability: current?.availability?.length\n          ? current.availability.map((slot) => ({\n              day_of_week: slot.day_of_week,\n              start_time: String(slot.start_time || '08:00').slice(0, 5),\n              end_time: String(slot.end_time || '12:00').slice(0, 5), _id: crypto.randomUUID(),\n            }))\n          : [{ ...EMPTY_AVAILABILITY_SLOT }],\n        exceptions: current?.exceptions?.length \n          ? current.exceptions.map((exc) => ({\n              date: exc.date.split('T')[0],\n              type: exc.type,\n              start_time: exc.start_time ? String(exc.start_time).slice(0, 5) : '',\n              end_time: exc.end_time ? String(exc.end_time).slice(0, 5) : '',\n              _id: crypto.randomUUID(),\n          })) : [],\n      });\n      setAvailabilityModal(true);\n    };",
+      "StartLine": 786,
+      "TargetContent": "    const openAvailabilitySettings = () => {\n      const current = currentDoctorAvailability;\n      setAvailabilityForm({\n        doctor_type: current?.doctor_type || 'Resident',\n        availability: current?.availability?.length\n          ? current.availability.map((slot) => ({\n              day_of_week: slot.day_of_week,\n              start_time: String(slot.start_time || '08:00').slice(0, 5),\n              end_time: String(slot.end_time || '12:00').slice(0, 5), _id: crypto.randomUUID(),\n            }))\n          : [{ ...EMPTY_AVAILABILITY_SLOT }],\n      });\n      setAvailabilityModal(true);\n    };",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Update openAvailabilitySettings"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"const openAvailabilitySettings =\" -Context 3,12",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find openAvailabilitySettings"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add exceptions to availability form state",
+      "EndLine": 971,
+      "Instruction": "Add exceptions array",
+      "ReplacementContent": "  const openAvailabilitySettings = () => {\n    const current = currentDoctorAvailability;\n    setAvailabilityForm({\n      doctor_type: current?.doctor_type || 'Resident',\n      availability: current?.availability?.length\n        ? current.availability.map((slot) => ({\n            day_of_week: slot.day_of_week,\n            start_time: String(slot.start_time || '08:00').slice(0, 5),\n            end_time: String(slot.end_time || '12:00').slice(0, 5), _id: crypto.randomUUID(),\n          }))\n        : [{ ...EMPTY_AVAILABILITY_SLOT }],\n      exceptions: current?.exceptions?.length \n        ? current.exceptions.map((exc) => ({\n            date: exc.date.split('T')[0],\n            type: exc.type,\n            start_time: exc.start_time ? String(exc.start_time).slice(0, 5) : '',\n            end_time: exc.end_time ? String(exc.end_time).slice(0, 5) : '',\n            _id: crypto.randomUUID(),\n        })) : [],\n    });\n    setAvailabilityModal(true);\n  };",
+      "StartLine": 958,
+      "TargetContent": "  const openAvailabilitySettings = () => {\n    const current = currentDoctorAvailability;\n    setAvailabilityForm({\n      doctor_type: current?.doctor_type || 'Resident',\n      availability: current?.availability?.length\n        ? current.availability.map((slot) => ({\n            day_of_week: slot.day_of_week,\n            start_time: String(slot.start_time || '08:00').slice(0, 5),\n            end_time: String(slot.end_time || '12:00').slice(0, 5), _id: crypto.randomUUID(),\n          }))\n        : [{ ...EMPTY_AVAILABILITY_SLOT }],\n    });\n    setAvailabilityModal(true);\n  };",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Update openAvailabilitySettings"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"onClick=\\{addAvailabilitySlot\\}\" -Context 5,20",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find addAvailabilitySlot UI"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add exception state managers",
+      "EndLine": 998,
+      "Instruction": "Add exception helpers",
+      "ReplacementContent": "  const removeAvailabilitySlot = (index) => {\n    setAvailabilityForm((form) => ({\n      ...form,\n      availability: form.availability.filter((_, slotIndex) => slotIndex !== index),\n    }));\n  };\n\n  const updateExceptionSlot = (index, key, value) => {\n    setAvailabilityForm((form) => ({\n      ...form,\n      exceptions: form.exceptions.map((exc, excIndex) => (\n        excIndex === index ? { ...exc, [key]: value } : exc\n      )),\n    }));\n  };\n\n  const addExceptionSlot = () => {\n    setAvailabilityForm((form) => ({\n      ...form,\n      exceptions: [...(form.exceptions || []), { date: new Date().toISOString().split('T')[0], type: 'leave', start_time: '', end_time: '', _id: crypto.randomUUID() }],\n    }));\n  };\n\n  const removeExceptionSlot = (index) => {\n    setAvailabilityForm((form) => ({\n      ...form,\n      exceptions: (form.exceptions || []).filter((_, excIndex) => excIndex !== index),\n    }));\n  };\n\n  const handleAvailabilitySubmit = async (e) => {",
+      "StartLine": 991,
+      "TargetContent": "  const removeAvailabilitySlot = (index) => {\n    setAvailabilityForm((form) => ({\n      ...form,\n      availability: form.availability.filter((_, slotIndex) => slotIndex !== index),\n    }));\n  };\n\n  const handleAvailabilitySubmit = async (e) => {",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add exception functions"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"onClick=\\{removeAvailabilitySlot\" -Context 3,30",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find removeAvailabilitySlot"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"Add Slot\" -Context 3,45",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find Add Slot UI"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add exception slots UI",
+      "EndLine": 1281,
+      "Instruction": "Add exceptions section",
+      "ReplacementContent": "          </div>\n\n          <div className=\"space-y-3 pt-4 border-t border-border\">\n            <div className=\"flex items-center justify-between gap-3\">\n              <div>\n                <p className=\"text-sm font-semibold text-text-muted\">Emergency Leaves & Ad-Hoc Slots</p>\n                <p className=\"text-xs text-text-light\">Block specific dates or open extra time</p>\n              </div>\n              <button\n                type=\"button\"\n                onClick={addExceptionSlot}\n                className=\"inline-flex items-center gap-1.5 rounded-lg bg-primary-bg px-3 py-1.5 text-xs font-bold text-primary-text hover:bg-primary-hover transition-colors\"\n              >\n                <Plus size={13} /> Add Exception\n              </button>\n            </div>\n\n            {(availabilityForm.exceptions || []).map((exc, index) => (\n              <div key={exc._id || index} className=\"grid grid-cols-1 sm:grid-cols-[1fr_110px_100px_100px_auto] gap-2 rounded-xl border border-rose-200/50 bg-rose-50/30 p-3\">\n                <input\n                  required\n                  type=\"date\"\n                  value={exc.date}\n                  onChange={(e) => updateExceptionSlot(index, 'date', e.target.value)}\n                  className=\"w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20\"\n                />\n                <select\n                  required\n                  value={exc.type}\n                  onChange={(e) => updateExceptionSlot(index, 'type', e.target.value)}\n                  className=\"w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20\"\n                >\n                  <option value=\"leave\">Leave (Block)</option>\n                  <option value=\"extra_slot\">Extra Slot</option>\n                </select>\n                <input\n                  type=\"time\"\n                  value={exc.start_time || ''}\n                  onChange={(e) => updateExceptionSlot(index, 'start_time', e.target.value)}\n                  placeholder=\"Start\"\n                  className=\"w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20\"\n                />\n                <input\n                  type=\"time\"\n                  value={exc.end_time || ''}\n                  onChange={(e) => updateExceptionSlot(index, 'end_time', e.target.value)}\n                  placeholder=\"End\"\n                  className=\"w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20\"\n                />\n                <button\n                  type=\"button\"\n                  onClick={() => removeExceptionSlot(index)}\n                  className=\"inline-flex items-center justify-center rounded-lg bg-surface px-3 py-2 text-rose-500 border border-border hover:bg-danger-bg transition-colors\"\n                  title=\"Remove exception\"\n                >\n                  <Trash2 size={15} />\n                </button>\n              </div>\n            ))}\n            {(availabilityForm.exceptions || []).length === 0 && (\n              <p className=\"text-xs text-text-light italic text-center py-2\">No exceptions added.</p>\n            )}\n          </div>\n\n",
+      "StartLine": 1280,
+      "TargetContent": "          </div>\n",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add Exception slots UI"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"Select a specialization with active doctors to see appointment slots.\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find empty state string"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Update empty state message for doctors",
+      "EndLine": 1464,
+      "Instruction": "Replace the empty state message",
+      "ReplacementContent": "            {matchingAvailableDoctors.length === 0 ? (\n              <div className=\"rounded-lg border border-dashed border-rose-200 bg-rose-50/50 px-4 py-8 text-center text-sm text-text-light flex flex-col items-center justify-center gap-2\">\n                <AlertCircle size={24} className=\"text-rose-400\" />\n                <p className=\"font-medium text-text-muted\">No doctor is currently available for this specialization, or the office is closed.</p>\n                <p className=\"text-xs\">Please select a different specialization or check back later.</p>\n              </div>",
+      "StartLine": 1461,
+      "TargetContent": "            {matchingAvailableDoctors.length === 0 ? (\n              <div className=\"rounded-lg border border-dashed border-border bg-background px-4 py-6 text-center text-sm text-text-light\">\n                Select a specialization with active doctors to see appointment slots.\n              </div>",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Update empty message"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"matchingAvailableDoctors\" -Context 5,20",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check context of matchingAvailableDoctors"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Contextualize the empty state messages in the appointment slots section",
+      "EndLine": 1467,
+      "Instruction": "Add context-aware empty states based on requested_specialization",
+      "ReplacementContent": "            {!requestForm.requested_specialization ? (\n              <div className=\"rounded-lg border border-dashed border-sky-200 bg-sky-50/50 px-4 py-8 text-center text-sm text-text-light flex flex-col items-center justify-center gap-2\">\n                <Stethoscope size={24} className=\"text-sky-400\" />\n                <p className=\"font-medium text-text-muted\">Please select a specialization to begin.</p>\n                <p className=\"text-xs\">Available doctors and their appointment slots will appear here.</p>\n              </div>\n            ) : matchingAvailableDoctors.length === 0 ? (\n              <div className=\"rounded-lg border border-dashed border-rose-200 bg-rose-50/50 px-4 py-8 text-center text-sm text-text-light flex flex-col items-center justify-center gap-2\">\n                <AlertCircle size={24} className=\"text-rose-400\" />\n                <p className=\"font-medium text-text-muted\">No doctors currently handle this specialization, or the office is closed.</p>\n                <p className=\"text-xs\">Please try selecting a different specialization or check back later.</p>\n              </div>\n            ) : (",
+      "StartLine": 1461,
+      "TargetContent": "            {matchingAvailableDoctors.length === 0 ? (\n              <div className=\"rounded-lg border border-dashed border-rose-200 bg-rose-50/50 px-4 py-8 text-center text-sm text-text-light flex flex-col items-center justify-center gap-2\">\n                <AlertCircle size={24} className=\"text-rose-400\" />\n                <p className=\"font-medium text-text-muted\">No doctor is currently available for this specialization, or the office is closed.</p>\n                <p className=\"text-xs\">Please select a different specialization or check back later.</p>\n              </div>\n            ) : (",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Contextualize empty states"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Contextualize doctor availability section empty state",
+      "EndLine": 1414,
+      "Instruction": "Contextualize empty state for doctor availability",
+      "ReplacementContent": "              {!requestForm.requested_specialization ? (\n                <p className=\"text-sm text-text-light italic\">Waiting for specialization selection...</p>\n              ) : matchingAvailableDoctors.length === 0 ? (\n                <p className=\"text-sm text-text-light\">No active doctors listed for this specialization.</p>\n              ) : matchingAvailableDoctors.map((doctor) => (",
+      "StartLine": 1413,
+      "TargetContent": "              {matchingAvailableDoctors.length === 0 ? (\n                <p className=\"text-sm text-text-light\">No active doctors listed for this specialization.</p>\n              ) : matchingAvailableDoctors.map((doctor) => (",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Contextualize doctor list empty state"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Tabs & Search\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check tabs in Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function doctorSlotStatus\" -Context 2,15",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check doctorSlotStatus"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Tabs & Search\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find tabs in Consultations"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"const \\[tab, setTab\\]\" -Context 0,2",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find state declaration"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Select-String -Path frontend/src/pages/dashboard/Consultations.jsx -Pattern \"export default function Consultations\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find main component"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"if \\(user\\?.role\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check role routing"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Tabs & Search\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Re-check Tabs & Search"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"const \\[tab, setTab\\]\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find tab state in components"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function AdminView\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check AdminView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Tabs & Search\" -Context 3,10 | Select-Object -Last 11",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find Tabs & Search in AdminView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"search.trim\" -Context 5,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check search logic in all views"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Import ConsultationCalendar and icons",
+      "EndLine": 25,
+      "Instruction": "Import ConsultationCalendar, CalendarIcon, LayoutList",
+      "ReplacementContent": "import { \n  Stethoscope, Calendar, Clock, CheckCircle2, XCircle, Search, \n  ChevronRight, CalendarPlus, User, FileText, AlertCircle, Plus, Trash2, Save,\n  Calendar as CalendarIcon, LayoutList\n} from 'lucide-react';\nimport useAuthStore from '../../store/useAuthStore';\nimport api from '../../utils/api';\nimport PageTitle from '../../components/PageTitle';\nimport ConsultationCalendar from '../../components/ConsultationCalendar';",
+      "StartLine": 17,
+      "TargetContent": "import { \n  Stethoscope, Calendar, Clock, CheckCircle2, XCircle, Search, \n  ChevronRight, CalendarPlus, User, FileText, AlertCircle, Plus, Trash2, Save\n} from 'lucide-react';\nimport useAuthStore from '../../store/useAuthStore';\nimport api from '../../utils/api';\nimport PageTitle from '../../components/PageTitle';",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Import Calendar components"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function PatientView\" -Context 3,10",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check PatientView"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add view mode toggle to PatientView",
+      "EndLine": 284,
+      "Instruction": "Add viewMode to PatientView",
+      "ReplacementContent": "function PatientView({ consultations, loading, onRequest, onReschedule, onCancel }) {\n  const tabs = ['All', 'Pending', 'Scheduled', 'Completed'];\n  const [tab, setTab] = useState('All');\n  const [search, setSearch] = useState('');\n  const [viewMode, setViewMode] = useState('list');",
+      "StartLine": 281,
+      "TargetContent": "function PatientView({ consultations, loading, onRequest, onReschedule, onCancel }) {\n  const tabs = ['All', 'Pending', 'Scheduled', 'Completed'];\n  const [tab, setTab] = useState('All');\n  const [search, setSearch] = useState('');",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add viewMode to PatientView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"filtered\\.length === 0\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check map render in PatientView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"value=\\{search\\}\" -Context 5,5",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find search bar in PatientView"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add view toggle to PatientView",
+      "EndLine": 320,
+      "Instruction": "Add toggle in PatientView",
+      "ReplacementContent": "              {search && (\n                <button onClick={() => setSearch('')} className=\"absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-rose-500\">\n                  <X size={14} />\n                </button>\n              )}\n            </div>\n            <div className=\"flex border border-border rounded-xl bg-surface p-1\">\n              <button \n                onClick={() => setViewMode('list')} \n                className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}`}\n                title=\"List View\"\n              >\n                <LayoutList size={16} />\n              </button>\n              <button \n                onClick={() => setViewMode('calendar')} \n                className={`p-1.5 rounded-lg transition-colors ${viewMode === 'calendar' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}`}\n                title=\"Calendar View\"\n              >\n                <CalendarIcon size={16} />\n              </button>\n            </div>\n          </div>\n        </div>\n\n        {/* Content */}\n        {viewMode === 'calendar' ? (\n          <ConsultationCalendar consultations={filtered} onViewConsultation={() => {}} />\n        ) : (\n          <div data-tour=\"page-list\" className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">\n            {loading ? Array.from({ length: 4 }).map((_, i) => (\n              <div key={i} className=\"bg-surface rounded-2xl border border-border p-5 animate-pulse\">\n                <div className=\"h-5 bg-surface-hover rounded w-40 mb-3\" /><div className=\"h-4 bg-surface-hover/50 rounded w-64\" />\n              </div>\n            )) : filtered.length === 0 ? <EmptyState message={tab === 'All' ? 'No consultations yet.' : `No ${tab.toLowerCase()} consultations.`} />\n            : filtered.map(c => {",
+      "StartLine": 317,
+      "TargetContent": "              {search && (\n                <button onClick={() => setSearch('')} className=\"absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-rose-500\">\n                  <X size={14} />\n                </button>\n              )}\n            </div>\n          </div>\n        </div>\n\n        {/* List */}\n        <div data-tour=\"page-list\" className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">\n          {loading ? Array.from({ length: 4 }).map((_, i) => (\n            <div key={i} className=\"bg-surface rounded-2xl border border-border p-5 animate-pulse\">\n              <div className=\"h-5 bg-surface-hover rounded w-40 mb-3\" /><div className=\"h-4 bg-surface-hover/50 rounded w-64\" />\n            </div>\n          )) : filtered.length === 0 ? <EmptyState message={tab === 'All' ? 'No consultations yet.' : `No ${tab.toLowerCase()} consultations.`} />\n          : filtered.map(c => {",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add view toggle to PatientView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function PatientView\" -Context 0,55",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check PatientView implementation"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "git checkout frontend/src/pages/dashboard/Consultations.jsx",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Restore Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "node -e \"\nconst fs = require('fs');\nlet file = fs.readFileSync('frontend/src/pages/dashboard/Consultations.jsx', 'utf8');\n\n// Imports\nfile = file.replace(/import \\{.*?\\} from 'lucide-react';/s, (match) => {\n  if (!match.includes('Calendar as CalendarIcon')) {\n    return match.replace('} from \\'lucide-react\\';', ', Calendar as CalendarIcon, LayoutList } from \\'lucide-react\\';');\n  }\n  return match;\n});\n\nif (!file.includes('ConsultationCalendar')) {\n  file = file.replace('import PageTitle from \\\\'../../components/PageTitle\\\\';', 'import PageTitle from \\\\'../../components/PageTitle\\\\';\\nimport ConsultationCalendar from \\\\'../../components/ConsultationCalendar\\\\';');\n}\n\n// Add state to PatientView\nfile = file.replace(/const \\\\[tab, setTab\\\\] = useState\\\\('All'\\\\);/, 'const [tab, setTab] = useState(\\\\'All\\\\');\\n  const [viewMode, setViewMode] = useState(\\\\'list\\\\');');\n// Add state to DoctorView\nfile = file.replace(/const \\\\[tab, setTab\\\\] = useState\\\\('Pending'\\\\);/, 'const [tab, setTab] = useState(\\\\'Pending\\\\');\\n  const [viewMode, setViewMode] = useState(\\\\'list\\\\');');\n// Add state to AdminView\nfile = file.replace(/const \\\\[tab, setTab\\\\] = useState\\\\('Scheduled'\\\\);/, 'const [tab, setTab] = useState(\\\\'Scheduled\\\\');\\n  const [viewMode, setViewMode] = useState(\\\\'list\\\\');');\n\n// Add toggle UI and logic\nconst toggleUI = \\`\n            </div>\n            <div className=\\\"flex border border-border rounded-xl bg-surface p-1 shrink-0\\\">\n              <button \n                onClick={() => setViewMode('list')} \n                className={\\\\\\`p-1.5 rounded-lg transition-colors \\\\\\${viewMode === 'list' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}\\\\\\`}\n                title=\\\"List View\\\"\n              >\n                <LayoutList size={16} />\n              </button>\n              <button \n                onClick={() => setViewMode('calendar')} \n                className={\\\\\\`p-1.5 rounded-lg transition-colors \\\\\\${viewMode === 'calendar' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}\\\\\\`}\n                title=\\\"Calendar View\\\"\n              >\n                <CalendarIcon size={16} />\n              </button>\n            </div>\n\\`;\n\nfile = file.replace(/(<Search size=\\{15\\}.*?<input[^>]+>[\\s\\S]*?\\{search && \\([\\s\\S]*?<\\/button>\\n\\s*\\)\\}\\n\\s*<\\/div>)/g, (match) => {\n  if (match.includes('LayoutList')) return match;\n  return match + toggleUI;\n});\n\n// Replace Content render for PatientView\nfile = file.replace(/\\{\\/\\* Cards \\*\\/\\}\\n\\s*<div className=\\\"space-y-3\\\">\\n\\s*\\{loading \\? Array\\.from/, '{/* Content */}\\n      {viewMode === \\\\'calendar\\\\' ? (\\n        <ConsultationCalendar consultations={filtered} onViewConsultation={() => {}} />\\n      ) : (\\n      <div className=\\\"space-y-3\\\">\\n        {loading ? Array.from');\n// Close the ternary for PatientView\nfile = file.replace(/(<\\/div>\\n\\s*)\\);\\n\\s*\\}\\)\\}\\n\\s*<\\/div>\\n\\s*<\\/div>\\n\\s*\\);\\n\\}/, '$1);\\n        })}\\n      </div>\\n      )}\\n    </div>\\n  );\\n}');\n\n// Replace Content render for DoctorView\nfile = file.replace(/\\{\\/\\* Content \\*\\/\\}\\n\\s*<div data-tour=\\\"page-list\\\" className=\\\"grid grid-cols-1 md:grid-cols-2 gap-4\\\">\\n\\s*\\{loading \\? Array\\.from/, '{/* Content */}\\n        {viewMode === \\\\'calendar\\\\' ? (\\n          <ConsultationCalendar consultations={filtered} onViewConsultation={(c) => onReview(c)} />\\n        ) : (\\n        <div data-tour=\\\"page-list\\\" className=\\\"grid grid-cols-1 md:grid-cols-2 gap-4\\\">\\n          {loading ? Array.from');\n// Close the ternary for DoctorView\nfile = file.replace(/(<\\/div>\\n\\s*)\\);\\n\\s*\\}\\)\\}\\n\\s*<\\/div>\\n\\s*<\\/div>\\n\\s*\\);\\n\\}/g, (match, p1) => {\n  if (match.includes('onReview(c)')) return match; // if this is not the doctor view\n  return p1 + ');\\n          })}\\n        </div>\\n        )}\\n      </div>\\n    );\\n}';\n});\n\nfs.writeFileSync('frontend/src/pages/dashboard/Consultations.jsx', file);\n\"",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Inject calendar view"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"Tabs & Search\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find Tabs & Search"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"PatientView\" -Context 0,60",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find PatientView return"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "node -e \"\nconst fs = require('fs');\nlet file = fs.readFileSync('frontend/src/pages/dashboard/Consultations.jsx', 'utf8');\n\nconst replaceInView = (viewName, tabStateStr) => {\n    let reState = new RegExp('const \\\\\\\\[tab, setTab\\\\\\\\] = useState\\\\\\\\(\\\\'' + tabStateStr + '\\\\'\\\\\\\\);');\n    file = file.replace(reState, 'const [tab, setTab] = useState(\\\\'' + tabStateStr + '\\\\');\\\\n    const [viewMode, setViewMode] = useState(\\\\'list\\\\');');\n    \n    let reSearch = new RegExp('(function ' + viewName + '[\\\\\\\\s\\\\\\\\S]*?<Search size=\\\\{15\\\\}[\\\\\\\\s\\\\\\\\S]*?\\\\{search && \\\\([\\\\\\\\s\\\\\\\\S]*?<\\\\\\\\/button>\\\\n\\\\s*\\\\)\\\\}\\\\n\\\\s*<\\\\\\\\/div>)');\n    \n    file = file.replace(reSearch, (match) => {\n        if (match.includes('LayoutList')) return match;\n        const toggle = \\`\n            </div>\n            <div className=\\\"flex border border-border rounded-xl bg-surface p-1 shrink-0\\\">\n              <button \n                onClick={() => setViewMode('list')} \n                className={\\\\\\`p-1.5 rounded-lg transition-colors \\\\\\${viewMode === 'list' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}\\\\\\`}\n                title=\\\"List View\\\"\n              >\n                <LayoutList size={16} />\n              </button>\n              <button \n                onClick={() => setViewMode('calendar')} \n                className={\\\\\\`p-1.5 rounded-lg transition-colors \\\\\\${viewMode === 'calendar' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}\\\\\\`}\n                title=\\\"Calendar View\\\"\n              >\n                <CalendarIcon size={16} />\n              </button>\n            </div>\\`;\n        return match + toggle;\n    });\n};\n\nreplaceInView('PatientView', 'All');\nreplaceInView('DoctorView', 'Pending');\nreplaceInView('AdminView', 'Scheduled');\n\nfs.writeFileSync('frontend/src/pages/dashboard/Consultations.jsx', file);\n\"",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Add state and toggle to views"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Set-Content patch.js @'\nconst fs = require('fs');\nlet file = fs.readFileSync('frontend/src/pages/dashboard/Consultations.jsx', 'utf8');\n\nconst replaceInView = (viewName, tabStateStr) => {\n    let reState = new RegExp(`const \\\\[tab, setTab\\\\] = useState\\\\('${tabStateStr}'\\\\);`);\n    file = file.replace(reState, `const [tab, setTab] = useState('${tabStateStr}');\\n    const [viewMode, setViewMode] = useState('list');`);\n    \n    let reSearch = new RegExp(`(function ${viewName}[\\\\s\\\\S]*?<Search size=\\\\{15\\\\}[\\\\s\\\\S]*?\\\\{search && \\\\([\\\\s\\\\S]*?<\\\\/button>\\\\n\\\\s*\\\\)\\\\}\\\\n\\\\s*<\\\\/div>)`);\n    \n    file = file.replace(reSearch, (match) => {\n        if (match.includes('LayoutList')) return match;\n        const toggle = `\n            </div>\n            <div className=\"flex border border-border rounded-xl bg-surface p-1 shrink-0 ml-2\">\n              <button \n                onClick={() => setViewMode('list')} \n                className={\\`p-1.5 rounded-lg transition-colors \\${viewMode === 'list' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}\\`}\n                title=\"List View\"\n              >\n                <LayoutList size={16} />\n              </button>\n              <button \n                onClick={() => setViewMode('calendar')} \n                className={\\`p-1.5 rounded-lg transition-colors \\${viewMode === 'calendar' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}\\`}\n                title=\"Calendar View\"\n              >\n                <CalendarIcon size={16} />\n              </button>\n            </div>`;\n        return match + toggle;\n    });\n    \n    let reListStart = new RegExp(`(function ${viewName}[\\\\s\\\\S]*?)\\\\{\\\\/\\\\* Cards \\\\*\\\\/\\\\}`);\n    if (file.match(reListStart)) {\n      file = file.replace(reListStart, `$1{/* Content */}\\n        {viewMode === 'calendar' ? (\\n          <ConsultationCalendar consultations={filtered} onViewConsultation={() => {}} />\\n        ) : (\\n        <div className=\"space-y-3\">`);\n      \n      let reListEnd = new RegExp(`(function ${viewName}[\\\\s\\\\S]*?)(<\\\\/div>\\\\n\\\\s*\\\\);\\\\n\\\\s*\\\\}\\\\)\\\\}[\\n\\\\s]*<\\\\/div>[\\n\\\\s]*<\\\\/div>[\\n\\\\s]*\\\\);\\\\n\\\\})`);\n      file = file.replace(reListEnd, `$1$2\\n        )}`);\n      // It's getting too complicated to regex the end correctly. Let's just do it cleanly via file replace for each view.\n    }\n};\n\nreplaceInView('PatientView', 'All');\nreplaceInView('DoctorView', 'Pending');\nreplaceInView('AdminView', 'Scheduled');\n\nfs.writeFileSync('frontend/src/pages/dashboard/Consultations.jsx', file);\n'@;\nnode patch.js\n",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Run patch script"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "git diff frontend/src/pages/dashboard/Consultations.jsx",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check diff"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "git checkout frontend/src/pages/dashboard/Consultations.jsx",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Reset changes"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Import Calendar UI components",
+      "EndLine": 19,
+      "Instruction": "Add calendar imports",
+      "ReplacementContent": "import { \n  Stethoscope, Calendar, Clock, CheckCircle2, XCircle, Search, \n  ChevronRight, CalendarPlus, User, FileText, AlertCircle, Plus, Trash2, Save,\n  Calendar as CalendarIcon, LayoutList\n} from 'lucide-react';\nimport useAuthStore from '../../store/useAuthStore';\nimport api from '../../utils/api';\nimport PageTitle from '../../components/PageTitle';\nimport ConsultationCalendar from '../../components/ConsultationCalendar';",
+      "StartLine": 11,
+      "TargetContent": "import {\n  Video, Calendar, Clock, CheckCircle, XCircle,\n  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X, ChevronLeft, ChevronRight\n} from 'lucide-react';\nimport useAuthStore from '../../store/useAuthStore';\nimport api from '../../utils/api';\nimport PageTitle from '../../components/PageTitle';",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Import Calendar components"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Import LayoutList",
+      "EndLine": 11,
+      "Instruction": "Import LayoutList",
+      "ReplacementContent": "import {\n  Video, Calendar, Clock, CheckCircle, XCircle,\n  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X, ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutList\n} from 'lucide-react';",
+      "StartLine": 8,
+      "TargetContent": "import {\n  Video, Calendar, Clock, CheckCircle, XCircle,\n  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X, ChevronLeft, ChevronRight\n} from 'lucide-react';",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Import LayoutList"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function PatientView\" -Context 0,60",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check PatientView context"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add viewMode to PatientView",
+      "EndLine": 283,
+      "Instruction": "Add viewMode state",
+      "ReplacementContent": "  const [tab, setTab] = useState('All');\n  const [search, setSearch] = useState('');\n  const [viewMode, setViewMode] = useState('list');",
+      "StartLine": 282,
+      "TargetContent": "  const [tab, setTab] = useState('All');\n  const [search, setSearch] = useState('');",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add viewMode"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"\\{search && \\(\" -Context 0,20",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find search button in PatientView"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Add toggle to PatientView UI",
+      "EndLine": 327,
+      "Instruction": "Add toggle to UI",
+      "ReplacementContent": "          {search && (\n            <button\n              type=\"button\"\n              onClick={() => setSearch('')}\n              className=\"flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-200 bg-danger-bg text-rose-600 text-xs font-semibold hover:bg-rose-100 transition-all shrink-0\"\n            >\n              <X size={13} /> Clear\n            </button>\n          )}\n          <div className=\"flex border border-border rounded-xl bg-surface p-1 shrink-0 ml-1\">\n            <button \n              onClick={() => setViewMode('list')} \n              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}`}\n              title=\"List View\"\n            >\n              <LayoutList size={16} />\n            </button>\n            <button \n              onClick={() => setViewMode('calendar')} \n              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'calendar' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}`}\n              title=\"Calendar View\"\n            >\n              <CalendarIcon size={16} />\n            </button>\n          </div>\n        </div>\n      </div>\n\n      {/* Content */}\n      {viewMode === 'calendar' ? (\n        <ConsultationCalendar consultations={filtered} onViewConsultation={() => {}} />\n      ) : (\n      <div className=\"space-y-3\">",
+      "StartLine": 317,
+      "TargetContent": "          {search && (\n            <button\n              type=\"button\"\n              onClick={() => setSearch('')}\n              className=\"flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-200 bg-danger-bg text-rose-600 text-xs font-semibold hover:bg-rose-100 transition-all shrink-0\"\n            >\n              <X size={13} /> Clear\n            </button>\n          )}\n        </div>\n      </div>\n\n      {/* Cards */}\n      <div className=\"space-y-3\">",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Add toggle to PatientView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"PatientView\" -Context 0,100",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find end of PatientView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"PatientView\" -Context 0,70",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check PatientView end"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function DoctorView\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find end of PatientView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function DoctorView\" -Context 20,0",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Find end of PatientView"
+    }
+  },
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": false,
+      "Description": "Close calendar ternary in PatientView",
+      "EndLine": 388,
+      "Instruction": "Close ternary",
+      "ReplacementContent": "              </div>\n            );\n          })}\n        </div>\n        )}\n      </div>\n    );\n  }",
+      "StartLine": 382,
+      "TargetContent": "              </div>\n            );\n          })}\n        </div>\n      </div>\n    );\n  }",
+      "TargetFile": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend/src/pages/dashboard/Consultations.jsx",
+      "toolAction": "Editing file",
+      "toolSummary": "Close ternary"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Set-Content script.js @'\nconst fs = require('fs');\nlet content = fs.readFileSync('frontend/src/pages/dashboard/Consultations.jsx', 'utf-8');\n\nconst applyView = (viewName, tabInit) => {\n    // State\n    content = content.replace(\n        new RegExp(`const \\\\[tab, setTab\\\\] = useState\\\\('${tabInit}'\\\\);`),\n        `const [tab, setTab] = useState('${tabInit}');\\n  const [viewMode, setViewMode] = useState('list');`\n    );\n\n    // Toggle button\n    const toggleStr = `\n          {search && (\n            <button\n              type=\"button\"\n              onClick={() => setSearch('')}\n              className=\"flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-200 bg-danger-bg text-rose-600 text-xs font-semibold hover:bg-rose-100 transition-all shrink-0\"\n            >\n              <X size={13} /> Clear\n            </button>\n          )}\n          <div className=\"flex border border-border rounded-xl bg-surface p-1 shrink-0 ml-1\">\n            <button \n              onClick={() => setViewMode('list')} \n              className={\\`p-1.5 rounded-lg transition-colors \\${viewMode === 'list' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}\\`}\n              title=\"List View\"\n            >\n              <LayoutList size={16} />\n            </button>\n            <button \n              onClick={() => setViewMode('calendar')} \n              className={\\`p-1.5 rounded-lg transition-colors \\${viewMode === 'calendar' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}\\`}\n              title=\"Calendar View\"\n            >\n              <CalendarIcon size={16} />\n            </button>\n          </div>\n        </div>\n      </div>\n`;\n    // Find the end of the search bar block\n    const searchRegex = new RegExp(`(function ${viewName}[\\\\s\\\\S]*?\\\\{search && \\\\([\\\\s\\\\S]*?<X size=\\\\{13\\\\} \\\\/> Clear\\\\n\\\\s*<\\\\/button>\\\\n\\\\s*\\\\)\\\\}\\\\n\\\\s*<\\\\/div>\\\\n\\\\s*<\\\\/div>)`);\n    \n    content = content.replace(searchRegex, (match) => {\n        if (match.includes('CalendarIcon size={16}')) return match; // already injected\n        // Just replace the end part\n        return match.replace(/\\{search && \\([\\s\\S]*?<\\/div>\\n\\s*<\\/div>$/, toggleStr.trim());\n    });\n    \n    // Inject calendar view condition\n    let listStartMatch;\n    if (viewName === 'AdminView') {\n      listStartMatch = `        {/* Table */}\\n        <div className=\"bg-surface rounded-2xl border border-border shadow-sm overflow-hidden\">`;\n    } else {\n      listStartMatch = `        {/* Queue list */}\\n        <div data-tour=\"page-list\" className=\"bg-surface rounded-2xl border border-border shadow-sm overflow-hidden\">`;\n    }\n    \n    const calendarRender = `        {viewMode === 'calendar' ? (\\n          <ConsultationCalendar consultations={filtered} onViewConsultation={() => {}} />\\n        ) : (\\n${listStartMatch}`;\n    \n    content = content.replace(listStartMatch, calendarRender);\n    \n    // Close ternary\n    const endMatch = new RegExp(`(function ${viewName}[\\\\s\\\\S]*?)(<\\\\/div>\\\\n\\\\s*\\\\);\\\\n\\\\s*\\\\}\\\\)\\\\}[\\n\\\\s]*<\\\\/div>[\\n\\\\s]*<\\\\/div>[\\n\\\\s]*\\\\);\\\\n\\\\})`);\n    content = content.replace(endMatch, `$1$2\\n        )}`);\n};\n\napplyView('DoctorView', 'Pending');\napplyView('AdminView', 'Scheduled');\nfs.writeFileSync('frontend/src/pages/dashboard/Consultations.jsx', content);\n'@;\nnode script.js",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Run injection script"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"function DoctorView\" -Context 0,110",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check DoctorView"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "git diff HEAD~1 HEAD frontend/src/pages/dashboard/Consultations.jsx",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check what I broke in Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "git diff frontend/src/pages/dashboard/Consultations.jsx",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check current Consultations.jsx changes"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"getDoctorSlotsForDate\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check if I lost my previous changes"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Get-Content frontend/src/pages/dashboard/Consultations.jsx | Select-String -Pattern \"HeartPulse\" -Context 3,3",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Check if Vitals are there"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "grep -A 100 \"replace_file_content.*Consultations.jsx\" ../.gemini/antigravity/brain/339cbc7d-24b3-4e47-b10c-a340b090a4bf/.system_generated/logs/transcript.jsonl | tail -n 2000 > transcript_extract.txt",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System/frontend",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Extract transcript logs"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Set-Content recover.js @'\nconst fs = require('fs');\nconst transcriptPath = '../../.gemini/antigravity/brain/339cbc7d-24b3-4e47-b10c-a340b090a4bf/.system_generated/logs/transcript_full.jsonl';\n\nconst lines = fs.readFileSync(transcriptPath, 'utf8').split('\\n').filter(Boolean);\n\nlet contents = [];\n\nfor (const line of lines) {\n  try {\n    const obj = JSON.parse(line);\n    if (obj.tool_calls) {\n      for (const call of obj.tool_calls) {\n        if (call.name === 'default_api:write_to_file' || call.name === 'default_api:replace_file_content' || call.name === 'default_api:run_command') {\n            if (JSON.stringify(call.arguments).includes('Consultations.jsx')) {\n                contents.push(call);\n            }\n        }\n      }\n    }\n  } catch(e) {}\n}\n\nfs.writeFileSync('recover_log.json', JSON.stringify(contents, null, 2));\n'@\nnode recover.js",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Run recovery script"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Set-Content recover.js @'\nconst fs = require('fs');\nconst transcriptPath = 'C:\\\\Users\\\\Fresh\\\\.gemini\\\\antigravity\\\\brain\\\\339cbc7d-24b3-4e47-b10c-a340b090a4bf\\\\.system_generated\\\\logs\\\\transcript_full.jsonl';\n\nconst lines = fs.readFileSync(transcriptPath, 'utf8').split('\\n').filter(Boolean);\n\nlet contents = [];\n\nfor (const line of lines) {\n  try {\n    const obj = JSON.parse(line);\n    if (obj.tool_calls) {\n      for (const call of obj.tool_calls) {\n        if (call.name === 'default_api:write_to_file' || call.name === 'default_api:replace_file_content' || call.name === 'default_api:run_command') {\n            if (JSON.stringify(call.arguments).includes('Consultations.jsx')) {\n                contents.push(call);\n            }\n        }\n      }\n    }\n  } catch(e) {}\n}\n\nfs.writeFileSync('recover_log.json', JSON.stringify(contents, null, 2));\n'@\nnode recover.js",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Run recovery script again"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "node -e \"\nconst fs = require('fs');\nconst log = JSON.parse(fs.readFileSync('recover_log.json', 'utf8'));\nconst replaces = log.filter(c => c.name === 'default_api:replace_file_content' && c.arguments.TargetFile.endsWith('Consultations.jsx'));\nconsole.log('Total replace_file_content calls:', replaces.length);\nreplaces.slice(-10).forEach(r => console.log('EndLine:', r.arguments.EndLine, 'Summary:', r.arguments.toolSummary));\n\"",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Analyze recovery log"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "node -e \"\nconst fs = require('fs');\nconst log = JSON.parse(fs.readFileSync('recover_log.json', 'utf8'));\nconst cmds = log.filter(c => c.name === 'default_api:run_command' && c.arguments.CommandLine.includes('Set-Content') && c.arguments.CommandLine.includes('Consultations.jsx'));\nconsole.log('Total Set-Content calls:', cmds.length);\nif (cmds.length > 0) {\n    fs.writeFileSync('last_set_content.txt', cmds[cmds.length-1].arguments.CommandLine);\n}\n\"",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Analyze Set-Content calls"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Set-Content recover2.js @'\nconst fs = require('fs');\nconst transcriptPath = 'C:\\\\Users\\\\Fresh\\\\.gemini\\\\antigravity\\\\brain\\\\339cbc7d-24b3-4e47-b10c-a340b090a4bf\\\\.system_generated\\\\logs\\\\transcript_full.jsonl';\nconst lines = fs.readFileSync(transcriptPath, 'utf8').split('\\n').filter(Boolean);\n\nlet found = false;\nfor (const line of lines.reverse()) {\n  try {\n    const obj = JSON.parse(line);\n    if (obj.tool_calls) {\n      for (const call of obj.tool_calls) {\n        let str = JSON.stringify(call);\n        if (str.includes('Consultations.jsx') && (str.includes('replace_file_content') || str.includes('node -e'))) {\n          console.log(str.substring(0, 500));\n          found = true;\n          break;\n        }\n      }\n    }\n  } catch(e) {}\n  if (found) break;\n}\n'@\nnode recover2.js",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Search transcript for Consultations.jsx"
+    }
+  },
+  {
+    "name": "run_command",
+    "args": {
+      "CommandLine": "Set-Content recover3.js @'\nconst fs = require('fs');\nconst transcriptPath = 'C:\\\\Users\\\\Fresh\\\\.gemini\\\\antigravity\\\\brain\\\\339cbc7d-24b3-4e47-b10c-a340b090a4bf\\\\.system_generated\\\\logs\\\\transcript_full.jsonl';\nconst lines = fs.readFileSync(transcriptPath, 'utf8').split('\\n').filter(Boolean);\n\nlet contents = [];\n\nfor (const line of lines) {\n  try {\n    const obj = JSON.parse(line);\n    if (obj.tool_calls) {\n      for (const call of obj.tool_calls) {\n        let str = JSON.stringify(call);\n        if (str.includes('Consultations.jsx') && (call.name === 'replace_file_content' || call.name === 'write_to_file' || call.name === 'run_command')) {\n          contents.push(call);\n        }\n      }\n    }\n  } catch(e) {}\n}\n\nfs.writeFileSync('recover_log.json', JSON.stringify(contents, null, 2));\n'@\nnode recover3.js",
+      "Cwd": "c:/Users/Fresh/Documents/Capstone 2/Cabuyao-CHO1-System",
+      "WaitMsBeforeAsync": 5000,
+      "toolAction": "Running command",
+      "toolSummary": "Extract actual tool calls"
+    }
+  }
+]

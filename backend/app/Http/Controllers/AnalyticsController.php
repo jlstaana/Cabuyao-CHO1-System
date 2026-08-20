@@ -61,6 +61,36 @@ class AnalyticsController extends Controller {
         $completedConsultations = (clone $query)->where('status', 'Completed')->count();
         $pendingConsultations = (clone $query)->whereIn('status', ['Pending', 'Approved', 'Scheduled'])->count();
 
+        // Epidemiological Analytics: Patient Demographics (Age Group/Category)
+        $byAgeGroup = (clone $query)
+            ->join('patients', 'consultations.patient_id', '=', 'patients.id')
+            ->select(DB::raw("COALESCE(patients.category, 'Unknown') as category"), DB::raw('count(*) as total'))
+            ->groupBy('patients.category')
+            ->orderByDesc('total')
+            ->get();
+
+        // Epidemiological Analytics: Geographic Distribution (Barangay)
+        // Note: SQLite doesn't support SUBSTRING_INDEX, so we extract in PHP
+        $consultationsWithAddress = (clone $query)
+            ->join('patients', 'consultations.patient_id', '=', 'patients.id')
+            ->select('patients.address')
+            ->whereNotNull('patients.address')
+            ->where('patients.address', '!=', '')
+            ->get();
+
+        $byBarangay = $consultationsWithAddress
+            ->map(function ($row) {
+                $parts = explode(',', $row->address);
+                return trim($parts[0]);
+            })
+            ->countBy()
+            ->map(function ($count, $barangay) {
+                return (object)['barangay' => $barangay, 'total' => $count];
+            })
+            ->sortByDesc('total')
+            ->take(15)
+            ->values();
+
         $recentLogs = AuditLog::with('user:id,name,role')
             ->latest()
             ->limit(20)
@@ -98,6 +128,8 @@ class AnalyticsController extends Controller {
             'consultations_by_status' => $byStatus,
             'consultations_by_doctor' => $byDoctor,
             'top_diseases' => $topDiseases,
+            'demographics_by_age' => $byAgeGroup,
+            'cases_by_barangay' => $byBarangay,
             'low_stock_medicines' => $lowStockMedicines,
             'recent_logs' => $recentLogs,
         ]);

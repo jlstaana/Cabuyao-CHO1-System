@@ -41,15 +41,7 @@ class UserSeeder extends Seeder
             'license_no' => 'LIC-123456',
         ]);
 
-        // 3. Create Staff Account
-        $staffUser = User::updateOrCreate(['email' => 'staff@cabuyao.gov.ph'], [
-            'name' => 'CHO Staff',
-            'password' => Hash::make('password123'),
-            'role' => 'Staff',
-            'first_login' => false,
-            'is_active' => true,
-            'email_verified_at' => now(),
-        ]);
+        
         
         Staff::updateOrCreate(['user_id' => $staffUser->id], [
             'department' => 'Records',

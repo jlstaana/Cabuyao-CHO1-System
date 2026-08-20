@@ -30,7 +30,7 @@ class MedicalImageController extends Controller
         }
 
         $request->validate([
-            'image' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'image' => 'required|file|mimes:jpg,jpeg,png,pdf,webp,gif,doc,docx|max:20480',
             'document_type' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:1000'
         ]);

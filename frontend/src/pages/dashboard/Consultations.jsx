@@ -6,9 +6,10 @@ import Modal from '../../components/Modal';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
+import ConsultationCalendar from '../../components/ConsultationCalendar';
 import {
   Video, Calendar, Clock, CheckCircle, XCircle,
-  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X,
+  Stethoscope, FilePlus, AlertCircle, Plus, Settings, Save, Trash2, Download, FileText, HeartPulse, Search, X, ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutList
 } from 'lucide-react';
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -197,8 +198,37 @@ function dateTimeLocalValue(date, time = '08:00') {
   return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}T${pad(next.getHours())}:${pad(next.getMinutes())}`;
 }
 
+function getDoctorSlotsForDate(doctor, date) {
+  if (!doctor) return [];
+  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  let baseSlots = (doctor.availability || []).filter((slot) => slot.day_of_week === dayName(date));
+  
+  const exceptions = (doctor.exceptions || []).filter(e => e.date === dateStr);
+  const leaves = exceptions.filter(e => e.type === 'leave');
+  if (leaves.length > 0) {
+    if (leaves.some(l => !l.start_time)) {
+      baseSlots = [];
+    } else {
+      leaves.forEach(leave => {
+        baseSlots = baseSlots.filter(s => {
+          return !(s.start_time >= leave.start_time && s.start_time < leave.end_time);
+        });
+      });
+    }
+  }
+
+  const extraSlots = exceptions.filter(e => e.type === 'extra_slot');
+  extraSlots.forEach(extra => {
+    if (extra.start_time && extra.end_time) {
+      baseSlots.push({ start_time: extra.start_time, end_time: extra.end_time, is_extra: true });
+    }
+  });
+
+  return baseSlots.sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
+}
+
 function dayName(date) {
-  return date.toLocaleDateString(undefined, { weekday: 'long' });
+  return date.toLocaleDateString('en-US', { weekday: 'long' });
 }
 
 function shortDayLabel(date) {
@@ -206,16 +236,18 @@ function shortDayLabel(date) {
 }
 
 function timeRangeLabel(slot) {
-  return `${String(slot.start_time).slice(0, 5)}-${String(slot.end_time).slice(0, 5)}`;
+  if (!slot) return '';
+  return `${String(slot.start_time || '').slice(0, 5)}-${String(slot.end_time || '').slice(0, 5)}`;
 }
 
-function availabilityLabel(availability = []) {
-  if (!availability.length) {
-    return 'Available without fixed weekly schedule';
+function availabilityLabel(availability) {
+  if (!availability || availability.length === 0) {
+    return 'Available without fixed schedule';
   }
 
   return availability
-    .map((slot) => `${String(slot.day_of_week).slice(0, 3)} ${timeRangeLabel(slot)}`)
+    .filter(slot => slot != null)
+    .map((slot) => `${String(slot.day_of_week || '').slice(0, 3)} ${timeRangeLabel(slot)}`)
     .join(', ');
 }
 
@@ -249,6 +281,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
   const tabs = ['All', 'Pending', 'Scheduled', 'Completed'];
   const [tab, setTab] = useState('All');
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState('list');
 
   const filtered = consultations.filter(c => {
     const matchTab = tab === 'All' || c.status === tab;
@@ -315,6 +348,9 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
               </button>
             )}
           </div>
+
+          
+
           {search && (
             <button
               type="button"
@@ -324,10 +360,29 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
               <X size={13} /> Clear
             </button>
           )}
+          <div className="flex border border-border rounded-xl bg-surface p-1 shrink-0 ml-1">
+            <button 
+              onClick={() => setViewMode('list')} 
+              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}`}
+              title="List View"
+            >
+              <LayoutList size={16} />
+            </button>
+            <button 
+              onClick={() => setViewMode('calendar')} 
+              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'calendar' ? 'bg-background shadow-sm text-sky-600' : 'text-text-muted hover:text-text'}`}
+              title="Calendar View"
+            >
+              <CalendarIcon size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Cards */}
+      {/* Content */}
+      {viewMode === 'calendar' ? (
+        <ConsultationCalendar consultations={filtered} onViewConsultation={() => {}} />
+      ) : (
       <div className="space-y-3">
         {loading ? Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="bg-surface rounded-2xl border border-border p-5 animate-pulse">
@@ -375,17 +430,19 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
                   </Link>
                 )}
               </div>
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
+        </div>
+        )}
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 // ─── DOCTOR VIEW ──────────────────────────────────────────────────────────────
 function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, onCancel, availabilityStatus, onOpenAvailability }) {
   const [tab, setTab] = useState('Pending');
+  const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
 
   const pending   = consultations.filter(c => c.status === 'Pending');
@@ -601,6 +658,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
 // ─── ADMIN / STAFF VIEW ───────────────────────────────────────────────────────
 function AdminView({ consultations, loading, onReschedule, onCancel }) {
   const [tab, setTab] = useState('Scheduled');
+  const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
 
   const filtered = consultations.filter(c => {
@@ -768,6 +826,7 @@ export default function Consultations() {
   const [loading, setLoading]     = useState(true);
   const [consultations, setConsultations] = useState([]);
   const [doctors, setDoctors]     = useState([]);
+  const [medicalImages, setMedicalImages] = useState([]);
   const [rescheduleModal, setRescheduleModal] = useState(false);
   const [requestModal, setRequestModal] = useState(false);
   const [availabilityModal, setAvailabilityModal] = useState(false);
@@ -777,12 +836,52 @@ export default function Consultations() {
   const [specializations, setSpecializations] = useState([]);
   const [availableDoctors, setAvailableDoctors] = useState([]);
   const [requestForm, setRequestForm] = useState(EMPTY_REQUEST_FORM);
+  const [requestWeekOffset, setRequestWeekOffset] = useState(0);
+  const [rescheduleWeekOffset, setRescheduleWeekOffset] = useState(0);
   const [availabilityForm, setAvailabilityForm] = useState({
     doctor_type: 'Resident',
     availability: [{ ...EMPTY_AVAILABILITY_SLOT, _id: crypto.randomUUID() }],
   });
 
-  const fetchConsultations = async () => {
+  
+  const [isUploadingMini, setIsUploadingMini] = useState(false);
+
+  const handleMiniUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate size (e.g. 10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File exceeds 10MB limit.');
+      return;
+    }
+
+    try {
+      setIsUploadingMini(true);
+      const fd = new FormData();
+      fd.append('image', file);
+      fd.append('document_type', 'Other'); // Default type for quick uploads
+      fd.append('notes', 'Attached during consultation request');
+
+      const response = await api.post('/medical-images', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      
+      toast.success('File uploaded successfully!');
+      
+      // Refresh the medicalImages state
+      const res = await api.get('/medical-images');
+      setMedicalImages(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to upload file');
+    } finally {
+      setIsUploadingMini(false);
+      e.target.value = ''; // Reset input
+    }
+  };
+
+const fetchConsultations = async () => {
     try {
       const res = await api.get('/consultations');
       setConsultations(res.data);
@@ -807,6 +906,11 @@ export default function Consultations() {
         })
         .catch(console.error);
     }
+      if (user?.role === 'Patient') {
+        api.get('/medical-images')
+          .then(res => { if (isActive) setMedicalImages(res.data); })
+          .catch(console.error);
+      }
     if (user?.role === 'Patient') {
       api.get('/doctors/specializations')
         .then(res => {
@@ -935,6 +1039,14 @@ export default function Consultations() {
             end_time: String(slot.end_time || '12:00').slice(0, 5), _id: crypto.randomUUID(),
           }))
         : [{ ...EMPTY_AVAILABILITY_SLOT }],
+      exceptions: current?.exceptions?.length 
+        ? current.exceptions.map((exc) => ({
+            date: exc.date.split('T')[0],
+            type: exc.type,
+            start_time: exc.start_time ? String(exc.start_time).slice(0, 5) : '',
+            end_time: exc.end_time ? String(exc.end_time).slice(0, 5) : '',
+            _id: crypto.randomUUID(),
+        })) : [],
     });
     setAvailabilityModal(true);
   };
@@ -959,6 +1071,29 @@ export default function Consultations() {
     setAvailabilityForm((form) => ({
       ...form,
       availability: form.availability.filter((_, slotIndex) => slotIndex !== index),
+    }));
+  };
+
+  const updateExceptionSlot = (index, key, value) => {
+    setAvailabilityForm((form) => ({
+      ...form,
+      exceptions: form.exceptions.map((exc, excIndex) => (
+        excIndex === index ? { ...exc, [key]: value } : exc
+      )),
+    }));
+  };
+
+  const addExceptionSlot = () => {
+    setAvailabilityForm((form) => ({
+      ...form,
+      exceptions: [...(form.exceptions || []), { date: new Date().toISOString().split('T')[0], type: 'leave', start_time: '', end_time: '', _id: crypto.randomUUID() }],
+    }));
+  };
+
+  const removeExceptionSlot = (index) => {
+    setAvailabilityForm((form) => ({
+      ...form,
+      exceptions: (form.exceptions || []).filter((_, excIndex) => excIndex !== index),
     }));
   };
 
@@ -999,14 +1134,14 @@ export default function Consultations() {
       : 'Available without fixed schedule',
   } : null;
   const matchingAvailableDoctors = availableDoctors.filter((doctor) => doctor.specialization === requestForm.requested_specialization);
-  const requestWeekStart = startOfWeek(requestForm.scheduled_at);
+  const requestWeekStart = addDays(startOfWeek(new Date()), requestWeekOffset * 7);
   const requestWeekDays = Array.from({ length: 7 }, (_, index) => addDays(requestWeekStart, index));
   const requestSelectedDate = requestForm.scheduled_at ? new Date(requestForm.scheduled_at) : null;
   const requestSelectedDateKey = requestSelectedDate && !Number.isNaN(requestSelectedDate.getTime()) ? requestSelectedDate.toDateString() : '';
   const requestSelectedTime = requestForm.scheduled_at ? requestForm.scheduled_at.slice(11, 16) : '';
   const rescheduleDoctorId = rescheduleForm.doctor_id || selected?.doctor_id || selected?.doctor?.id;
   const rescheduleDoctor = availableDoctors.find((doctor) => String(doctor.id) === String(rescheduleDoctorId));
-  const rescheduleWeekStart = startOfWeek(rescheduleForm.scheduled_at);
+  const rescheduleWeekStart = addDays(startOfWeek(new Date()), rescheduleWeekOffset * 7);
   const rescheduleWeekDays = Array.from({ length: 7 }, (_, index) => addDays(rescheduleWeekStart, index));
   const selectedDateTime = rescheduleForm.scheduled_at ? new Date(rescheduleForm.scheduled_at) : null;
   const selectedDateKey = selectedDateTime && !Number.isNaN(selectedDateTime.getTime()) ? selectedDateTime.toDateString() : '';
@@ -1015,9 +1150,7 @@ export default function Consultations() {
   const rescheduleDoctorName = rescheduleDoctor?.name || selected?.doctor?.user?.name;
   const rescheduleWeekSchedule = rescheduleWeekDays.map((date) => ({
     date,
-    slots: rescheduleAvailability
-      .filter((slot) => slot.day_of_week === dayName(date))
-      .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time))),
+    slots: getDoctorSlotsForDate(rescheduleDoctor, date)
   }));
 
   return (
@@ -1068,30 +1201,32 @@ export default function Consultations() {
                 )}
               </div>
 
-              <div className="rounded-xl border border-border bg-surface p-4">
-                <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
-                  <HeartPulse size={15} className="text-danger-text" /> Vital Signs
-                </p>
-                {selected.vital_signs || selected.vitalSigns ? (
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {[
-                      ['BP', (selected.vital_signs || selected.vitalSigns).blood_pressure, 'mmHg'],
-                      ['Heart Rate', (selected.vital_signs || selected.vitalSigns).heart_rate, 'bpm'],
-                      ['Temperature', (selected.vital_signs || selected.vitalSigns).temperature, 'C'],
-                      ['Respiratory', (selected.vital_signs || selected.vitalSigns).respiratory, '/min'],
-                      ['SpO2', (selected.vital_signs || selected.vitalSigns).oxygen, '%'],
-                      ['Weight', (selected.vital_signs || selected.vitalSigns).weight, 'kg'],
-                    ].map(([label, value, unit]) => (
-                      <div key={label} className="rounded-lg bg-background px-3 py-2">
-                        <p className="text-[11px] font-semibold uppercase text-text-light">{label}</p>
-                        <p className="font-bold text-text">{value || '-'} <span className="text-xs font-medium text-text-light">{value ? unit : ''}</span></p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-text-light">No vital signs recorded.</p>
-                )}
-              </div>
+              {user?.role !== 'Patient' && (
+                <div className="rounded-xl border border-border bg-surface p-4">
+                  <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
+                    <HeartPulse size={15} className="text-danger-text" /> Vital Signs
+                  </p>
+                  {selected.vital_signs || selected.vitalSigns ? (
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {[
+                        ['BP', (selected.vital_signs || selected.vitalSigns).blood_pressure, 'mmHg'],
+                        ['Heart Rate', (selected.vital_signs || selected.vitalSigns).heart_rate, 'bpm'],
+                        ['Temperature', (selected.vital_signs || selected.vitalSigns).temperature, 'C'],
+                        ['Respiratory', (selected.vital_signs || selected.vitalSigns).respiratory, '/min'],
+                        ['SpO2', (selected.vital_signs || selected.vitalSigns).oxygen, '%'],
+                        ['Weight', (selected.vital_signs || selected.vitalSigns).weight, 'kg'],
+                      ].map(([label, value, unit]) => (
+                        <div key={label} className="rounded-lg bg-background px-3 py-2">
+                          <p className="text-[11px] font-semibold uppercase text-text-light">{label}</p>
+                          <p className="font-bold text-text">{value || '-'} <span className="text-xs font-medium text-text-light">{value ? unit : ''}</span></p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-text-light">No vital signs recorded.</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="rounded-xl border border-border bg-surface p-4">
@@ -1217,8 +1352,69 @@ export default function Consultations() {
             ))}
           </div>
 
-          <div className="pt-2 flex justify-end gap-3">
-            <button type="button" onClick={() => setAvailabilityModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
+          <div className="space-y-3 pt-4 border-t border-border">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-text-muted">Emergency Leaves & Ad-Hoc Slots</p>
+                <p className="text-xs text-text-light">Block specific dates or open extra time</p>
+              </div>
+              <button
+                type="button"
+                onClick={addExceptionSlot}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary-bg px-3 py-1.5 text-xs font-bold text-primary-text hover:bg-primary-hover transition-colors"
+              >
+                <Plus size={13} /> Add Exception
+              </button>
+            </div>
+
+            {(availabilityForm.exceptions || []).map((exc, index) => (
+              <div key={exc._id || index} className="grid grid-cols-1 sm:grid-cols-[1fr_110px_100px_100px_auto] gap-2 rounded-xl border border-rose-200/50 bg-rose-50/30 p-3">
+                <input
+                  required
+                  type="date"
+                  value={exc.date}
+                  onChange={(e) => updateExceptionSlot(index, 'date', e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
+                />
+                <select
+                  required
+                  value={exc.type}
+                  onChange={(e) => updateExceptionSlot(index, 'type', e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
+                >
+                  <option value="leave">Leave (Block)</option>
+                  <option value="extra_slot">Extra Slot</option>
+                </select>
+                <input
+                  type="time"
+                  value={exc.start_time || ''}
+                  onChange={(e) => updateExceptionSlot(index, 'start_time', e.target.value)}
+                  placeholder="Start"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
+                />
+                <input
+                  type="time"
+                  value={exc.end_time || ''}
+                  onChange={(e) => updateExceptionSlot(index, 'end_time', e.target.value)}
+                  placeholder="End"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeExceptionSlot(index)}
+                  className="inline-flex items-center justify-center rounded-lg bg-surface px-3 py-2 text-rose-500 border border-border hover:bg-danger-bg transition-colors"
+                  title="Remove exception"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            ))}
+            {(availabilityForm.exceptions || []).length === 0 && (
+              <p className="text-xs text-text-light italic text-center py-2">No exceptions added.</p>
+            )}
+          </div>
+
+            <div className="pt-2 flex justify-end gap-3">\n              <button type="button" onClick={() => setAvailabilityModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
             <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-semibold hover:bg-sky-600 rounded-xl flex items-center gap-2 shadow-md shadow-sky-200">
               <Save size={16} /> Save Schedule
             </button>
@@ -1227,13 +1423,16 @@ export default function Consultations() {
       </Modal>
 
       {/* Patient Request Modal */}
-      <Modal isOpen={requestModal} onClose={() => setRequestModal(false)} title="Request Teleconsultation">
-        <form data-tour="page-form" onSubmit={handleRequestSubmit} className="space-y-4">
+      <Modal isOpen={requestModal} onClose={() => setRequestModal(false)} title="Request Teleconsultation" maxWidth="max-w-6xl">
+        <form data-tour="page-form" onSubmit={handleRequestSubmit}>
+<div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<div className="lg:col-span-4 space-y-4">
+
           <div className="rounded-xl border border-sky-100 bg-primary-bg px-4 py-3 text-sm text-primary-text">
-            Enter your consultation details, vital signs, and preferred schedule. The system will schedule an available doctor or queue the request for coordination.
+            Enter your consultation details and select your preferred schedule.
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-muted mb-1">Needed Specialization</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Available Doctor Specialization</label>
             <select
               required
               value={requestForm.requested_specialization}
@@ -1262,7 +1461,7 @@ export default function Consultations() {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-text-muted mb-1">Consultation Details</label>
+            <label className="block text-sm font-medium text-text-muted mb-1">Consultation Request For</label>
             <textarea
               required
               rows={3}
@@ -1282,63 +1481,90 @@ export default function Consultations() {
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-sky-500/20 outline-none resize-none"
             />
           </div>
+
           <div>
-            <p className="block text-sm font-medium text-text-muted mb-2">Vital Signs</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input type="text" value={requestForm.vitals.blood_pressure} onChange={e => updateRequestVital('blood_pressure', e.target.value)} placeholder="Blood pressure, e.g. 120/80" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input type="text" value={requestForm.vitals.heart_rate} onChange={e => updateRequestVital('heart_rate', e.target.value)} placeholder="Heart rate, e.g. 72 bpm" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input type="text" value={requestForm.vitals.temperature} onChange={e => updateRequestVital('temperature', e.target.value)} placeholder="Temperature, e.g. 36.6 C" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input type="text" value={requestForm.vitals.respiratory} onChange={e => updateRequestVital('respiratory', e.target.value)} placeholder="Respiratory rate, e.g. 16/min" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input type="text" value={requestForm.vitals.oxygen} onChange={e => updateRequestVital('oxygen', e.target.value)} placeholder="Oxygen saturation, e.g. 98%" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
-              <input type="text" value={requestForm.vitals.weight} onChange={e => updateRequestVital('weight', e.target.value)} placeholder="Weight, e.g. 65 kg" className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-text-muted">Attached Medical Images</label>
+              <div>
+                <input type="file" id="mini-upload" className="hidden" accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx" onChange={handleMiniUpload} disabled={isUploadingMini} />
+                <label htmlFor="mini-upload" className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded-md border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 cursor-pointer transition-colors ${isUploadingMini ? 'opacity-50 cursor-wait' : ''}`}>
+                  <FilePlus size={12} />
+                  {isUploadingMini ? 'Uploading...' : 'Quick Upload'}
+                </label>
+              </div>
             </div>
-          </div>
-          <div className="rounded-xl border border-border bg-background px-4 py-3">
-            <p className="text-xs font-semibold uppercase text-text-light mb-2">Doctor Availability</p>
-            <div className="space-y-2">
-              {matchingAvailableDoctors.length === 0 ? (
-                <p className="text-sm text-text-light">No active doctors listed for this specialization.</p>
-              ) : matchingAvailableDoctors.map((doctor) => (
-                <div key={doctor.id} className="flex items-center justify-between gap-3 rounded-lg bg-surface px-3 py-2 border border-border">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-text">Dr. {(doctor.name || '').replace(/^Dr\.\s*/i, '')}</p>
-                    <p className="text-xs text-text-light">{doctor.specialization}</p>
-                    <p className="mt-1 text-xs font-medium leading-relaxed text-text-muted">
-                      {availabilityLabel(doctor.availability)}
-                    </p>
-                  </div>
-                  <span className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${doctor.is_available_now ? 'bg-emerald-100 text-success-text' : 'bg-amber-100 text-warning-text'}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${doctor.is_available_now ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                    {doctor.is_available_now ? 'Available now' : 'Off schedule'}
-                  </span>
+            {medicalImages.length > 0 ? (
+              <div className="rounded-xl border border-border bg-surface overflow-hidden">
+                <div className="max-h-32 overflow-y-auto divide-y divide-border">
+                  {medicalImages.map(img => (
+                    <div key={img.id} className="flex items-center justify-between px-3 py-2">
+                      <div className="flex flex-col truncate">
+                        <span className="text-xs font-semibold text-text truncate">{img.original_name || img.file_path.split('/').pop()}</span>
+                        <span className="text-[10px] text-text-light">{img.document_type || 'Document'}</span>
+                      </div>
+                      <span className="shrink-0 ml-2 inline-flex items-center rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-bold text-success-text">Attached</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+                <div className="bg-background px-3 py-2 border-t border-border flex justify-between items-center">
+                  <p className="text-[10px] text-text-light">
+                    These files will be accessible to your doctor.
+                  </p>
+                  <Link to="/medical-images" className="text-[10px] text-sky-600 font-medium hover:underline">Manage all</Link>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-4 text-center">
+                <p className="text-xs text-text-muted">No medical images attached.</p>
+                <p className="text-[10px] text-text-light mt-1">Click "Quick Upload" above to attach files directly.</p>
+              </div>
+            )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-text-muted mb-1">Preferred Date &amp; Time</label>
-            <input
-              required
-              type="datetime-local"
-              value={requestForm.scheduled_at}
-              onChange={e => setRequestForm({ ...requestForm, scheduled_at: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none"
-            />
+
+          
+          
+          </div>
+<div className="lg:col-span-8 space-y-4">
+<div>
+            <label className="block text-sm font-medium text-text-muted mb-1">Selected Appointment Slot</label>
+            {requestForm.scheduled_at ? (
+              <div className="w-full px-4 py-2.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-700 font-semibold flex items-center gap-2">
+                <Calendar size={16} />
+                {new Date(requestForm.scheduled_at).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </div>
+            ) : (
+              <div className="w-full px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-600 font-medium text-sm">
+                Please click an available green slot below.
+              </div>
+            )}
+            <input type="text" className="h-0 w-0 absolute opacity-0" required value={requestForm.scheduled_at || ''} onChange={()=>{}} tabIndex="-1" />
           </div>
           <div className="rounded-xl border border-border bg-surface p-4">
-            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-text">Available Appointment Slots</p>
-                <p className="text-xs text-text-light">Week of {requestWeekStart.toLocaleDateString()}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <button type="button" onClick={() => setRequestWeekOffset(prev => prev - 1)} className="p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text"><ChevronLeft size={16}/></button>
+                  <p className="text-xs font-medium text-text-light w-32 text-center">Week of {requestWeekStart.toLocaleDateString()}</p>
+                  <button type="button" onClick={() => setRequestWeekOffset(prev => prev + 1)} className="p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text"><ChevronRight size={16}/></button>
+                </div>
               </div>
               <span className="inline-flex w-fit items-center rounded-full bg-success-bg px-3 py-1 text-xs font-bold text-success-text">
                 Open slots can be selected
               </span>
             </div>
 
-            {matchingAvailableDoctors.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border bg-background px-4 py-6 text-center text-sm text-text-light">
-                Select a specialization with active doctors to see appointment slots.
+            {!requestForm.requested_specialization ? (
+              <div className="rounded-lg border border-dashed border-sky-200 bg-sky-50/50 px-4 py-8 text-center text-sm text-text-light flex flex-col items-center justify-center gap-2">
+                <Stethoscope size={24} className="text-sky-400" />
+                <p className="font-medium text-text-muted">Please select a specialization to begin.</p>
+                <p className="text-xs">Available doctors and their appointment slots will appear here.</p>
+              </div>
+            ) : matchingAvailableDoctors.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-rose-200 bg-rose-50/50 px-4 py-8 text-center text-sm text-text-light flex flex-col items-center justify-center gap-2">
+                <AlertCircle size={24} className="text-rose-400" />
+                <p className="font-medium text-text-muted">No doctors currently handle this specialization, or the office is closed.</p>
+                <p className="text-xs">Please try selecting a different specialization or check back later.</p>
               </div>
             ) : (
       <div data-tour="page-list" className="space-y-4">
@@ -1351,12 +1577,10 @@ export default function Consultations() {
                       </div>
                       <p className="text-xs font-medium text-text-muted">{availabilityLabel(doctor.availability)}</p>
                     </div>
-                    {doctor.availability?.length ? (
+                    {(doctor.availability?.length > 0 || doctor.exceptions?.length > 0) ? (
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
                         {requestWeekDays.map((date) => {
-                          const slots = doctor.availability
-                            .filter((slot) => slot.day_of_week === dayName(date))
-                            .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
+                          const slots = getDoctorSlotsForDate(doctor, date);
                           const isSelectedDate = requestSelectedDateKey === date.toDateString();
 
                           return (
@@ -1415,7 +1639,9 @@ export default function Consultations() {
               </div>
             )}
           </div>
-          <div className="pt-2 flex justify-end gap-3">
+          </div>
+</div>
+<div className="pt-2 flex justify-end gap-3">
             <button type="button" onClick={() => setRequestModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
             <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-semibold hover:bg-sky-600 rounded-xl flex items-center gap-2 shadow-md shadow-sky-200">
               <Stethoscope size={16} /> Submit Request
@@ -1457,12 +1683,16 @@ export default function Consultations() {
               </div>
             )}
             <div className="rounded-xl border border-border bg-surface p-4">
-              <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-text">Doctor Weekly Availability</p>
-                  <p className="text-xs text-text-light">
-                    Week of {rescheduleWeekStart.toLocaleDateString()} {rescheduleDoctorName ? `for Dr. ${(rescheduleDoctorName || '').replace(/^Dr\.\s*/i, '')}` : ''}
-                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <button type="button" onClick={() => setRescheduleWeekOffset(prev => prev - 1)} className="p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text"><ChevronLeft size={16}/></button>
+                    <p className="text-xs font-medium text-text-light">
+                      Week of {rescheduleWeekStart.toLocaleDateString()} {rescheduleDoctorName ? `for Dr. ${(rescheduleDoctorName || '').replace(/^Dr\.\s*/i, '')}` : ''}
+                    </p>
+                    <button type="button" onClick={() => setRescheduleWeekOffset(prev => prev + 1)} className="p-1 rounded-md hover:bg-surface-hover text-text-muted hover:text-text"><ChevronRight size={16}/></button>
+                  </div>
                 </div>
                 {rescheduleDoctor?.doctor_type && (
                   <span className="inline-flex w-fit items-center rounded-full bg-primary-bg px-3 py-1 text-xs font-bold text-primary-text">
@@ -1531,10 +1761,18 @@ export default function Consultations() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-muted mb-1">New Date &amp; Time</label>
-              <input required type="datetime-local" value={rescheduleForm.scheduled_at}
-                onChange={e => setRescheduleForm({ ...rescheduleForm, scheduled_at: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
+              <label className="block text-sm font-medium text-text-muted mb-1">Selected New Appointment Slot</label>
+              {rescheduleForm.scheduled_at ? (
+                <div className="w-full px-4 py-2.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-700 font-semibold flex items-center gap-2">
+                  <Calendar size={16} />
+                  {new Date(rescheduleForm.scheduled_at).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </div>
+              ) : (
+                <div className="w-full px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-600 font-medium text-sm">
+                  Please click an available slot above.
+                </div>
+              )}
+              <input type="text" className="h-0 w-0 absolute opacity-0" required value={rescheduleForm.scheduled_at || ''} onChange={()=>{}} tabIndex="-1" />
             </div>
             <div className="pt-2 flex justify-end gap-3">
               <button type="button" onClick={() => setRescheduleModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>

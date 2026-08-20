@@ -6,6 +6,21 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ConsultationController extends Controller {
+
+    public function history(Request $request) {
+        $user = $request->user();
+        $query = Consultation::with(['patient.user', 'doctor.user', 'form', 'prescription.items.medicine'])
+            ->orderBy('created_at', 'desc');
+
+        if ($user->role === 'Patient') {
+            $query->where('patient_id', $user->patient->id);
+        } elseif ($user->role === 'Doctor') {
+            $query->where('doctor_id', $user->doctor->id);
+        }
+
+        return response()->json($query->get());
+    }
+
     private function canAccessConsultation($user, Consultation $consultation): bool {
         return in_array($user->role, ['Admin', 'Staff'])
             || ($user->role === 'Patient' && (int) $consultation->patient_id === (int) $user->patient?->id)
@@ -109,6 +124,12 @@ class ConsultationController extends Controller {
         $user = $request->user();
         $query = Consultation::with(['patient.user', 'patient.record', 'doctor.user', 'vitalSigns', 'medicalImages', 'form', 'prescription.items.medicine']);
         $query->whereHas('patient', fn ($patientQuery) => $patientQuery->where('archived', false));
+
+        // Hide cluttered/old consultations from the main dashboard queue
+        if (!$request->has('show_all')) {
+            $query->whereIn('status', ['Pending', 'Scheduled']);
+        }
+
         if ($user->role === 'Patient') {
             $query->where('patient_id', $user->patient->id);
         } elseif ($user->role === 'Doctor') {
@@ -143,6 +164,28 @@ class ConsultationController extends Controller {
             'vitals.respiratory' => 'nullable|string|max:50',
             'vitals.oxygen' => 'nullable|string|max:50',
         ]);
+
+        $patientId = $request->user()->patient->id;
+
+        // 1. Penalty System: Check for 3 or more missed appointments this month
+        $missedCount = Consultation::where('patient_id', $patientId)
+            ->where('status', 'Missed')
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->count();
+            
+        if ($missedCount >= 3) {
+            return response()->json(['message' => 'Your account is temporarily restricted from booking online due to 3 or more missed appointments this month. Please contact the CHO.'], 403);
+        }
+
+        // 2. Booking Limits: Check for active/pending requests
+        $activeCount = Consultation::where('patient_id', $patientId)
+            ->whereIn('status', ['Pending', 'Scheduled'])
+            ->count();
+            
+        if ($activeCount >= 2) {
+            return response()->json(['message' => 'You cannot have more than 2 active or pending consultation requests at the same time.'], 403);
+        }
+
 
         if (!empty($data['doctor_id'])) {
             $doctor = Doctor::find($data['doctor_id']);

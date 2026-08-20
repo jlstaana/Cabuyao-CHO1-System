@@ -161,6 +161,11 @@ class DoctorController extends Controller
             'availability.*.day_of_week' => 'required|in:' . implode(',', self::DAYS),
             'availability.*.start_time' => 'required|date_format:H:i',
             'availability.*.end_time' => 'required|date_format:H:i',
+            'exceptions' => 'nullable|array',
+            'exceptions.*.date' => 'required|date_format:Y-m-d',
+            'exceptions.*.type' => 'required|in:leave,extra_slot',
+            'exceptions.*.start_time' => 'nullable|date_format:H:i',
+            'exceptions.*.end_time' => 'nullable|date_format:H:i',
         ]);
 
         $doctor = $request->user()->doctor()->with('availability')->first();
@@ -175,9 +180,7 @@ class DoctorController extends Controller
 
         $hasInvalidTime = collect($entries)->contains(fn ($entry) => $this->minutes($entry['end_time']) <= $this->minutes($entry['start_time']));
         if ($hasInvalidTime) {
-            return response()->json([
-                'message' => 'Invalid schedule. End time must be later than start time.',
-            ], 422);
+            return response()->json(['message' => 'Invalid time range: End time must be after start time.'], 422);
         }
 
         if ($this->hasScheduleConflict($entries)) {
@@ -201,6 +204,18 @@ class DoctorController extends Controller
             $doctor->availability()->create($entry);
         }
         $doctor->update(['doctor_type' => $data['doctor_type']]);
+
+        if (isset($data['exceptions'])) {
+            $doctor->exceptions()->delete();
+            foreach ($data['exceptions'] as $exc) {
+                $doctor->exceptions()->create([
+                    'date' => $exc['date'],
+                    'type' => $exc['type'],
+                    'start_time' => empty($exc['start_time']) ? null : substr($exc['start_time'], 0, 5),
+                    'end_time' => empty($exc['end_time']) ? null : substr($exc['end_time'], 0, 5),
+                ]);
+            }
+        }
 
         AuditLog::create([
             'user_id' => $request->user()->id,
@@ -243,6 +258,7 @@ class DoctorController extends Controller
         $doctors = Doctor::with([
             'user:id,name,is_active', 
             'availability',
+            'exceptions',
             'consultations' => function ($q) {
                 $q->where('status', 'Scheduled')
                   ->whereNotNull('scheduled_at')

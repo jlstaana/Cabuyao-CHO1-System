@@ -7,5 +7,6 @@ class Doctor extends Model {
     protected $casts = ['active_until' => 'datetime'];
     public function user() { return $this->belongsTo(User::class); }
     public function availability() { return $this->hasMany(DoctorAvailability::class); }
+    public function exceptions() { return $this->hasMany(DoctorScheduleException::class); }
     public function consultations() { return $this->hasMany(Consultation::class); }
 }

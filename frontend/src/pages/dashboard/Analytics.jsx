@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { BarChart2, Activity, Download, TrendingUp, FileText, Users, Calendar, X } from 'lucide-react';
+import { BarChart2, Activity, Download, TrendingUp, FileText, Users, Calendar, X, HeartPulse } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
 
@@ -9,6 +9,7 @@ import choLogo from '../../assets/CHO1-Logo.png';
 
 const REPORT_TABS = [
   { key: 'consultations', label: 'Consultation Statistics', icon: Activity },
+  { key: 'epidemiology', label: 'Population Health', icon: HeartPulse },
   { key: 'prescriptions', label: 'E-Prescription Trends', icon: FileText },
   { key: 'utilization', label: 'Service Utilization', icon: TrendingUp },
 ];
@@ -98,6 +99,8 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
   const diseaseRows = (stats.top_diseases || []).map((r) => ({ Disease: r.diagnosis, Cases: r.total }));
   const lowStockRows = (stats.low_stock_medicines || []).map((r) => ({ Category: r.category, 'Low Stock Count': r.count }));
   const volumeRows  = stats.time_based_volume.map((r) => ({ Date: r.date, Consultations: r.count }));
+  const ageRows = (stats.demographics_by_age || []).map((r) => ({ Category: r.category, Cases: r.total }));
+  const barangayRows = (stats.cases_by_barangay || []).map((r) => ({ Barangay: r.barangay, Cases: r.total }));
   const logRows     = stats.recent_logs.map((r) => ({
     Date: formatDateTime(r.created_at), User: r.user || 'System',
     Role: r.role || 'N/A', Action: r.action, IP: r.ip_address || 'N/A',
@@ -236,7 +239,16 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
       ${dataTable([['Date', '60%'], ['Consultations', '40%']], tableRows(volumeRows, ['Date', 'Consultations']))}
     `),
 
-    // PAGE 3 — Inventory & Staff
+    // PAGE 3 — Epidemiology & Demographics
+    wrap(`
+      ${miniHeader('Epidemiological & Population Health Report')}
+      ${twoCol(
+        sectionHeader('Patient Demographics (Age Group)', '#3b82f6') + dataTable([['Age Group', '68%'], ['Cases', '32%']], tableRows(ageRows, ['Category', 'Cases'])),
+        sectionHeader('Case Distribution by Barangay', '#f59e0b') + dataTable([['Barangay', '68%'], ['Cases', '32%']], tableRows(barangayRows, ['Barangay', 'Cases']))
+      )}
+    `),
+
+    // PAGE 4 — Inventory & Staff
     wrap(`
       ${miniHeader('Inventory & Staff Report')}
       ${twoCol(
@@ -450,13 +462,41 @@ export default function Analytics() {
         </div>
       )}
 
+      {activeTab === 'epidemiology' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
+              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><Users size={16} className="text-sky-500" /> Patient Demographics (by Category)</h3>
+              {(stats.demographics_by_age || []).length ? (
+                <div className="space-y-3">
+                  {stats.demographics_by_age.map((row) => (
+                    <BarRow key={row.category} label={row.category} value={row.total} max={Math.max(...stats.demographics_by_age.map(r => Number(r.total)), 1)} color="bg-sky-400" />
+                  ))}
+                </div>
+              ) : <EmptyBlock label="No demographic data yet" />}
+            </div>
+
+            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
+              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><Activity size={16} className="text-amber-500" /> Case Distribution by Barangay</h3>
+              {(stats.cases_by_barangay || []).length ? (
+                <div className="space-y-3">
+                  {stats.cases_by_barangay.map((row) => (
+                    <BarRow key={row.barangay} label={row.barangay} value={row.total} max={Math.max(...stats.cases_by_barangay.map(r => Number(r.total)), 1)} color="bg-amber-400" />
+                  ))}
+                </div>
+              ) : <EmptyBlock label="No geographic data yet" />}
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'prescriptions' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} sub="This month" color="emerald" />
             <StatCard label="Low Stock Alerts" value={formatNumber(summary.low_stock_count)} sub="Items needing restock" color="amber" />
             <StatCard label="Top Diseases" value={formatNumber((stats.top_diseases || []).length)} sub="Based on diagnoses" color="indigo" />
-            <StatCard label="Completed Consults" value={formatNumber(summary.completed_consultations)} sub="Eligible for prescriptions" color="rose" />
+            <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Available in inventory" color="rose" />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
