@@ -26,7 +26,7 @@ class DoctorController extends Controller
         $value = strtolower(trim($specialization));
         $aliases = [
             'general' => 'General Medicine',
-            'general medicine' => 'General Medicine',
+            'general medicine' => 'General Medicine', 'general physician' => 'General Medicine', 'general practitioner' => 'General Medicine', 
             'cardio' => 'Cardio',
             'cardiology' => 'Cardio',
             'cardiologist' => 'Cardio',
