@@ -198,34 +198,61 @@ function dateTimeLocalValue(date, time = '08:00') {
   return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}T${pad(next.getHours())}:${pad(next.getMinutes())}`;
 }
 
+
 function getDoctorSlotsForDate(doctor, date) {
   if (!doctor) return [];
   const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  let baseSlots = (doctor.availability || []).filter((slot) => slot.day_of_week === dayName(date));
-  
+  const day = dayName(date);
+
   const exceptions = (doctor.exceptions || []).filter(e => e.date === dateStr);
   const leaves = exceptions.filter(e => e.type === 'leave');
-  if (leaves.length > 0) {
-    if (leaves.some(l => !l.start_time)) {
-      baseSlots = [];
-    } else {
-      leaves.forEach(leave => {
-        baseSlots = baseSlots.filter(s => {
-          return !(s.start_time >= leave.start_time && s.start_time < leave.end_time);
-        });
-      });
+  const extraSlots = exceptions.filter(e => e.type === 'extra_slot');
+
+  const avail = (doctor.availability || []).filter(slot => slot.day_of_week === day);
+
+  // Generate 24 hourly slots (DFA standard viewing)
+  const slots = [];
+  for (let i = 0; i < 24; i++) {
+    const start = String(i).padStart(2, '0') + ':00';
+    const end = String(i + 1).padStart(2, '0') + ':00';
+    
+    // Check if this hour is covered by availability or an extra_slot exception
+    let isCovered = avail.some(a => start >= String(a.start_time).slice(0, 5) && start < String(a.end_time).slice(0, 5));
+    if (!isCovered) {
+      isCovered = extraSlots.some(e => start >= String(e.start_time).slice(0, 5) && start < String(e.end_time).slice(0, 5));
     }
+
+    // Check if this hour is blocked by a leave
+    if (leaves.length > 0) {
+      if (leaves.some(l => !l.start_time)) {
+        isCovered = false; // Whole day leave
+      } else {
+        if (leaves.some(l => start >= String(l.start_time).slice(0, 5) && start < String(l.end_time).slice(0, 5))) {
+          isCovered = false;
+        }
+      }
+    }
+
+    // Determine the original block that covers this (for quota tracking)
+    let parentBlock = null;
+    if (isCovered) {
+      parentBlock = avail.find(a => start >= String(a.start_time).slice(0, 5) && start < String(a.end_time).slice(0, 5));
+      if (!parentBlock) {
+        parentBlock = extraSlots.find(e => start >= String(e.start_time).slice(0, 5) && start < String(e.end_time).slice(0, 5));
+      }
+    }
+
+    slots.push({
+      start_time: start,
+      end_time: end === '24:00' ? '23:59' : end,
+      isAvailable: isCovered,
+      parentBlock
+    });
   }
 
-  const extraSlots = exceptions.filter(e => e.type === 'extra_slot');
-  extraSlots.forEach(extra => {
-    if (extra.start_time && extra.end_time) {
-      baseSlots.push({ start_time: extra.start_time, end_time: extra.end_time, is_extra: true });
-    }
-  });
-
-  return baseSlots.sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
+  return slots;
 }
+
 
 function dayName(date) {
   return date.toLocaleDateString('en-US', { weekday: 'long' });
@@ -256,12 +283,17 @@ function dateKey(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+
 function doctorSlotStatus(doctor, date, slot) {
+  const checkStart = slot.parentBlock ? String(slot.parentBlock.start_time).slice(0, 5) : String(slot.start_time).slice(0, 5);
+  const checkEnd = slot.parentBlock ? String(slot.parentBlock.end_time).slice(0, 5) : String(slot.end_time).slice(0, 5);
+  const day = dayName(date);
+
   const booked = (doctor.booked_slots || []).find((booked) => (
     booked.date === dateKey(date)
-    && booked.day_of_week === slot.day_of_week
-    && String(booked.start_time).slice(0, 5) === String(slot.start_time).slice(0, 5)
-    && String(booked.end_time).slice(0, 5) === String(slot.end_time).slice(0, 5)
+    && booked.day_of_week === day
+    && String(booked.start_time).slice(0, 5) === checkStart
+    && String(booked.end_time).slice(0, 5) === checkEnd
   ));
 
   const capacity = booked?.capacity || doctor.slot_capacity || 18;
@@ -275,6 +307,7 @@ function doctorSlotStatus(doctor, date, slot) {
     isFull: Boolean(booked?.is_full) || remaining <= 0,
   };
 }
+
 
 // ─── PATIENT VIEW ─────────────────────────────────────────────────────────────
 function PatientView({ consultations, loading, onRequest, onReschedule, onCancel }) {
@@ -1609,17 +1642,15 @@ const fetchConsultations = async () => {
                                       <button
                                         key={`${doctor.id}-${dateKey(date)}-${slot.start_time}-${slot.end_time}`}
                                         type="button"
-                                        disabled={isFull}
+                                        disabled={!slot.isAvailable || isFull}
                                         onClick={() => setRequestForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart), doctor_id: doctor.id }))}
                                         className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
-                                          isFull
-                                            ? 'bg-danger-bg text-rose-400 line-through'
-                                            : isSelectedSlot
+                                          !slot.isAvailable ? 'bg-surface/50 text-text-muted/30 cursor-not-allowed border border-border' : isFull ? 'bg-danger-bg text-rose-400 line-through' : isSelectedSlot
                                               ? 'bg-sky-600 text-white shadow-sm'
                                               : 'bg-success-bg text-success-text hover:bg-emerald-100'
                                         }`}
                                       >
-                                        {timeRangeLabel(slot)} · {isFull ? 'Full' : `${slotStatus.remaining} left`}
+                                        {timeRangeLabel(slot)} � {!slot.isAvailable ? 'Unavailable' : isFull ? 'Full' : `${slotStatus.remaining} left`}
                                       </button>
                                     );
                                   })}
@@ -1738,17 +1769,15 @@ const fetchConsultations = async () => {
                                 <button
                                   key={`${slot.day_of_week}-${slot.start_time}-${slot.end_time}`}
                                   type="button"
-                                  disabled={isFull}
+                                  disabled={!slot.isAvailable || isFull}
                                   onClick={() => setRescheduleForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart) }))}
                                   className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
-                                    isFull
-                                      ? 'bg-danger-bg text-rose-400 line-through'
-                                      : isSelectedSlot
+                                    !slot.isAvailable ? 'bg-surface/50 text-text-muted/30 cursor-not-allowed border border-border' : isFull ? 'bg-danger-bg text-rose-400 line-through' : isSelectedSlot
                                       ? 'bg-sky-600 text-white shadow-sm'
                                       : 'bg-surface text-text-muted hover:bg-primary-hover hover:text-primary-text'
                                   }`}
                                 >
-                                  {timeRangeLabel(slot)} · {isFull ? 'Full' : `${slotStatus.remaining} left`}
+                                  {timeRangeLabel(slot)} � {!slot.isAvailable ? 'Unavailable' : isFull ? 'Full' : `${slotStatus.remaining} left`}
                                 </button>
                               );
                             })}
