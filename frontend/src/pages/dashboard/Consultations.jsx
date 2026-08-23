@@ -310,6 +310,26 @@ function availabilityLabel(availability) {
     .join(', ');
 }
 
+function groupAndFormatAvailability(availability) {
+  if (!availability || availability.length === 0) {
+    return [{ day: 'Any Day', slots: ['Available without fixed schedule'] }];
+  }
+  
+  const DAYS_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const grouped = {};
+  
+  availability.filter(slot => slot != null).forEach(slot => {
+    const day = slot.day_of_week || 'Unknown';
+    if (!grouped[day]) grouped[day] = [];
+    grouped[day].push(timeRangeLabel(slot));
+  });
+  
+  return DAYS_ORDER.filter(d => grouped[d]).map(day => ({
+    day,
+    slots: grouped[day]
+  }));
+}
+
 function dateKey(date) {
   const pad = (value) => String(value).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -1637,7 +1657,16 @@ const fetchConsultations = async () => {
                         <p className="text-sm font-bold text-text">Dr. {(doctor.name || '').replace(/^Dr\.\s*/i, '')}</p>
                         <p className="text-xs text-text-light">{doctor.doctor_type || 'Resident'} · {doctor.specialization} · {doctor.slot_capacity || 18} slots per block</p>
                       </div>
-                      <p className="text-xs font-medium text-text-muted">{availabilityLabel(doctor.availability)}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-1 sm:mt-0">
+                        {groupAndFormatAvailability(doctor.availability).map((item) => (
+                          <span 
+                            key={item.day} 
+                            className="inline-flex items-center gap-1 rounded-md bg-slate-50 dark:bg-slate-800/60 px-2 py-0.5 text-[10px] font-bold text-text-muted dark:text-slate-300 border border-slate-200 dark:border-slate-700/80"
+                          >
+                            <span className="text-sky-500 dark:text-sky-400 uppercase tracking-wider">{item.day.slice(0, 3)}</span>: {item.slots.join(', ')}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                     {(doctor.availability?.length > 0 || doctor.exceptions?.length > 0) ? (
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
@@ -1679,7 +1708,11 @@ const fetchConsultations = async () => {
                                               : 'bg-success-bg text-success-text hover:bg-emerald-100'
                                         }`}
                                       >
-                                        {timeRangeLabel(slot)} � {!slot.isAvailable ? 'Unavailable' : isFull ? 'Full' : `${slotStatus.remaining} left`}
+                                        {timeRangeLabel(slot)} · <span className={
+                                          !slot.isAvailable ? 'text-text-muted/50' : isFull ? 'text-rose-500' : isSelectedSlot ? 'text-sky-100' : slotStatus.remaining <= 2 ? 'text-rose-600 dark:text-rose-400 font-extrabold' : (slotStatus.remaining / slotStatus.capacity <= 0.4) ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-emerald-600 dark:text-emerald-400'
+                                        }>
+                                          {!slot.isAvailable ? 'Unavailable' : isFull ? 'Full' : `${slotStatus.remaining} left`}
+                                        </span>
                                       </button>
                                     );
                                   })}
@@ -1806,7 +1839,11 @@ const fetchConsultations = async () => {
                                       : 'bg-surface text-text-muted hover:bg-primary-hover hover:text-primary-text'
                                   }`}
                                 >
-                                  {timeRangeLabel(slot)} � {!slot.isAvailable ? 'Unavailable' : isFull ? 'Full' : `${slotStatus.remaining} left`}
+                                  {timeRangeLabel(slot)} · <span className={
+                                    !slot.isAvailable ? 'text-text-muted/50' : isFull ? 'text-rose-500' : isSelectedSlot ? 'text-sky-100' : slotStatus.remaining <= 2 ? 'text-rose-600 dark:text-rose-400 font-extrabold' : (slotStatus.remaining / slotStatus.capacity <= 0.4) ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-emerald-600 dark:text-emerald-400'
+                                  }>
+                                    {!slot.isAvailable ? 'Unavailable' : isFull ? 'Full' : `${slotStatus.remaining} left`}
+                                  </span>
                                 </button>
                               );
                             })}
