@@ -190,7 +190,7 @@ export default function ManageUsers() {
       </div>
 
       {/* Category Summary Stat Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
         <div
           className="p-4 rounded-2xl border transition-all duration-200 shadow-sm bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-transparent"
         >

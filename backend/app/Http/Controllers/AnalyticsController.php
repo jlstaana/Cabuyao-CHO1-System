@@ -59,7 +59,7 @@ class AnalyticsController extends Controller {
 
         $totalConsultations = (clone $query)->count();
         $completedConsultations = (clone $query)->where('status', 'Completed')->count();
-        $pendingConsultations = (clone $query)->whereIn('status', ['Pending', 'Approved', 'Scheduled'])->count();
+        $scheduledConsultations = (clone $query)->whereIn('status', ['Scheduled'])->count();
 
         // Epidemiological Analytics: Patient Demographics (Age Group/Category)
         $byAgeGroup = (clone $query)
@@ -117,7 +117,7 @@ class AnalyticsController extends Controller {
             'summary' => [
                 'total_consultations' => $totalConsultations,
                 'completed_consultations' => $completedConsultations,
-                'pending_consultations' => $pendingConsultations,
+                'scheduled_consultations' => $scheduledConsultations,
                 'registered_patients' => Patient::where('archived', false)->count(),
                 'active_doctors' => Doctor::count(),
                 'active_medicines' => Medicine::where('status', true)->count(),

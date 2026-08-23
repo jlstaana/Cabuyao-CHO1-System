@@ -1,5 +1,5 @@
 import {
-  Home, HeartPulse, ImagePlus, Stethoscope, Clock, FileText, ClipboardList, Pill, Users, BarChart2, ShieldCheck
+  Home, HeartPulse, Folder, Stethoscope, Clock, FileText, ClipboardList, Pill, Users, BarChart2, ShieldCheck
 } from 'lucide-react';
 
 export function buildNavGroups(role) {
@@ -10,7 +10,7 @@ export function buildNavGroups(role) {
         label: 'My Health',
         links: [
           { path: '/dashboard',            label: 'Overview',            icon: Home },
-          { path: '/medical-images',       label: 'Medical Images',      icon: ImagePlus },
+          { path: '/medical-images',       label: 'Medical Documents',      icon: Folder },
         ],
       },
       {
@@ -42,7 +42,6 @@ export function buildNavGroups(role) {
         label: 'Consultations',
         links: [
           { path: '/consultations',  label: 'Consultation Queue',      icon: Stethoscope },
-          { path: '/consultation-history', label: 'Consultation History', icon: Clock },
           { path: '/patient-records', label: 'Patient Records',        icon: ClipboardList },
         ],
       },

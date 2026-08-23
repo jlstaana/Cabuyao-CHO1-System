@@ -39,12 +39,17 @@ function StatCard({ label, value, sub, color = 'sky' }) {
     emerald: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent',
     indigo: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent',
     rose: 'bg-gradient-to-br from-rose-500 to-pink-600 text-white border-transparent',
+    amber: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent',
   };
+  
+  const isText = typeof value === 'string' && isNaN(value.replace(/,/g, ''));
+  const valueClass = isText ? 'text-xl font-bold truncate mt-2' : 'text-3xl font-black mt-1';
+  
   return (
     <div className={`p-5 rounded-2xl border ${styles[color] || styles.sky}`}>
       <p className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</p>
-      <p className="text-3xl font-black mt-1 text-white">{value}</p>
-      {sub && <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">{sub}</p>}
+      <p className={`${valueClass} text-white`} title={value}>{value}</p>
+      {sub && <p className="text-[10px] mt-2 text-white/70 uppercase tracking-wide">{sub}</p>}
     </div>
   );
 }
@@ -174,9 +179,9 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
   const kpiGrid = `
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;table-layout:fixed;">
       <tr>
-        ${kpiCard('Total Consultations', formatNumber(summary.registered_patients), '#0ea5e9')}
+        ${kpiCard('Registered Patients', formatNumber(summary.registered_patients), '#0ea5e9')}
         ${kpiCard('Completed', formatNumber(summary.completed_consultations), '#10b981')}
-        ${kpiCard('Pending / Reminders', formatNumber(summary.pending_consultations), '#f59e0b')}
+        ${kpiCard('Cancelled Consultations', formatNumber(summary.cancelled_consultations), '#f59e0b')}
         <td style="padding:0;">
           <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:3px solid #8b5cf6;background:#f8fafc;">
             <tr><td style="padding:12px 14px;">
@@ -464,6 +469,24 @@ export default function Analytics() {
 
       {activeTab === 'epidemiology' && (
         <div className="space-y-6">
+            {(() => {
+              const topDiagnosis = (stats.top_diseases && stats.top_diseases.length > 0) ? stats.top_diseases[0].diagnosis : 'N/A';
+              const topDiagnosisCases = (stats.top_diseases && stats.top_diseases.length > 0) ? stats.top_diseases[0].total : 0;
+              const topBarangay = (stats.cases_by_barangay && stats.cases_by_barangay.length > 0) ? stats.cases_by_barangay[0].barangay : 'N/A';
+              const topBarangayCases = (stats.cases_by_barangay && stats.cases_by_barangay.length > 0) ? stats.cases_by_barangay[0].total : 0;
+              const topDemo = (stats.demographics_by_age && stats.demographics_by_age.length > 0) ? stats.demographics_by_age[0].category : 'N/A';
+              const totalBarangays = (stats.cases_by_barangay || []).length;
+              
+              return (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <StatCard label="Top Diagnosis" value={topDiagnosis} sub={topDiagnosis !== 'N/A' ? `${topDiagnosisCases} total reported cases` : 'No data yet'} color="rose" />
+                  <StatCard label="Most Affected Area" value={topBarangay} sub={topBarangay !== 'N/A' ? `${topBarangayCases} cases in this barangay` : 'No data yet'} color="amber" />
+                  <StatCard label="Primary Demo" value={topDemo} sub="Highest case concentration" color="sky" />
+                  <StatCard label="Barangays Covered" value={totalBarangays} sub="Areas with active patients" color="emerald" />
+                </div>
+              );
+            })()}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
               <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><Users size={16} className="text-sky-500" /> Patient Demographics (by Category)</h3>
@@ -572,17 +595,52 @@ export default function Analytics() {
 
             <StatCard
               label="Reminders"
-              value={formatNumber(summary.pending_consultations)}
-              sub="Pending to-do items for doctors"
+              value={formatNumber(summary.cancelled_consultations)}
+              sub="Discontinued consultations"
               color="rose"
             />
           </div>
 
-          {/* ── System Utilization bar chart ── */}
-          <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-            <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><BarChart2 size={16} className="text-sky-500" /> System Utilization — <span className="font-bold">{currentMonthYear}</span></h3>
-            <div className="space-y-3">
-              {serviceRows.map((row) => <BarRow key={row.name} label={row.name} value={row.total} max={serviceMax} color="bg-sky-400" />)}
+          {/* ?? Recent System Activity ?? */}
+          <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden mb-6">
+            <div className="p-6 border-b border-border">
+              <h3 className="font-semibold text-text flex items-center gap-2">
+                <Activity size={16} className="text-indigo-500" /> Recent System Activity
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-surface-hover/50 text-text-muted font-medium border-b border-border">
+                  <tr>
+                    <th className="px-6 py-3">Timestamp</th>
+                    <th className="px-6 py-3">User</th>
+                    <th className="px-6 py-3">Action</th>
+                    <th className="px-6 py-3 min-w-[200px]">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50 text-text">
+                  {(stats.recent_logs || []).slice(0, 5).map((log, i) => (
+                    <tr key={i} className="hover:bg-surface-hover/30 transition-colors">
+                      <td className="px-6 py-3 whitespace-nowrap text-text-light text-xs">{new Date(log.created_at).toLocaleString()}</td>
+                      <td className="px-6 py-3">
+                        <div className="font-medium text-text">{log.user || 'System'}</div>
+                        {log.role && <div className="text-[10px] uppercase tracking-wider text-text-muted mt-0.5">{log.role}</div>}
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-semibold">
+                          {log.action}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-text-light text-xs">{log.description}</td>
+                    </tr>
+                  ))}
+                  {(!stats.recent_logs || stats.recent_logs.length === 0) && (
+                    <tr>
+                      <td colSpan="4" className="px-6 py-8 text-center text-text-muted">No recent activity recorded.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -677,3 +735,26 @@ export default function Analytics() {
   );
 }
 
+    const topDiagnosis = (reportStats.top_diseases && reportStats.top_diseases.length > 0) ? reportStats.top_diseases[0].diagnosis : 'N/A';
+    const topBarangay = (reportStats.cases_by_barangay && reportStats.cases_by_barangay.length > 0) ? reportStats.cases_by_barangay[0].barangay : 'N/A';
+    const topDemo = (reportStats.demographics_by_age && reportStats.demographics_by_age.length > 0) ? reportStats.demographics_by_age[0].category : 'N/A';
+    const totalBarangays = (reportStats.cases_by_barangay || []).length;
+
+    const epiKpiGrid = `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;table-layout:fixed;">
+        <tr>
+          ${kpiCard('Top Diagnosis', topDiagnosis, '#f43f5e')}
+          ${kpiCard('Most Affected Area', topBarangay, '#f59e0b')}
+          ${kpiCard('Primary Demo', topDemo, '#0ea5e9')}
+          <td style="padding:0;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:3px solid #10b981;background:#f8fafc;">
+              <tr><td style="padding:12px 14px;">
+                <div style="font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;">Barangays Covered</div>
+                <div style="font-size:18px;font-weight:800;color:#10b981;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${totalBarangays}</div>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+      </table>`;
+
+    

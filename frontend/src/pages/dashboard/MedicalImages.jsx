@@ -3,7 +3,7 @@ import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import {
-  ImagePlus, Upload, X, Eye, FileImage, CheckCircle,
+  Folder, Upload, X, Eye, FileImage, CheckCircle,
   AlertCircle, Info, Loader, FileText, Download,
 } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
@@ -68,7 +68,9 @@ export default function MedicalImages() {
   const [notes, setNotes] = useState('');
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [lightbox, setLightbox] = useState(null); // url for lightbox preview
+  const [lightbox, setLightbox] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('All'); // url for lightbox preview
 
   useEffect(() => {
     if (user?.role !== 'Patient') return;
@@ -134,7 +136,7 @@ export default function MedicalImages() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!previews.length) { toast.error('Please select at least one image.'); return; }
+    if (!previews.length) { toast.error('Please select at least one file.'); return; }
     setUploading(true);
     try {
       const saved = [];
@@ -166,7 +168,7 @@ export default function MedicalImages() {
       setPreviews([]);
       setNotes('');
       setImageType('X-Ray');
-      toast.success(`${newEntries.length} image(s) uploaded successfully!`);
+      toast.success(`${newEntries.length} file(s) uploaded successfully!`);
     } catch {
       toast.error('Upload failed. Please try again.');
     } finally {
@@ -196,17 +198,25 @@ export default function MedicalImages() {
     }
   };
 
-  return (
+  
+  const filteredUploads = uploads.filter(img => {
+    const matchesSearch = (img.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (img.notes || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === 'All' || img.type === filterType;
+    return matchesSearch && matchesType;
+  });
+
+return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
       {/* Header */}
       <header>
-        <PageTitle icon={ImagePlus} title="Medical Images" description="Upload X-rays, lab test results, and other medical documents for your doctor to review." iconClassName="bg-brand-bg text-indigo-600" />
+        <PageTitle icon={Folder} title="Medical Documents" description="Upload X-rays, lab test results, and other medical documents for your doctor to review." iconClassName="bg-brand-bg text-indigo-600" />
       </header>
 
       {/* Upload form */}
       <form data-tour="page-form" onSubmit={handleSubmit} className="rounded-2xl border border-transparent bg-gradient-to-br from-sky-500 to-blue-600 p-6 space-y-5">
         <h2 className="font-bold text-white flex items-center gap-2">
-          <ImagePlus size={18} /> Upload New Image
+          <Folder size={18} /> Upload New File
         </h2>
 
         {/* Drop zone */}
@@ -225,7 +235,7 @@ export default function MedicalImages() {
             <Upload size={28} />
           </div>
           <div className="text-center text-white">
-            <p className="font-bold">Drag &amp; drop images here</p>
+            <p className="font-bold">Drag &amp; drop files here</p>
             <p className="text-sm text-white/80 mt-1">or click to browse — JPG, PNG, WEBP, PDF, DOC up to {MAX_SIZE_MB} MB</p>
           </div>
           <input
@@ -270,7 +280,7 @@ export default function MedicalImages() {
         {/* Metadata fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-white/90 mb-1 uppercase tracking-wide">Image Type</label>
+            <label className="block text-xs font-bold text-white/90 mb-1 uppercase tracking-wide">Document Type</label>
             <select
               value={imageType}
               onChange={(e) => setImageType(e.target.value)}
@@ -293,7 +303,7 @@ export default function MedicalImages() {
 
         <div className="bg-white/20 border border-white/30 rounded-xl px-4 py-3 flex gap-3 text-sm text-white">
           <Info size={16} className="shrink-0 mt-0.5" />
-          <span>Uploaded images are securely stored in your personal medical gallery and visible to your doctors during consultations.</span>
+          <span>Uploaded files are securely stored in your personal medical record and visible to your doctors during consultations.</span>
         </div>
 
         <div className="flex justify-end">
@@ -310,19 +320,36 @@ export default function MedicalImages() {
 
       {/* Uploaded images list */}
       <div data-tour="page-list" className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-border">
-          <h2 className="font-semibold text-text flex items-center gap-2">
-            <FileImage size={16} className="text-indigo-500" /> My Uploaded Images
+        <div className="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="font-semibold text-text flex items-center gap-2 shrink-0">
+            <Folder size={16} className="text-indigo-500" /> My Uploaded Files
           </h2>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <input 
+              type="text" 
+              placeholder="Search files or notes..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-lg border border-border bg-background focus:ring-2 focus:ring-sky-500/20 outline-none w-full sm:w-48"
+            />
+            <select 
+              value={filterType}
+              onChange={e => setFilterType(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-lg border border-border bg-background focus:ring-2 focus:ring-sky-500/20 outline-none"
+            >
+              <option value="All">All Types</option>
+              {IMAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
         </div>
-        {uploads.length === 0 ? (
+        {filteredUploads.length === 0 ? (
           <div className="p-12 text-center text-text-light">
-            <FileImage size={32} className="mx-auto mb-3 opacity-30" />
-            <p>No images uploaded yet.</p>
+            <Folder size={32} className="mx-auto mb-3 opacity-30" />
+            <p>No files uploaded yet.</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-50">
-            {uploads.map((img) => (
+            {filteredUploads.map((img) => (
               <div key={img.id} className="flex items-center gap-4 px-5 py-4 hover:bg-background/60 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-brand-bg flex items-center justify-center flex-shrink-0">
                   {isImageType(img.mimeType) ? <FileImage size={20} className="text-indigo-500" /> : <FileText size={20} className="text-indigo-500" />}

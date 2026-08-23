@@ -127,7 +127,7 @@ class ConsultationController extends Controller {
 
         // Hide cluttered/old consultations from the main dashboard queue
         if (!$request->has('show_all')) {
-            $query->whereIn('status', ['Pending', 'Scheduled']);
+            $query->whereIn('status', ['Scheduled']);
         }
 
         if ($user->role === 'Patient') {
@@ -179,11 +179,11 @@ class ConsultationController extends Controller {
 
         // 2. Booking Limits: Check for active/pending requests
         $activeCount = Consultation::where('patient_id', $patientId)
-            ->whereIn('status', ['Pending', 'Scheduled'])
+            ->whereIn('status', ['Scheduled'])
             ->count();
             
         if ($activeCount >= 2) {
-            return response()->json(['message' => 'You cannot have more than 2 active or pending consultation requests at the same time.'], 403);
+            return response()->json(['message' => 'You cannot have more than 2 active scheduled consultation requests at the same time.'], 403);
         }
 
 
@@ -193,7 +193,7 @@ class ConsultationController extends Controller {
             $doctor = $this->matchingDoctor($data['requested_specialization'], $data['scheduled_at']);
         }
         
-        $status = $doctor ? 'Scheduled' : 'Pending';
+        $status = 'Scheduled';
 
         $c = Consultation::create([
             'patient_id' => $request->user()->patient->id,
@@ -224,7 +224,7 @@ class ConsultationController extends Controller {
             : 'No doctor is available for the selected schedule. Your request has been queued for coordination.';
 
         // Notifications
-        if ($status === 'Pending') {
+        if (!$doctor) {
             $staffUsers = \App\Models\User::whereIn('role', ['Admin', 'Staff'])->get();
             foreach ($staffUsers as $staff) {
                 $this->sendActivityAlert(

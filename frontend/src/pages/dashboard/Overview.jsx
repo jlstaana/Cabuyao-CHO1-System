@@ -130,7 +130,7 @@ function RecentActivity({ stats }) {
 }
 
 function ConsultationQueue({ consultations, className = "lg:col-span-2" }) {
-  const rows = consultations.filter((c) => ['Pending', 'Scheduled'].includes(c.status)).slice(0, 5);
+  const rows = consultations.filter((c) => ['Scheduled'].includes(c.status)).slice(0, 5);
   return (
     <div data-tour="page-list" className={`${className} bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col`}>
       <div className="mb-5 flex items-start gap-3">
@@ -141,7 +141,7 @@ function ConsultationQueue({ consultations, className = "lg:col-span-2" }) {
         </div>
       </div>
       <div className="space-y-3">
-        {rows.length === 0 ? <p className="text-sm text-text-light">No pending or scheduled consultations.</p> : rows.map((c) => (
+        {rows.length === 0 ? <p className="text-sm text-text-light">No scheduled consultations.</p> : rows.map((c) => (
           <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-background transition-colors">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-brand-bg text-indigo-600 flex items-center justify-center font-bold text-sm">
@@ -239,7 +239,13 @@ function DoctorToDoList({ consultations }) {
 }
 
 function DoctorOverview({ user, consultations, prescriptions }) {
-  const pending = consultations.filter((c) => c.status === 'Pending').length;
+  const now = new Date();
+  const completedThisMonth = consultations.filter(c => {
+    if (c.status !== 'Completed') return false;
+    const d = new Date(c.scheduled_at || c.created_at);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+  
   const scheduledToday = consultations.filter((c) => c.status === 'Scheduled' && isToday(c.scheduled_at)).length;
   return (
     <>
@@ -247,9 +253,9 @@ function DoctorOverview({ user, consultations, prescriptions }) {
         <PageTitle icon={Stethoscope} title={`Good day, Dr. ${(user?.name?.split(' ')[0] || '').replace(/^Dr\.\s*/i, '')}!`} description="Here's your consultation overview." iconClassName="bg-success-bg text-emerald-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <StatCard label="Patient Queue" value={pending} icon={Clock} color="text-amber-500"  sub="Pending requests needing review" />
-        <StatCard label="Scheduled Consultations" value={scheduledToday} icon={Calendar} color="text-sky-500"  sub="Upcoming sessions for today" />
-        <StatCard label="Recent Prescriptions" value={prescriptions.length} icon={FileText} color="text-indigo-500"  sub="Total generated prescriptions" />
+        <StatCard label="Scheduled Consultations" value={scheduledToday} icon={Calendar} color="text-sky-500" sub="Upcoming sessions for today" />
+        <StatCard label="Recent Prescriptions" value={prescriptions.length} icon={FileText} color="text-indigo-500" sub="Total generated prescriptions" />
+        <StatCard label="Completed Consultations" value={completedThisMonth} icon={CheckCircle} color="text-emerald-500" sub={<>As of <b>{new Date().toLocaleString('default', { month: 'long' })}</b></>} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <DoctorToDoList consultations={consultations} />
@@ -328,14 +334,14 @@ function PatientOverview({ user, consultations, prescriptions }) {
 }
 
 function StaffOverview({ user, stats, consultations, medicines }) {
-  const pending = consultations.filter((c) => c.status === 'Pending').length;
+  
   return (
     <>
       <header className="mb-8">
         <PageTitle icon={Users} title="Staff Dashboard" description={`Welcome, ${user?.name}. Here's the current workload.`} iconClassName="bg-warning-bg text-amber-600" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Pending Requests" value={pending} icon={Clock} color="text-amber-500"  sub="Needs assignment" />
+        
         <StatCard label="Active Patients" value={formatNumber(stats.summary?.registered_patients)} icon={Users} color="text-sky-500"  sub="Registered accounts" />
         <StatCard label="Active Medicines" value={medicines.filter((m) => m.status).length} icon={AlertCircle} color="text-emerald-500"  sub="In-stock inventory" />
         <StatCard label="Scheduled Today" value={consultations.filter((c) => c.status === 'Scheduled' && isToday(c.scheduled_at)).length} icon={Calendar} color="text-emerald-500"  sub="Upcoming sessions" />

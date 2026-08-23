@@ -1,4 +1,35 @@
 import { useState, useEffect } from 'react';
+function formatTime12h(timeStr) {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':');
+  const hours = parseInt(h, 10);
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${m} ${ampm}`;
+}
+
+function formatScheduleSummary(availability) {
+  if (!availability?.length) return 'Available without fixed schedule';
+  const groups = {};
+  availability.forEach(slot => {
+    let t = `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
+    if (!groups[t]) groups[t] = [];
+    groups[t].push(slot.day_of_week.substring(0, 3));
+  });
+
+  const parts = Object.entries(groups).map(([time, days]) => {
+    let dayStr = days.join(', ');
+    if (days.length === 7) dayStr = 'Everyday';
+    else if (days.length === 5 && !days.includes('Sat') && !days.includes('Sun')) dayStr = 'Weekdays';
+    else if (days.length === 2 && days.includes('Sat') && days.includes('Sun')) dayStr = 'Weekends';
+
+    const [start, end] = time.split(' - ');
+    return `${dayStr} ${formatTime12h(start)} - ${formatTime12h(end)}`;
+  });
+  return parts.join(' | ');
+}
+
+
 import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
@@ -71,7 +102,7 @@ const getDisplayStatus = (c) => {
 };
 
 function StatusPill({ status }) {
-  const cfg = STATUS[status] || STATUS.Pending;
+  const cfg = STATUS[status] || STATUS.Scheduled;
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold ${cfg.pill}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
@@ -264,7 +295,8 @@ function shortDayLabel(date) {
 
 function timeRangeLabel(slot) {
   if (!slot) return '';
-  return `${String(slot.start_time || '').slice(0, 5)}-${String(slot.end_time || '').slice(0, 5)}`;
+  return `${formatTime12h(slot.start_time)} - ${formatTime12h(slot.end_time)}`;
+
 }
 
 function availabilityLabel(availability) {
@@ -311,8 +343,9 @@ function doctorSlotStatus(doctor, date, slot) {
 
 // ─── PATIENT VIEW ─────────────────────────────────────────────────────────────
 function PatientView({ consultations, loading, onRequest, onReschedule, onCancel }) {
-  const tabs = ['All', 'Pending', 'Scheduled', 'Completed'];
-  const [tab, setTab] = useState('All');
+  const tabs = ['Scheduled'];
+  const [tab, setTab] = useState('Scheduled');
+  
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState('list');
 
@@ -423,7 +456,7 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
           </div>
         )) : filtered.length === 0 ? <EmptyState message={tab === 'All' ? 'No consultations yet.' : `No ${tab.toLowerCase()} consultations.`} />
         : filtered.map(c => {
-          const cfg = STATUS[c.status] || STATUS.Pending;
+          const cfg = STATUS[c.status] || STATUS.Scheduled;
           return (
             <div key={c.id} className="bg-surface rounded-2xl border border-border shadow-sm p-5 flex flex-col sm:flex-row sm:items-center gap-4">
               {/* Status dot */}
@@ -438,11 +471,11 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
                 <div className="flex flex-wrap gap-3 text-xs text-text-light">
                   {c.requested_specialization && <span className="flex items-center gap-1"><Stethoscope size={12} /> {c.requested_specialization}</span>}
                   <span className="flex items-center gap-1"><Calendar size={12} /> Requested: {new Date(c.created_at).toLocaleDateString()}</span>
-                  {c.scheduled_at && <span className="flex items-center gap-1"><Clock size={12} /> {c.status === 'Pending' ? 'Preferred' : 'Scheduled'}: {new Date(c.scheduled_at).toLocaleString()}</span>}
+                  {c.scheduled_at && <span className="flex items-center gap-1"><Clock size={12} /> Scheduled: {new Date(c.scheduled_at).toLocaleString()}</span>}
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 flex-shrink-0 mt-3 sm:mt-0 w-full sm:w-auto justify-start sm:justify-end">
-                {['Pending', 'Scheduled'].includes(c.status) && (
+                {['Scheduled'].includes(c.status) && (
                   <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-4 py-2 bg-danger-bg text-danger-text rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
                     <XCircle size={16} /> Cancel
                   </button>
@@ -474,16 +507,16 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
 
 // ─── DOCTOR VIEW ──────────────────────────────────────────────────────────────
 function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, onCancel, availabilityStatus, onOpenAvailability }) {
-  const [tab, setTab] = useState('Pending');
+  const [tab, setTab] = useState('Scheduled');
   const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
 
-  const pending   = consultations.filter(c => c.status === 'Pending');
+  const cancelled = consultations.filter(c => c.status === 'Cancelled' || c.status === 'Missed');
   const scheduled = consultations.filter(c => c.status === 'Scheduled');
   const completed = consultations.filter(c => c.status === 'Completed');
 
-  const counts = { Pending: pending.length, Scheduled: scheduled.length, Completed: completed.length };
-  const baseFiltered = tab === 'Pending' ? pending : tab === 'Scheduled' ? scheduled : completed;
+  const counts = { Scheduled: scheduled.length, Completed: completed.length, Cancelled: cancelled.length };
+  const baseFiltered = tab === 'Scheduled' ? scheduled : tab === 'Completed' ? completed : cancelled;
 
   const filtered = baseFiltered.filter(c => {
     const q = search.trim().toLowerCase();
@@ -506,7 +539,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
         <div className={`rounded-2xl border px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${availabilityStatus.is_available_now ? 'bg-success-bg border-emerald-200 text-success-text' : 'bg-warning-bg border-amber-200 text-warning-text'}`}>
           <div className="flex items-center gap-2 font-semibold">
             <span className={`h-2.5 w-2.5 rounded-full ${availabilityStatus.is_available_now ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-            {availabilityStatus.doctor_type || 'Resident'} doctor · {availabilityStatus.is_available_now ? 'Active and on schedule now' : 'Active but outside scheduled hours'}
+            {availabilityStatus.doctor_type || 'Resident'} doctor | {availabilityStatus.is_available_now ? 'Active and on schedule now' : 'Active but outside scheduled hours'}
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <p className="text-xs font-medium opacity-80">{availabilityStatus.scheduleLabel || 'No fixed schedule set'}</p>
@@ -538,9 +571,9 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       {/* Summary strip / Filter cards */}
       <div data-tour="page-stats" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { label: 'Pending', status: 'Pending', count: pending.length, sub: 'Needs review' },
           { label: 'Scheduled', status: 'Scheduled', count: scheduled.length, sub: 'Upcoming' },
           { label: 'Completed', status: 'Completed', count: completed.length, sub: 'Finished' },
+            { label: 'Cancelled', status: 'Cancelled', count: cancelled.length, sub: 'Discontinued' },
         ].map(s => (
           <InteractiveStatCard
             key={s.label}
@@ -555,16 +588,14 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       {/* Tabs & Search */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="flex gap-2">
-          {['Pending', 'Scheduled', 'Completed'].map(t => {
+          {['Scheduled', 'Completed', 'Cancelled'].map(t => {
             const Icon = TAB_ICON[t] || Stethoscope;
             return (
               <button key={t} onClick={() => setTab(t)}
                 className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
               >
                 <Icon size={14} /> {t}
-                {counts[t] > 0 && t === 'Pending' && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">{counts[t]}</span>
-                )}
+
               </button>
             );
           })}
@@ -617,7 +648,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <CheckCircle size={32} className="mx-auto mb-2 text-emerald-400" />
-            <p className="font-semibold text-text-muted">{tab === 'Pending' ? 'No pending request.' : `No ${tab.toLowerCase()} consultations.`}</p>
+            <p className="font-semibold text-text-muted">{`No \${tab.toLowerCase()} consultations.`}</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-50">
@@ -637,14 +668,14 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
                   <p className="font-semibold text-text">{c.patient?.user?.name || 'Unknown Patient'}</p>
                   <div className="flex flex-wrap gap-3 text-xs text-text-light mt-0.5">
                     <span className="flex items-center gap-1"><Calendar size={11} /> {new Date(c.created_at).toLocaleDateString()}</span>
-                    {c.scheduled_at && <span className="flex items-center gap-1"><Clock size={11} /> {c.status === 'Pending' ? 'Preferred' : 'Scheduled'}: {new Date(c.scheduled_at).toLocaleString()}</span>}
+                    {c.scheduled_at && <span className="flex items-center gap-1"><Clock size={11} /> Scheduled: {new Date(c.scheduled_at).toLocaleString()}</span>}
                   </div>
                 </div>
                 </div>
                 
                 {/* Actions */}
                 <div className="flex flex-wrap items-center gap-2 flex-shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
-                  {c.status === 'Pending' && (
+                  {c.status === 'DELETED_STATUS' && (
                     <>
                       <span className="text-xs text-amber-600 bg-warning-bg border border-amber-200 px-3 py-1.5 rounded-lg font-medium">
                         Awaiting doctor
@@ -711,9 +742,8 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div data-tour="page-stats" className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div data-tour="page-stats" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { status: 'Pending', sub: 'Awaiting assignment' },
           { status: 'Scheduled', sub: 'Upcoming sessions' },
           { status: 'Completed', sub: 'Successfully finished' },
           { status: 'Cancelled', sub: 'Discontinued requests' }
@@ -731,7 +761,7 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
       {/* Tabs & Search */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {['Pending','Scheduled','Completed','Cancelled'].map(t => {
+          {['Scheduled','Completed','Cancelled'].map(t => {
             const Icon = TAB_ICON[t] || Stethoscope;
             return (
               <button key={t} onClick={() => setTab(t)}
@@ -821,7 +851,7 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
                     <td className="px-5 py-3 text-text-light">{c.scheduled_at ? new Date(c.scheduled_at).toLocaleString() : '—'}</td>
                     <td className="px-5 py-3"><StatusPill status={getDisplayStatus(c)} /></td>
                     <td className="px-5 py-3 text-right">
-                      {c.status === 'Pending' && (
+                      {c.status === 'DELETED_STATUS' && (
                         <div className="flex justify-end gap-2">
                           <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-3 py-1.5 bg-danger-bg text-danger-text rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors">
                             <XCircle size={13} /> Cancel
@@ -1162,9 +1192,7 @@ const fetchConsultations = async () => {
   const currentDoctorStatus = availableDoctors.find((doctor) => doctor.user_id === user?.id);
   const currentDoctorAvailability = currentDoctorStatus ? {
     ...currentDoctorStatus,
-    scheduleLabel: currentDoctorStatus.availability?.length
-      ? currentDoctorStatus.availability.map((slot) => `${slot.day_of_week.slice(0, 3)} ${slot.start_time}-${slot.end_time}`).join(', ')
-      : 'Available without fixed schedule',
+    scheduleLabel: formatScheduleSummary(currentDoctorStatus.availability),
   } : null;
   const matchingAvailableDoctors = availableDoctors.filter((doctor) => doctor.specialization === requestForm.requested_specialization);
   const requestWeekStart = addDays(startOfWeek(new Date()), requestWeekOffset * 7);
@@ -1447,7 +1475,8 @@ const fetchConsultations = async () => {
             )}
           </div>
 
-            <div className="pt-2 flex justify-end gap-3">\n              <button type="button" onClick={() => setAvailabilityModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
+            <div className="pt-2 flex justify-end gap-3">
+              <button type="button" onClick={() => setAvailabilityModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
             <button type="submit" className="px-5 py-2.5 bg-sky-500 text-white font-semibold hover:bg-sky-600 rounded-xl flex items-center gap-2 shadow-md shadow-sky-200">
               <Save size={16} /> Save Schedule
             </button>

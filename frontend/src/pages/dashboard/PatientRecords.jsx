@@ -99,7 +99,7 @@ const isUpcoming = (dateStr) => {
   return (d.getTime() + 15 * 60 * 1000) > now.getTime();
 };
 
-const IMAGE_STATUS_STYLE = {
+const IMAGE_STATUS_CONFIG = {
   Reviewed:       { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
   'Pending Review': { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
   Uploaded:       { bg: 'bg-slate-50 text-text-muted border-slate-200', dot: 'bg-slate-400' },
@@ -294,7 +294,7 @@ export default function PatientRecords() {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageTitle icon={Users} title="Patient Records" description={canEditRecords ? 'Open patient records, update permitted information, and review history.' : 'View medical history, vitals, images, and consultations for your patients.'} iconClassName="bg-brand-bg text-indigo-600" />
+        <PageTitle icon={Users} title="Patient Records" description={canEditRecords ? 'Open patient records, update permitted information, and review history.' : 'View medical history, patient documents, and consultations for your patients.'} iconClassName="bg-brand-bg text-indigo-600" />
       </div>
 
       {/* Stat Cards */}
@@ -396,13 +396,13 @@ export default function PatientRecords() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-bold text-text">{patient.name}</p>
-                      <span className="text-xs text-text-light">·</span>
+                      <span className="text-xs text-text-light"> | </span>
                       <p className="text-sm text-text-muted">{calcAge(patient.dob)} yrs</p>
-                      <span className="text-xs text-text-light">·</span>
+                      <span className="text-xs text-text-light"> | </span>
                       <span className="flex items-center gap-1 text-sm text-text-muted"><HeartPulse size={13} className="text-text-light" /> {patient.blood_type}</span>
-                      <span className="text-xs text-text-light">·</span>
+                      <span className="text-xs text-text-light"> | </span>
                       <span className="flex items-center gap-1 text-sm text-text-muted"><Phone size={13} className="text-text-light" /> {patient.contact || 'N/A'}</span>
-                      <span className="text-xs text-text-light">·</span>
+                      <span className="text-xs text-text-light"> | </span>
                       <span className="flex items-center gap-1 text-sm text-text-muted"><MapPin size={13} className="text-text-light" /> {patient.address}</span>
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-text-light flex-wrap">
@@ -436,7 +436,6 @@ export default function PatientRecords() {
                       {[
                         { key: 'overview',      label: 'Overview',         icon: User },
                         { key: 'consultations', label: 'Consultations',    icon: ClipboardList },
-                        { key: 'vitals',        label: 'Vital Signs',      icon: HeartPulse },
                         { key: 'images',        label: `Images (${patient.images.length})`, icon: ImagePlus },
                       ].map(({ key, label, icon: Icon }) => (
                         <button
@@ -460,7 +459,7 @@ export default function PatientRecords() {
                         <div className="space-y-5">
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <InfoChip icon={User}     label="Full Name"    value={patient.name} />
-                            <InfoChip icon={Calendar} label="Date of Birth" value={`${patient.dob} (${calcAge(patient.dob)} years old)`} />
+                            <InfoChip icon={Calendar} label="Date of Birth" value={`${formatDate(patient.dob)} (${calcAge(patient.dob)} years old)`} />
                             <InfoChip icon={Phone}    label="Contact No."  value={patient.contact} />
                             <InfoChip icon={MapPin}   label="Address"      value={patient.address} />
                             <InfoChip icon={HeartPulse} label="Blood Type" value={patient.blood_type} />
@@ -498,12 +497,7 @@ export default function PatientRecords() {
                             >
                               <ClipboardList size={15} /> View Consultations
                             </button>
-                            <button
-                              onClick={() => setTab(patient.id, 'vitals')}
-                              className="flex items-center gap-2 px-4 py-2 bg-danger-bg text-rose-700 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors"
-                            >
-                              <HeartPulse size={15} /> View Vitals
-                            </button>
+                            
                             {patient.consultations.some(c => c.status === 'Scheduled' && isUpcoming(c.raw_date)) && (
                               <Link
                                 to={`/room/${patient.consultations.find(c => c.status === 'Scheduled' && isUpcoming(c.raw_date)).id}`}
@@ -533,12 +527,12 @@ export default function PatientRecords() {
                                 <div className="flex items-center gap-2 text-sm">
                                   <Calendar size={14} className="text-text-light" />
                                   <span className="font-semibold text-text">{c.date}</span>
-                                  <span className="text-text-light">·</span>
+                                  <span className="text-text-light"> | </span>
                                   <Clock size={14} className="text-text-light" />
                                   <span className="text-text-muted">{c.time}</span>
                                 </div>
                                 {(() => {
-                                  const style = STATUS_STYLE[c.status] || STATUS_STYLE.Pending;
+                                  const style = STATUS_CONFIG[c.status] || STATUS_CONFIG.Scheduled;
                                   return (
                                     <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-sm ${style.bg}`}>
                                       <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
@@ -576,31 +570,6 @@ export default function PatientRecords() {
                         </div>
                       )}
 
-                      {/* ── Vitals tab ────────────────────────────────────── */}
-                      {tab === 'vitals' && (
-                        <div className="space-y-4">
-                          <p className="text-xs text-text-light font-medium">Latest recorded vital signs</p>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                            <VitalBadge label="Blood Pressure" value={patient.vitals.blood_pressure} unit="mmHg"  color="bg-primary-bg text-primary-text" />
-                            <VitalBadge label="Heart Rate"     value={patient.vitals.heart_rate}     unit="bpm"   color="bg-danger-bg text-rose-700" />
-                            <VitalBadge label="Temperature"    value={patient.vitals.temperature}    unit="°C"    color="bg-warning-bg text-warning-text" />
-                            <VitalBadge label="SpO₂"           value={patient.vitals.oxygen}         unit="%"     color="bg-brand-bg text-brand-text" />
-                            <VitalBadge label="Weight"         value={patient.vitals.weight}         unit="kg"    color="bg-success-bg text-success-text" />
-                          </div>
-                          {/* Abnormal flags */}
-                          {parseInt(patient.vitals.heart_rate) > 100 && (
-                            <div className="flex items-center gap-2 text-sm text-warning-text bg-warning-bg border border-amber-200 rounded-xl px-4 py-2">
-                              <AlertCircle size={16} /> Heart rate elevated — consider further assessment.
-                            </div>
-                          )}
-                          {parseInt(patient.vitals.oxygen) < 95 && (
-                            <div className="flex items-center gap-2 text-sm text-rose-700 bg-danger-bg border border-rose-200 rounded-xl px-4 py-2">
-                              <AlertCircle size={16} /> SpO₂ below normal — oxygen supplementation may be needed.
-                            </div>
-                          )}
-                        </div>
-                      )}
-
                       {/* ── Images tab ────────────────────────────────────── */}
                       {tab === 'images' && (
                         <div className="space-y-3">
@@ -616,12 +585,12 @@ export default function PatientRecords() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-text truncate">{img.name}</p>
-                                <p className="text-xs text-text-light mt-0.5">{img.type} · {img.fileType?.toUpperCase()} · {img.date}</p>
+                                <p className="text-xs text-text-light mt-0.5">{img.type}  |  {img.fileType?.toUpperCase()}  |  {img.date}</p>
                                 {img.notes && <p className="text-xs text-text-light mt-0.5 truncate">{img.notes}</p>}
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 {(() => {
-                                  const style = IMAGE_STATUS_STYLE[img.status] || IMAGE_STATUS_STYLE.Uploaded;
+                                  const style = IMAGE_STATUS_CONFIG[img.status] || IMAGE_STATUS_CONFIG.Uploaded;
                                   return (
                                     <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-sm ${style.bg}`}>
                                       <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />

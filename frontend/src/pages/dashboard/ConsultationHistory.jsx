@@ -15,7 +15,7 @@ const STATUS_CONFIG = {
   Cancelled:  { color: 'bg-surface-hover/50 text-text-muted',      icon: XCircle },
 };
 
-const FILTERS = ['All', 'Completed', 'Scheduled', 'Pending', 'Cancelled'];
+const FILTERS = ['All', 'Completed', 'Scheduled', 'Cancelled'];
 
 function toHistoryItem(c) {
   const when = c.scheduled_at || c.created_at;
@@ -183,7 +183,7 @@ export default function ConsultationHistory() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-text">{c.doctor}</p>
-                      <span className="text-xs text-text-light">·</span>
+                      <span className="text-xs text-text-light"> | </span>
                       <p className="text-sm text-text-muted">{c.specialization}</p>
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-text-light">
