@@ -86,10 +86,10 @@ function buildPatientRecords(patientsData) {
 }
 
 const STATUS_CONFIG = {
-  Completed:  { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  Scheduled:  { bg: 'bg-sky-50 text-sky-700 border-sky-200', dot: 'bg-sky-500' },
-  Pending:    { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  Cancelled:  { bg: 'bg-slate-50 text-slate-700 border-slate-200', dot: 'bg-slate-500' },
+  Completed:  { bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30', dot: 'bg-emerald-500' },
+  Scheduled:  { bg: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-900/30', dot: 'bg-sky-500' },
+  Pending:    { bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/30', dot: 'bg-amber-500' },
+  Cancelled:  { bg: 'bg-slate-50 dark:bg-slate-800/40 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800', dot: 'bg-slate-500' },
 };
 
 const isUpcoming = (dateStr) => {
@@ -100,9 +100,9 @@ const isUpcoming = (dateStr) => {
 };
 
 const IMAGE_STATUS_CONFIG = {
-  Reviewed:       { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  'Pending Review': { bg: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  Uploaded:       { bg: 'bg-slate-50 text-text-muted border-slate-200', dot: 'bg-slate-400' },
+  Reviewed:       { bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30', dot: 'bg-emerald-500' },
+  'Pending Review': { bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/30', dot: 'bg-amber-500' },
+  Uploaded:       { bg: 'bg-slate-50 dark:bg-slate-800/40 text-text-muted dark:text-slate-400 border-slate-200 dark:border-slate-800', dot: 'bg-slate-400' },
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -338,7 +338,7 @@ export default function PatientRecords() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search patient by name or address..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface dark:bg-slate-900 text-text dark:text-white transition-all"
           />
         </div>
         <div className="relative sm:w-48">
@@ -347,7 +347,7 @@ export default function PatientRecords() {
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface transition-all text-sm text-text"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface dark:bg-slate-900 text-sm text-text dark:text-white transition-all"
           />
         </div>
       </div>
@@ -624,25 +624,25 @@ export default function PatientRecords() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-muted mb-1">Full Name</label>
-              <input required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+              <input required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-text-muted mb-1">Date of Birth</label>
-                <input type="date" value={editForm.dob} onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                <input type="date" value={editForm.dob} onChange={(e) => setEditForm({ ...editForm, dob: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-muted mb-1">Contact No.</label>
-                <input value={editForm.contact_no} onChange={(e) => setEditForm({ ...editForm, contact_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+                <input value={editForm.contact_no} onChange={(e) => setEditForm({ ...editForm, contact_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white focus:ring-2 focus:ring-indigo-500/20 outline-none" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-text-muted mb-1">Address</label>
-              <textarea rows={2} value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
+              <textarea rows={2} value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-muted mb-1">Category</label>
-              <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none bg-surface">
+              <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white focus:ring-2 focus:ring-indigo-500/20 outline-none">
                 <option value="">General</option>
                 <option value="Pediatric">Pediatric</option>
                 <option value="Adult">Adult</option>
@@ -655,7 +655,7 @@ export default function PatientRecords() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-muted mb-1">Medical History</label>
-              <textarea rows={4} value={editForm.medical_history} onChange={(e) => setEditForm({ ...editForm, medical_history: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
+              <textarea rows={4} value={editForm.medical_history} onChange={(e) => setEditForm({ ...editForm, medical_history: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none" />
             </div>
             <div className="pt-2 flex justify-end gap-3">
               <button type="button" onClick={() => setEditModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
@@ -681,7 +681,7 @@ export default function PatientRecords() {
                 value={archiveReason}
                 onChange={(e) => setArchiveReason(e.target.value)}
                 placeholder="Enter the reason for archiving this patient record"
-                className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-rose-500/20 outline-none resize-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white focus:ring-2 focus:ring-rose-500/20 outline-none resize-none"
               />
             </div>
             <div className="pt-2 flex justify-end gap-3">

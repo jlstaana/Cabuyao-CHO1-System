@@ -13,10 +13,10 @@ const ROLE_FILTERS = {
 };
 
 const CATEGORY_BADGE = {
-  info: 'bg-primary-hover text-primary-text',
-  success: 'bg-emerald-100 text-success-text',
-  warning: 'bg-amber-100 text-warning-text',
-  error: 'bg-rose-100 text-rose-700',
+  info: 'bg-primary-hover text-primary-text dark:bg-sky-950/40 dark:text-sky-400 dark:border dark:border-sky-900/30',
+  success: 'bg-emerald-100 text-success-text dark:bg-emerald-950/40 dark:text-emerald-400 dark:border dark:border-emerald-900/30',
+  warning: 'bg-amber-100 text-warning-text dark:bg-amber-950/40 dark:text-amber-400 dark:border dark:border-amber-900/30',
+  error: 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 dark:border dark:border-rose-900/30',
 };
 
 const TYPE_ICON = {
@@ -78,8 +78,8 @@ function buildConsultationNotifications(consultations, role, readIds = []) {
       message,
       time: consultation.updated_at ? new Date(consultation.updated_at).toLocaleString() : 'N/A',
       read: readSet.has(`consultation-${consultation.id}`),
-      iconBg: 'bg-primary-hover',
-      iconColor: 'text-primary-text',
+      iconBg: 'bg-primary-hover dark:bg-sky-950/40 dark:border dark:border-sky-900/30',
+      iconColor: 'text-primary-text dark:text-sky-400',
       targetPath,
     };
   });
@@ -107,8 +107,8 @@ function buildPrescriptionNotifications(prescriptions, role, readIds = []) {
         : `${isPatient ? `Dr. ${(otherPerson || '').replace(/^Dr\.\s*/i, '')}` : `Prescription for ${otherPerson}`} created an e-prescription.`,
       time: prescription.updated_at ? new Date(prescription.updated_at).toLocaleString() : 'N/A',
       read: readSet.has(`prescription-${prescription.id}`),
-      iconBg: 'bg-emerald-100',
-      iconColor: 'text-emerald-600',
+      iconBg: 'bg-emerald-100 dark:bg-emerald-950/40 dark:border dark:border-emerald-900/30',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
       targetPath: '/prescriptions',
     };
   });
@@ -226,8 +226,8 @@ export default function Notifications() {
             onClick={() => setActiveFilter(f)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
               activeFilter === f
-                ? 'bg-sky-600 text-white shadow-sm shadow-sky-200'
-                : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'
+                ? 'bg-sky-600 text-white shadow-sm dark:shadow-none'
+                : 'bg-surface dark:bg-slate-900 text-text-muted dark:text-slate-400 border border-border dark:border-slate-800 hover:border-sky-300 dark:hover:border-slate-700 hover:text-primary-text dark:hover:text-white'
             }`}
           >
             {f}
@@ -268,9 +268,9 @@ export default function Notifications() {
                 key={notification.id}
                 className={`group flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer ${
                   !notification.read
-                    ? 'bg-surface border-sky-200 shadow-sm shadow-sky-50'
-                    : 'bg-surface border-border opacity-80'
-                } ${isSelected ? 'ring-2 ring-sky-400' : 'hover:shadow-md dark:hover:shadow-none hover:border-border dark:hover:border-zinc-800'}`}
+                    ? 'bg-surface dark:bg-slate-900/90 border-sky-200 dark:border-sky-900/40 shadow-sm shadow-sky-50 dark:shadow-none'
+                    : 'bg-surface dark:bg-slate-900/40 border-border dark:border-slate-800/80 opacity-80'
+                } ${isSelected ? 'ring-2 ring-sky-400' : 'hover:shadow-md dark:hover:shadow-none hover:border-sky-300 dark:hover:border-slate-700'}`}
                 onClick={() => openNotification(notification)}
                 role="button"
                 tabIndex={0}

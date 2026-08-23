@@ -15,12 +15,12 @@ const VITAL_FIELDS = [
 ];
 
 const COLOR_MAP = {
-  sky:     { bg: 'bg-primary-bg',     icon: 'text-sky-500',     border: 'border-sky-200',     badge: 'bg-primary-hover text-primary-text', gradient: 'bg-gradient-to-br from-sky-500 to-blue-600' },
-  rose:    { bg: 'bg-danger-bg',    icon: 'text-rose-500',    border: 'border-rose-200',    badge: 'bg-rose-100 text-rose-700', gradient: 'bg-gradient-to-br from-rose-500 to-pink-600' },
-  amber:   { bg: 'bg-warning-bg',   icon: 'text-amber-500',   border: 'border-amber-200',   badge: 'bg-amber-100 text-warning-text', gradient: 'bg-gradient-to-br from-amber-500 to-orange-600' },
-  emerald: { bg: 'bg-success-bg', icon: 'text-emerald-500', border: 'border-emerald-200', badge: 'bg-emerald-100 text-success-text', gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600' },
-  indigo:  { bg: 'bg-brand-bg',  icon: 'text-indigo-500',  border: 'border-indigo-200',  badge: 'bg-indigo-100 text-brand-text', gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600' },
-  purple:  { bg: 'bg-purple-50',  icon: 'text-purple-500',  border: 'border-purple-200',  badge: 'bg-purple-100 text-purple-700', gradient: 'bg-gradient-to-br from-purple-500 to-fuchsia-600' },
+  sky:     { bg: 'bg-primary-bg',     icon: 'text-sky-500',     border: 'border-sky-250 dark:border-sky-900/30',     badge: 'bg-primary-hover text-primary-text dark:bg-sky-950/40 dark:text-sky-400 dark:border dark:border-sky-900/20', gradient: 'bg-gradient-to-br from-sky-500 to-blue-600' },
+  rose:    { bg: 'bg-danger-bg',    icon: 'text-rose-500',    border: 'border-rose-250 dark:border-rose-900/30',    badge: 'bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 dark:border dark:border-rose-900/20', gradient: 'bg-gradient-to-br from-rose-500 to-pink-600' },
+  amber:   { bg: 'bg-warning-bg',   icon: 'text-amber-500',   border: 'border-amber-250 dark:border-amber-900/30',   badge: 'bg-amber-100 dark:bg-amber-950/40 text-warning-text dark:text-amber-400 dark:border dark:border-amber-900/20', gradient: 'bg-gradient-to-br from-amber-500 to-orange-600' },
+  emerald: { bg: 'bg-success-bg', icon: 'text-emerald-500', border: 'border-emerald-250 dark:border-emerald-900/30', badge: 'bg-emerald-100 dark:bg-emerald-950/40 text-success-text dark:text-emerald-400 dark:border dark:border-emerald-900/20', gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600' },
+  indigo:  { bg: 'bg-brand-bg',  icon: 'text-indigo-500',  border: 'border-indigo-250 dark:border-indigo-900/30',  badge: 'bg-indigo-100 dark:bg-indigo-950/40 text-brand-text dark:text-indigo-400 dark:border dark:border-indigo-900/20', gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600' },
+  purple:  { bg: 'bg-purple-50 dark:bg-purple-950/20',  icon: 'text-purple-500',  border: 'border-purple-250 dark:border-purple-900/30',  badge: 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 dark:border dark:border-purple-900/20', gradient: 'bg-gradient-to-br from-purple-500 to-fuchsia-600' },
 };
 
 function mapVitalHistory(vitals) {

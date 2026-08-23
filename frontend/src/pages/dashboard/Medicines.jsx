@@ -46,16 +46,16 @@ function BatchManager({ medicine, fetchMedicines }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-background rounded-xl p-4 border border-border">
+      <div className="bg-background dark:bg-slate-950 rounded-xl p-4 border border-border dark:border-slate-800">
         <h4 className="font-medium text-sm text-text mb-3">Existing Batches</h4>
         <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
           {batches.length === 0 ? <p className="text-sm text-text-light">No batches recorded.</p> : batches.map(b => (
-            <div key={b.id} className="flex justify-between items-center p-3 bg-surface rounded-lg border border-border">
+            <div key={b.id} className="flex justify-between items-center p-3 bg-surface dark:bg-slate-900 rounded-lg border border-border dark:border-slate-800">
               <div>
                 <p className="text-sm font-semibold text-text">
                   Batch No: {b.batch_number}
                   {new Date(b.expiration_date) < new Date() && (
-                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase tracking-wide">Pullout</span>
+                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 dark:border dark:border-rose-900/30 uppercase tracking-wide">Pullout</span>
                   )}
                 </p>
                 <p className="text-xs text-text-light">Exp: {new Date(b.expiration_date).toLocaleDateString()} • Stock: {b.stock} {medicine.dosage_form || 'units'}</p>
@@ -71,18 +71,18 @@ function BatchManager({ medicine, fetchMedicines }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-medium text-text-muted mb-1">Batch No.</label>
-              <input required type="text" value={newBatch.batch_number} onChange={e=>setNewBatch({...newBatch, batch_number: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface" placeholder="e.g. BATCH-01" />
+              <input required type="text" value={newBatch.batch_number} onChange={e=>setNewBatch({...newBatch, batch_number: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-border dark:border-slate-850 focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface dark:bg-slate-900 text-text dark:text-white" placeholder="e.g. BATCH-01" />
             </div>
             <div>
               <label className="block text-xs font-medium text-text-muted mb-1">Stock</label>
-              <input required type="number" min="1" value={newBatch.stock} onChange={e=>setNewBatch({...newBatch, stock: parseInt(e.target.value) || 0})} className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface" />
+              <input required type="number" min="1" value={newBatch.stock} onChange={e=>setNewBatch({...newBatch, stock: parseInt(e.target.value) || 0})} className="w-full px-3 py-2 rounded-lg border border-border dark:border-slate-850 focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface dark:bg-slate-900 text-text dark:text-white" />
             </div>
             <div>
               <label className="block text-xs font-medium text-text-muted mb-1">Exp Date</label>
-              <input required type="date" value={newBatch.expiration_date} onChange={e=>setNewBatch({...newBatch, expiration_date: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-border focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface" />
+              <input required type="date" value={newBatch.expiration_date} onChange={e=>setNewBatch({...newBatch, expiration_date: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-border dark:border-slate-850 focus:ring-2 focus:ring-emerald-500/20 text-sm bg-surface dark:bg-slate-900 text-text dark:text-white" />
             </div>
           </div>
-          <button type="submit" className="w-full py-2 bg-emerald-50 text-emerald-600 font-semibold rounded-lg hover:bg-emerald-100 transition-colors text-sm">Add Batch</button>
+          <button type="submit" className="w-full py-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 font-semibold rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-900/30 transition-colors text-sm">Add Batch</button>
         </form>
       </div>
     </div>
@@ -224,7 +224,7 @@ export default function Medicines() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search medicines by name or category..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background focus:bg-surface transition-all text-sm"
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-border dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background dark:bg-slate-950 focus:bg-surface dark:focus:bg-slate-900 text-text dark:text-white transition-all text-sm"
             />
           </div>
 
@@ -234,7 +234,7 @@ export default function Medicines() {
             <select
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
-              className="w-full sm:w-72 px-4 py-2 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background focus:bg-surface transition-all text-sm font-medium text-text"
+              className="w-full sm:w-72 px-4 py-2 rounded-xl border border-border dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background dark:bg-slate-950 focus:bg-surface dark:focus:bg-slate-900 text-text dark:text-white transition-all text-sm font-medium"
             >
               <option value="All">All Categories ({medicines.length})</option>
               {CATEGORIES.map(c => {
@@ -256,7 +256,7 @@ export default function Medicines() {
         <div className="overflow-x-auto">
           <table data-tour="page-list" className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-background text-text-muted text-sm border-b border-border">
+              <tr className="bg-background dark:bg-slate-950 text-text-muted dark:text-slate-400 text-sm border-b border-border dark:border-slate-850">
                 <th className="p-4 font-semibold">Medicine Name</th>
                 <th className="p-4 font-semibold">Category</th>
                 <th className="p-4 font-semibold">Total Stock</th>
@@ -265,7 +265,7 @@ export default function Medicines() {
                 {(user?.role === 'Admin' || user?.role === 'Staff') && <th className="p-4 font-semibold text-right">Actions</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>
@@ -320,7 +320,7 @@ export default function Medicines() {
                              <>
                                <span className={`text-sm flex items-center gap-2 ${isNearExpiry ? 'text-amber-600 font-semibold' : 'text-text-muted'}`}>
                                  <span>Exp: {new Date(nearest.expiration_date).toLocaleDateString()}</span>
-                                 {isNearExpiry && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide">Near Expiry</span>}
+                                 {isNearExpiry && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 dark:border dark:border-amber-900/30 uppercase tracking-wide">Near Expiry</span>}
                                </span>
                                <span className="text-xs text-text-light font-medium mt-0.5 block">Batch No: {nearest.batch_number}</span>
                                {activeBatches.length > 1 ? (
@@ -370,41 +370,41 @@ export default function Medicines() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-muted mb-1">Brand Name</label>
-              <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
+              <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20" />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-muted mb-1">Generic Name</label>
-              <input value={formData.generic_name} onChange={e => setFormData({ ...formData, generic_name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
+              <input value={formData.generic_name} onChange={e => setFormData({ ...formData, generic_name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20" />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-text-muted mb-1">Category</label>
-            <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none bg-surface">
+            <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none">
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-text-muted mb-1">Unit/Dosage Form</label>
-            <input value={formData.dosage_form} onChange={e => setFormData({ ...formData, dosage_form: e.target.value })} placeholder="e.g. tablets, boxes, bottles" className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
+            <input value={formData.dosage_form} onChange={e => setFormData({ ...formData, dosage_form: e.target.value })} placeholder="e.g. tablets, boxes, bottles" className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-muted mb-1">Description (optional)</label>
-            <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20" />
+            <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
           <div className="border-t border-border pt-4 mt-4">
             <h4 className="text-sm font-semibold text-text mb-3">Initial Batch (Optional)</h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-medium text-text-muted mb-1">Batch No.</label>
-                <input type="text" value={formData.batch_number} onChange={e => setFormData({ ...formData, batch_number: e.target.value })} placeholder="e.g. BATCH-01" className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
+                <input type="text" value={formData.batch_number} onChange={e => setFormData({ ...formData, batch_number: e.target.value })} placeholder="e.g. BATCH-01" className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-text-muted mb-1">Initial Stock</label>
-                <input type="number" min="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
+                <input type="number" min="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-text-muted mb-1">Expiration Date</label>
-                <input type="date" value={formData.expiration_date} onChange={e => setFormData({ ...formData, expiration_date: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-emerald-500/20 bg-surface" />
+                <input type="date" value={formData.expiration_date} onChange={e => setFormData({ ...formData, expiration_date: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/20" />
               </div>
             </div>
           </div>
@@ -422,26 +422,26 @@ export default function Medicines() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-muted mb-1">Brand Name</label>
-                <input required value={editTarget.name} onChange={e => setEditTarget({ ...editTarget, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
+                <input required value={editTarget.name} onChange={e => setEditTarget({ ...editTarget, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-sky-500/20" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-muted mb-1">Generic Name</label>
-                <input value={editTarget.generic_name || ''} onChange={e => setEditTarget({ ...editTarget, generic_name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
+                <input value={editTarget.generic_name || ''} onChange={e => setEditTarget({ ...editTarget, generic_name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-sky-500/20" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-text-muted mb-1">Category</label>
-              <select value={editTarget.category} onChange={e => setEditTarget({ ...editTarget, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none bg-surface">
+              <select value={editTarget.category} onChange={e => setEditTarget({ ...editTarget, category: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none">
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-text-muted mb-1">Unit/Dosage Form</label>
-              <input value={editTarget.dosage_form || ''} onChange={e => setEditTarget({ ...editTarget, dosage_form: e.target.value })} placeholder="e.g. tablets, boxes, bottles" className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
+              <input value={editTarget.dosage_form || ''} onChange={e => setEditTarget({ ...editTarget, dosage_form: e.target.value })} placeholder="e.g. tablets, boxes, bottles" className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-sky-500/20" />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-muted mb-1">Description</label>
-              <input value={editTarget.description || ''} onChange={e => setEditTarget({ ...editTarget, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border outline-none focus:ring-2 focus:ring-sky-500/20" />
+              <input value={editTarget.description || ''} onChange={e => setEditTarget({ ...editTarget, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white outline-none focus:ring-2 focus:ring-sky-500/20" />
             </div>
             <p className="text-xs text-text-light italic">Note: To edit stock and expiration dates, please use the "Manage Batches" button.</p>
             <div className="pt-4 flex justify-end gap-3">
