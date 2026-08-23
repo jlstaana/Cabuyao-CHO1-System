@@ -918,6 +918,7 @@ export default function Consultations() {
   const [rescheduleForm, setRescheduleForm] = useState({ doctor_id: '', scheduled_at: '' });
   const [specializations, setSpecializations] = useState([]);
   const [availableDoctors, setAvailableDoctors] = useState([]);
+  const [requestDoctorIndex, setRequestDoctorIndex] = useState(0);
   const [requestForm, setRequestForm] = useState(EMPTY_REQUEST_FORM);
   const [requestWeekOffset, setRequestWeekOffset] = useState(0);
   const [rescheduleWeekOffset, setRescheduleWeekOffset] = useState(0);
@@ -1018,6 +1019,10 @@ const fetchConsultations = async () => {
     }
     return () => { isActive = false; };
   }, [user]);
+
+  useEffect(() => {
+    setRequestDoctorIndex(0);
+  }, [requestForm.requested_specialization]);
 
   const handleRequest = () => {
     setRequestModal(true);
@@ -1649,8 +1654,31 @@ const fetchConsultations = async () => {
                 <p className="text-xs">Please try selecting a different specialization or check back later.</p>
               </div>
             ) : (
-      <div data-tour="page-list" className="space-y-4">
-                {matchingAvailableDoctors.map((doctor) => (
+      <div data-tour="page-list" className="space-y-3">
+                {matchingAvailableDoctors.length > 1 && (
+                  <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-border">
+                    <button
+                      type="button"
+                      onClick={() => setRequestDoctorIndex(prev => Math.max(prev - 1, 0))}
+                      disabled={requestDoctorIndex === 0}
+                      className="p-1.5 rounded-lg border border-border bg-surface dark:bg-slate-900 text-text-muted hover:text-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span className="text-xs font-bold text-text-muted dark:text-slate-400">
+                      Doctor {requestDoctorIndex + 1} of {matchingAvailableDoctors.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setRequestDoctorIndex(prev => Math.min(prev + 1, matchingAvailableDoctors.length - 1))}
+                      disabled={requestDoctorIndex === matchingAvailableDoctors.length - 1}
+                      className="p-1.5 rounded-lg border border-border bg-surface dark:bg-slate-900 text-text-muted hover:text-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
+                {[matchingAvailableDoctors[requestDoctorIndex]].filter(Boolean).map((doctor) => (
                   <div key={`request-slots-${doctor.id}`} className="rounded-lg border border-border bg-background p-3">
                     <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <div>
