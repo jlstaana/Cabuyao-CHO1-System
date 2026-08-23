@@ -15,9 +15,78 @@ class AnalyticsController extends Controller {
         if ($request->has('doctor_id')) {
             $query->where('doctor_id', $request->doctor_id);
         }
+        if ($request->has('age_group') && $request->age_group !== '') {
+            $query->whereHas('patient', function($q) use ($request) {
+                $q->where('category', $request->age_group);
+            });
+        }
+        if ($request->has('barangay') && $request->barangay !== '') {
+            $query->whereHas('patient', function($q) use ($request) {
+                $q->where('address', 'like', $request->barangay . '%');
+            });
+        }
 
         $consultationVolume = (clone $query)->select(DB::raw('DATE(consultations.created_at) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')->orderBy('date')->get();
+
+        
+        
+        $tomorrowStr = \Carbon\Carbon::tomorrow()->englishDayOfWeek;
+        $tomorrowDoctors = \App\Models\Doctor::with(['user', 'availability' => function($q) use ($tomorrowStr) {
+            $q->where('day_of_week', $tomorrowStr);
+        }])->get()->filter(function($doctor) {
+            return $doctor->availability->isNotEmpty();
+        })->map(function($doctor) {
+            return [
+                'name' => $doctor->user->name,
+                'schedule' => $doctor->availability->map(function($a) {
+                    return \Carbon\Carbon::parse($a->start_time)->format('g:i A') . ' - ' . \Carbon\Carbon::parse($a->end_time)->format('g:i A');
+                })->join(', ')
+            ];
+        })->values();
+
+        $peakHoursData = (clone $query)
+            ->whereNotNull('consultations.scheduled_at')
+            ->get(['scheduled_at'])
+            ->groupBy(function($date) {
+                return \Carbon\Carbon::parse($date->scheduled_at)->format('H');
+            })
+            ->map(function($row, $hour) {
+                $h = (int)$hour;
+                $ampm = $h >= 12 ? 'PM' : 'AM';
+                $displayHour = $h % 12;
+                if ($displayHour === 0) $displayHour = 12;
+                return [
+                    'hour_key' => $hour,
+                    'hour' => $displayHour . ':00 ' . $ampm,
+                    'count' => $row->count()
+                ];
+            })
+            ->sortBy('hour_key')
+            ->values()
+            ->map(function($item) {
+                unset($item['hour_key']);
+                return $item;
+            });
+
+        $categories = Medicine::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category')->values();
+        $doctorsList = Doctor::with('user')->get()->map(function($d) {
+            return [
+                'id' => $d->id,
+                'name' => $d->user ? $d->user->name : 'Unknown Doctor'
+            ];
+        })->values();
+        $ageGroups = Patient::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category')->values();
+        $barangays = Patient::whereNotNull('address')
+            ->where('address', '!=', '')
+            ->pluck('address')
+            ->map(function($address) {
+                $parts = explode(',', $address);
+                return trim($parts[0]);
+            })
+            ->filter()
+            ->unique()
+            ->values();
 
         $byStatus = (clone $query)->select('status', DB::raw('count(*) as total'))->groupBy('status')->get();
         $byDoctor = (clone $query)
@@ -112,6 +181,36 @@ class AnalyticsController extends Controller {
         } else {
             $prescriptionsQuery->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
         }
+        if ($request->has('category') && $request->category !== '') {
+            $prescriptionsQuery->whereHas('items.medicine', function($q) use ($request) {
+                $q->where('category', $request->category);
+            });
+        }
+
+                $recentConsultations = \App\Models\Consultation::with(['doctor.user', 'patient.user'])
+            ->latest('updated_at')
+            ->limit(10)
+            ->get()
+            ->map(function ($c) {
+                $patientName = $c->patient?->user?->name ?? 'Unknown';
+                $nameParts = explode(' ', trim($patientName));
+                if (count($nameParts) > 1) {
+                    $initial = strtoupper(substr($nameParts[0], 0, 1));
+                    $lastName = array_pop($nameParts);
+                    $formattedName = $initial . '. ' . $lastName;
+                } else {
+                    $formattedName = $patientName;
+                }
+                
+                return [
+                    'id' => $c->id,
+                    'status' => $c->status,
+                    'doctor' => $c->doctor?->user?->name ?? 'Unassigned',
+                    'patient' => $formattedName,
+                    'time' => $c->updated_at->diffForHumans(),
+                    'raw_time' => $c->updated_at,
+                ];
+            });
 
         return response()->json([
             'summary' => [
@@ -132,6 +231,13 @@ class AnalyticsController extends Controller {
             'cases_by_barangay' => $byBarangay,
             'low_stock_medicines' => $lowStockMedicines,
             'recent_logs' => $recentLogs,
+            'recent_consultations' => $recentConsultations,
+            'tomorrow_doctors' => $tomorrowDoctors,
+            'peak_hours' => $peakHoursData,
+            'categories' => $categories,
+            'doctors' => $doctorsList,
+            'age_groups' => $ageGroups,
+            'barangays' => $barangays,
         ]);
     }
 }

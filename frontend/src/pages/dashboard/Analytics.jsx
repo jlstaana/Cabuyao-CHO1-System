@@ -1,7 +1,9 @@
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
 import { useEffect, useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
+import useThemeStore from '../../store/useThemeStore';
 import api from '../../utils/api';
-import { BarChart2, Activity, Download, TrendingUp, FileText, Users, Calendar, X, HeartPulse } from 'lucide-react';
+import { BarChart2, Activity, Download, TrendingUp, FileText, Users, Clock, Stethoscope, Calendar, X, HeartPulse, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
 
@@ -25,6 +27,26 @@ const EMPTY_STATS = {
 };
 
 const formatNumber = (value) => Number(value || 0).toLocaleString();
+
+function SubViewSelector({ options, active, onChange }) {
+  return (
+    <div className="flex flex-wrap gap-1.5 mb-2 bg-slate-100/80 dark:bg-slate-950/80 p-1 rounded-xl w-fit border border-slate-200 dark:border-slate-800">
+      {options.map((opt) => (
+        <button
+          key={opt.key}
+          onClick={() => onChange(opt.key)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+            active === opt.key
+              ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm dark:shadow-none'
+              : 'text-text-muted dark:text-slate-400 hover:text-text dark:hover:text-white'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 const formatDateTime = (value) => (value ? new Date(value).toLocaleString() : 'N/A');
 
 const getStatusTotal = (stats, status) => (
@@ -34,38 +56,52 @@ const getStatusTotal = (stats, status) => (
 const maxTotal = (items) => Math.max(...items.map((item) => Number(item.total || item.count || 0)), 1);
 
 function StatCard({ label, value, sub, color = 'sky' }) {
-  const styles = {
-    sky: 'bg-gradient-to-br from-sky-500 to-blue-600 text-white border-transparent',
-    emerald: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-transparent',
-    indigo: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent',
-    rose: 'bg-gradient-to-br from-rose-500 to-pink-600 text-white border-transparent',
-    amber: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent',
-  };
-  
-  const isText = typeof value === 'string' && isNaN(value.replace(/,/g, ''));
-  const valueClass = isText ? 'text-xl font-bold truncate mt-2' : 'text-3xl font-black mt-1';
-  
-  return (
-    <div className={`p-5 rounded-2xl border ${styles[color] || styles.sky}`}>
-      <p className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</p>
-      <p className={`${valueClass} text-white`} title={value}>{value}</p>
-      {sub && <p className="text-[10px] mt-2 text-white/70 uppercase tracking-wide">{sub}</p>}
-    </div>
-  );
-}
+    const accents = {
+      sky: { border: 'border-l-sky-500', text: 'text-sky-600', bg: 'bg-sky-50' },
+      rose: { border: 'border-l-rose-500', text: 'text-rose-600', bg: 'bg-rose-50' },
+      emerald: { border: 'border-l-emerald-500', text: 'text-emerald-600', bg: 'bg-emerald-50' },
+      amber: { border: 'border-l-amber-500', text: 'text-amber-600', bg: 'bg-amber-50' },
+      indigo: { border: 'border-l-indigo-500', text: 'text-indigo-600', bg: 'bg-indigo-50' }
+    };
+    const accent = accents[color] || accents.sky;
+    const isText = typeof value === 'string' && isNaN(value.replace(/,/g, ''));
+    const valueClass = isText 
+      ? 'text-lg font-bold text-slate-800 dark:text-slate-100 truncate mt-1' 
+      : 'text-3xl font-extrabold text-slate-900 dark:text-white mt-0.5';
 
-function BarRow({ label, value, max, color = 'bg-sky-500' }) {
-  const width = max ? Math.max((Number(value || 0) / max) * 100, value ? 6 : 0) : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs text-text-muted w-36 truncate shrink-0">{label}</span>
-      <div className="flex-1 h-2.5 bg-surface-hover/50 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${width}%` }} />
+    return (
+      <div className={`p-5 bg-surface dark:bg-slate-900 rounded-2xl border border-border dark:border-slate-800 border-l-4 ${accent.border} shadow-sm transition-all duration-200 hover:shadow-md`}>
+        <p className="text-xs font-semibold uppercase tracking-wider text-text-muted dark:text-slate-400">{label}</p>
+        <p className={valueClass} title={value}>{value}</p>
+        {sub && <p className="text-[10px] mt-1.5 text-text-light dark:text-slate-500 uppercase tracking-wide font-medium">{sub}</p>}
       </div>
-      <span className="text-xs font-semibold text-text-muted w-10 text-right">{formatNumber(value)}</span>
-    </div>
-  );
-}
+    );
+  }
+
+function BarRow({ label, value, max, color }) {
+    const width = max ? Math.max((Number(value || 0) / max) * 100, value ? 6 : 0) : 0;
+    let barColor = color;
+    if (!barColor) {
+      if (width >= 80) {
+        barColor = 'bg-rose-500'; // High workload
+      } else if (width >= 40) {
+        barColor = 'bg-amber-500'; // Medium
+      } else {
+        barColor = 'bg-emerald-500'; // Low
+      }
+    }
+    return (
+      <div className="flex flex-col gap-1.5 py-2">
+        <div className="flex justify-between items-center text-xs font-semibold">
+          <span className="text-text dark:text-white font-medium truncate max-w-[200px]">{label}</span>
+          <span className="text-text dark:text-white-muted">{formatNumber(value)}</span>
+        </div>
+        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${width}%` }} />
+        </div>
+      </div>
+    );
+  }
 
 function EmptyBlock({ label }) {
   return (
@@ -104,10 +140,10 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
   const diseaseRows = (stats.top_diseases || []).map((r) => ({ Disease: r.diagnosis, Cases: r.total }));
   const lowStockRows = (stats.low_stock_medicines || []).map((r) => ({ Category: r.category, 'Low Stock Count': r.count }));
   
-    const topDiagnosis = (reportStats.top_diseases && reportStats.top_diseases.length > 0) ? reportStats.top_diseases[0].diagnosis : 'N/A';
-    const topBarangay = (reportStats.cases_by_barangay && reportStats.cases_by_barangay.length > 0) ? reportStats.cases_by_barangay[0].barangay : 'N/A';
-    const topDemo = (reportStats.demographics_by_age && reportStats.demographics_by_age.length > 0) ? reportStats.demographics_by_age[0].category : 'N/A';
-    const totalBarangays = (reportStats.cases_by_barangay || []).length;
+    const topDiagnosis = (stats.top_diseases && stats.top_diseases.length > 0) ? stats.top_diseases[0].diagnosis : 'N/A';
+    const topBarangay = (stats.cases_by_barangay && stats.cases_by_barangay.length > 0) ? stats.cases_by_barangay[0].barangay : 'N/A';
+    const topDemo = (stats.demographics_by_age && stats.demographics_by_age.length > 0) ? stats.demographics_by_age[0].category : 'N/A';
+    const totalBarangays = (stats.cases_by_barangay || []).length;
 
     const epiKpiGrid = `
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;table-layout:fixed;">
@@ -270,6 +306,7 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
     // PAGE 3 — Epidemiology & Demographics
     wrap(`
       ${miniHeader('Epidemiological & Population Health Report')}
+      ${epiKpiGrid}
       ${twoCol(
         sectionHeader('Patient Demographics (Age Group)', '#3b82f6') + dataTable([['Age Group', '68%'], ['Cases', '32%']], tableRows(ageRows, ['Category', 'Cases'])),
         sectionHeader('Case Distribution by Barangay', '#f59e0b') + dataTable([['Barangay', '68%'], ['Cases', '32%']], tableRows(barangayRows, ['Barangay', 'Cases']))
@@ -297,6 +334,15 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
 
 export default function Analytics() {
   const { user } = useAuthStore();
+  const { theme } = useThemeStore();
+  const isDark = theme === 'dark';
+
+  // Dynamic colors for Recharts based on active theme
+  const chartGridColor = isDark ? '#334155' : '#f1f5f9';
+  const chartStrokeColor = isDark ? '#94a3b8' : '#64748b';
+  const tooltipBg = isDark ? '#1e293b' : '#ffffff';
+  const tooltipBorder = isDark ? '#334155' : '#e2e8f0';
+  const tooltipTextColor = isDark ? '#f8fafc' : '#0f172a';
   const [activeTab, setActiveTab] = useState('consultations');
 
   const [exporting, setExporting] = useState(false);
@@ -305,6 +351,51 @@ export default function Analytics() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportDateFrom, setExportDateFrom] = useState('');
   const [exportDateTo, setExportDateTo] = useState('');
+
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [subView, setSubView] = useState('all');
+  const [stockPage, setStockPage] = useState(0);
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterAgeGroup, setFilterAgeGroup] = useState('');
+  const [filterBarangay, setFilterBarangay] = useState('');
+  const [filterDoctorId, setFilterDoctorId] = useState('');
+
+  useEffect(() => {
+    setStockPage(0);
+  }, [stats.low_stock_medicines]);
+
+  useEffect(() => {
+    setSubView('all');
+    setFilterCategory('');
+    setFilterAgeGroup('');
+    setFilterBarangay('');
+    setFilterDoctorId('');
+  }, [activeTab]);
+
+  useEffect(() => {
+    setSubView('all');
+  }, [activeTab]);
+
+  const fetchStats = () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
+    if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
+    if (activeTab === 'prescriptions' && filterCategory) params.append('category', filterCategory);
+    if (activeTab === 'epidemiology' && filterAgeGroup) params.append('age_group', filterAgeGroup);
+    if (activeTab === 'epidemiology' && filterBarangay) params.append('barangay', filterBarangay);
+    if (activeTab === 'consultations' && filterDoctorId) params.append('doctor_id', filterDoctorId);
+
+    api.get('/analytics/stats?' + params.toString())
+      .then((res) => {
+        setStats({ ...EMPTY_STATS, ...res.data });
+      })
+      .catch(() => toast.error('Failed to load analytics'))
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
     if (user?.role !== 'Admin') {
@@ -417,6 +508,9 @@ export default function Analytics() {
   const diseaseMax = maxTotal(stats.top_diseases || []);
   const lowStockMax = maxTotal(stats.low_stock_medicines || []);
   const currentMonth = new Date().toLocaleString('en-PH', { month: 'long' });
+  const itemsPerPage = 5;
+  const paginatedStock = (stats.low_stock_medicines || []).slice(stockPage * itemsPerPage, (stockPage + 1) * itemsPerPage);
+  const totalStockPages = Math.ceil((stats.low_stock_medicines || []).length / itemsPerPage);
   const currentMonthYear = new Date().toLocaleString('en-PH', { month: 'long', year: 'numeric' });
 
   const serviceRows = [
@@ -462,36 +556,230 @@ export default function Analytics() {
         })}
       </div>
 
+      {/* Global Filters */}
+      <div className="flex flex-wrap items-center gap-3 bg-surface p-3 sm:px-4 rounded-2xl border border-border shadow-sm">
+         <div className="flex items-center gap-2 mr-2">
+           <Calendar size={14} className="text-sky-500" />
+           <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{activeTab === 'utilization' ? 'Observation Period' : 'Filter Period'}</span>
+         </div>
+         
+         <div className="flex items-center gap-2">
+           <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} max={filterDateTo || undefined} className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500" />
+           <span className="text-text dark:text-white-muted text-xs font-medium">to</span>
+           <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} min={filterDateFrom || undefined} className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500" />
+         </div>
+
+         {activeTab === 'prescriptions' && (stats.categories || []).length > 0 && (
+           <div className="flex items-center gap-2">
+             <span className="text-text dark:text-white-muted text-xs font-bold uppercase tracking-wider">Category:</span>
+             <select
+               value={filterCategory}
+               onChange={e => {
+                 const catVal = e.target.value;
+                 setFilterCategory(catVal);
+                 setTimeout(() => {
+                   setLoading(true);
+                   const params = new URLSearchParams();
+                   if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
+                   if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
+                   if (catVal) params.append('category', catVal);
+                   api.get('/analytics/stats?' + params.toString())
+                     .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
+                     .finally(() => setLoading(false));
+                 }, 0);
+               }}
+               className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500"
+             >
+               <option value="">All Categories</option>
+               {stats.categories.map(cat => (
+                 <option key={cat} value={cat}>{cat}</option>
+               ))}
+             </select>
+           </div>
+         )}
+
+         {activeTab === 'consultations' && (stats.doctors || []).length > 0 && (
+           <div className="flex items-center gap-2">
+             <span className="text-text dark:text-white-muted text-xs font-bold uppercase tracking-wider">Physician:</span>
+             <select
+               value={filterDoctorId}
+               onChange={e => {
+                 const docVal = e.target.value;
+                 setFilterDoctorId(docVal);
+                 setTimeout(() => {
+                   setLoading(true);
+                   const params = new URLSearchParams();
+                   if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
+                   if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
+                   if (docVal) params.append('doctor_id', docVal);
+                   api.get('/analytics/stats?' + params.toString())
+                     .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
+                     .finally(() => setLoading(false));
+                 }, 0);
+               }}
+               className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500"
+             >
+               <option value="">All Doctors</option>
+               {stats.doctors.map(doc => (
+                 <option key={doc.id} value={doc.id}>{doc.name}</option>
+               ))}
+             </select>
+           </div>
+         )}
+
+         {activeTab === 'epidemiology' && (stats.age_groups || []).length > 0 && (
+           <div className="flex items-center gap-2">
+             <span className="text-text dark:text-white-muted text-xs font-bold uppercase tracking-wider">Age Group:</span>
+             <select
+               value={filterAgeGroup}
+               onChange={e => {
+                 const ageVal = e.target.value;
+                 setFilterAgeGroup(ageVal);
+                 setTimeout(() => {
+                   setLoading(true);
+                   const params = new URLSearchParams();
+                   if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
+                   if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
+                   if (ageVal) params.append('age_group', ageVal);
+                   if (filterBarangay) params.append('barangay', filterBarangay);
+                   api.get('/analytics/stats?' + params.toString())
+                     .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
+                     .finally(() => setLoading(false));
+                 }, 0);
+               }}
+               className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500"
+             >
+               <option value="">All Groups</option>
+               {stats.age_groups.map(grp => (
+                 <option key={grp} value={grp}>{grp}</option>
+               ))}
+             </select>
+           </div>
+         )}
+
+         {activeTab === 'epidemiology' && (stats.barangays || []).length > 0 && (
+           <div className="flex items-center gap-2">
+             <span className="text-text dark:text-white-muted text-xs font-bold uppercase tracking-wider">Barangay:</span>
+             <select
+               value={filterBarangay}
+               onChange={e => {
+                 const barVal = e.target.value;
+                 setFilterBarangay(barVal);
+                 setTimeout(() => {
+                   setLoading(true);
+                   const params = new URLSearchParams();
+                   if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
+                   if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
+                   if (filterAgeGroup) params.append('age_group', filterAgeGroup);
+                   if (barVal) params.append('barangay', barVal);
+                   api.get('/analytics/stats?' + params.toString())
+                     .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
+                     .finally(() => setLoading(false));
+                 }, 0);
+               }}
+               className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500"
+             >
+               <option value="">All Barangays</option>
+               {stats.barangays.map(brgy => (
+                 <option key={brgy} value={brgy}>{brgy}</option>
+               ))}
+             </select>
+           </div>
+         )}
+         
+         <div className="flex items-center gap-2 ml-auto">
+           {(filterDateFrom || filterDateTo) && (
+             <button 
+               onClick={() => { 
+                 setFilterDateFrom(''); setFilterDateTo(''); 
+                 setTimeout(() => {
+                   setLoading(true);
+                   api.get('/analytics/stats').then(res => setStats({ ...EMPTY_STATS, ...res.data })).finally(() => setLoading(false));
+                 }, 0);
+               }} 
+               className="text-xs font-semibold text-text-muted hover:text-rose-500 transition-colors px-2"
+             >
+               Clear
+             </button>
+           )}
+           <button 
+             onClick={fetchStats} 
+             disabled={loading}
+             className="bg-sky-50 text-sky-700 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-sky-100 transition-colors disabled:opacity-50 flex items-center gap-2"
+           >
+             {loading ? 'Applying...' : 'Apply Filters'}
+           </button>
+         </div>
+      </div>
+
       {activeTab === 'consultations' && (
-        <div data-tour="page-stats" className="space-y-6">
+        <div data-tour="page-stats" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatCard label="Monthly Consultations" value={formatNumber(summary.total_consultations)} sub={<>as of <b>{currentMonth}</b> complete consultation</>} color="sky" />
             <StatCard label="Completed" value={formatNumber(getStatusTotal(stats, 'Completed'))} sub="Successfully finished" color="emerald" />
             <StatCard label="Scheduled" value={formatNumber(getStatusTotal(stats, 'Scheduled'))} sub="Upcoming sessions" color="indigo" />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-              <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><Activity size={16} className="text-sky-500" /> Daily Consultation Volume</h3>
-              {stats.time_based_volume.length ? (
-                <div className="space-y-3">
-                  {stats.time_based_volume.map((row) => <BarRow key={row.date} label={row.date} value={row.count} max={maxTotal(stats.time_based_volume)} />)}
-                </div>
-              ) : <EmptyBlock label="No consultation volume yet" />}
-            </div>
-            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-              <h3 className="font-semibold text-text mb-4 flex items-center gap-2"><Users size={16} className="text-indigo-500" /> By Doctor</h3>
-              {stats.consultations_by_doctor.length ? (
-                <div className="space-y-3">
-                  {stats.consultations_by_doctor.map((row) => <BarRow key={row.name} label={row.name} value={row.total} max={doctorMax} color="bg-indigo-400" />)}
-                </div>
-              ) : <EmptyBlock label="No doctor consultation data yet" />}
-            </div>
+
+          <SubViewSelector
+            active={subView}
+            onChange={setSubView}
+            options={[
+              { key: 'all', label: 'All Charts' },
+              { key: 'volume', label: 'Daily Volume' },
+              { key: 'doctor', label: 'By Doctor' }
+            ]}
+          />
+
+          <div className={`grid gap-6 ${subView === 'all' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+            {(subView === 'all' || subView === 'volume') && (
+              <div className="bg-surface dark:bg-slate-900 rounded-2xl border border-border shadow-sm p-6 min-w-0">
+                <h3 className="font-semibold text-text dark:text-white mb-4 flex items-center gap-2"><Activity size={16} className="text-sky-500" /> Daily Consultation Volume</h3>
+                {stats.time_based_volume.length ? (
+                  <div className="h-64 mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={stats.time_based_volume}>
+                        <defs>
+                          <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#0284c7" stopOpacity={0.2}/>
+                            <stop offset="95%" stopColor="#0284c7" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
+                        <XAxis dataKey="date" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                        <YAxis stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                        <Tooltip contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '12px', fontSize: '12px', color: tooltipTextColor }} itemStyle={{ color: tooltipTextColor }} />
+                        <Area type="monotone" dataKey="count" name="Consultations" stroke="#0284c7" strokeWidth={2} fillOpacity={1} fill="url(#colorVolume)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : <EmptyBlock label="No consultation volume yet" />}
+              </div>
+            )}
+
+            {(subView === 'all' || subView === 'doctor') && (
+              <div className="bg-surface dark:bg-slate-900 rounded-2xl border border-border shadow-sm p-6 min-w-0">
+                <h3 className="font-semibold text-text dark:text-white mb-4 flex items-center gap-2"><Users size={16} className="text-indigo-500" /> By Doctor</h3>
+                {stats.consultations_by_doctor.length ? (
+                  <div className="h-64 mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats.consultations_by_doctor} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} />
+                        <XAxis type="number" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                        <YAxis type="category" dataKey="name" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} width={100} />
+                        <Tooltip contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '12px', fontSize: '12px', color: tooltipTextColor }} itemStyle={{ color: tooltipTextColor }} />
+                        <Bar dataKey="total" name="Consultations" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={16} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : <EmptyBlock label="No doctor consultation data yet" />}
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {activeTab === 'epidemiology' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {(() => {
               const topDiagnosis = (stats.top_diseases && stats.top_diseases.length > 0) ? stats.top_diseases[0].diagnosis : 'N/A';
               const topDiagnosisCases = (stats.top_diseases && stats.top_diseases.length > 0) ? stats.top_diseases[0].total : 0;
@@ -510,172 +798,288 @@ export default function Analytics() {
               );
             })()}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><Users size={16} className="text-sky-500" /> Patient Demographics (by Category)</h3>
-              {(stats.demographics_by_age || []).length ? (
-                <div className="space-y-3">
-                  {stats.demographics_by_age.map((row) => (
-                    <BarRow key={row.category} label={row.category} value={row.total} max={Math.max(...stats.demographics_by_age.map(r => Number(r.total)), 1)} color="bg-sky-400" />
-                  ))}
-                </div>
-              ) : <EmptyBlock label="No demographic data yet" />}
-            </div>
+          <SubViewSelector
+            active={subView}
+            onChange={setSubView}
+            options={[
+              { key: 'all', label: 'All Charts' },
+              { key: 'demographics', label: 'Demographics' },
+              { key: 'barangay', label: 'By Barangay' }
+            ]}
+          />
 
-            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><Activity size={16} className="text-amber-500" /> Case Distribution by Barangay</h3>
-              {(stats.cases_by_barangay || []).length ? (
-                <div className="space-y-3">
-                  {stats.cases_by_barangay.map((row) => (
-                    <BarRow key={row.barangay} label={row.barangay} value={row.total} max={Math.max(...stats.cases_by_barangay.map(r => Number(r.total)), 1)} color="bg-amber-400" />
-                  ))}
-                </div>
-              ) : <EmptyBlock label="No geographic data yet" />}
-            </div>
+          <div className={`grid gap-6 ${subView === 'all' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+            {(subView === 'all' || subView === 'demographics') && (
+              <div className="bg-surface dark:bg-slate-900 rounded-2xl border border-border shadow-sm p-6 min-w-0">
+                <h3 className="font-semibold text-text dark:text-white mb-5 flex items-center gap-2"><Users size={16} className="text-sky-500" /> Patient Demographics (by Category)</h3>
+                {(stats.demographics_by_age || []).length ? (
+                  <div className="h-64 mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats.demographics_by_age} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} />
+                        <XAxis type="number" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                        <YAxis type="category" dataKey="category" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} width={100} />
+                        <Tooltip contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '12px', fontSize: '12px', color: tooltipTextColor }} itemStyle={{ color: tooltipTextColor }} />
+                        <Bar dataKey="total" name="Cases" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={16} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : <EmptyBlock label="No demographic data yet" />}
+              </div>
+            )}
+
+            {(subView === 'all' || subView === 'barangay') && (
+              <div className="bg-surface dark:bg-slate-900 rounded-2xl border border-border shadow-sm p-6 min-w-0">
+                <h3 className="font-semibold text-text dark:text-white mb-5 flex items-center gap-2"><Activity size={16} className="text-amber-500" /> Case Distribution by Barangay</h3>
+                {(stats.cases_by_barangay || []).length ? (
+                  <div className="h-64 mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats.cases_by_barangay}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
+                        <XAxis dataKey="barangay" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                        <YAxis stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                        <Tooltip contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '12px', fontSize: '12px', color: tooltipTextColor }} itemStyle={{ color: tooltipTextColor }} />
+                        <Bar dataKey="total" name="Cases" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={20} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : <EmptyBlock label="No geographic data yet" />}
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {activeTab === 'prescriptions' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} sub="This month" color="emerald" />
             <StatCard label="Low Stock Alerts" value={formatNumber(summary.low_stock_count)} sub="Items needing restock" color="amber" />
             <StatCard label="Top Diseases" value={formatNumber((stats.top_diseases || []).length)} sub="Based on diagnoses" color="indigo" />
             <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Available in inventory" color="rose" />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><FileText size={16} className="text-emerald-500" /> Top Diagnosed Diseases</h3>
-              {(stats.top_diseases || []).length ? (
-                <div className="space-y-3">
-                  {stats.top_diseases.map((row) => <BarRow key={row.diagnosis} label={row.diagnosis} value={row.total} max={diseaseMax} color="bg-emerald-400" />)}
-                </div>
-              ) : <EmptyBlock label="No disease diagnosis data yet" />}
-            </div>
 
-            <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-              <h3 className="font-semibold text-text mb-5 flex items-center gap-2"><FileText size={16} className="text-amber-500" /> Low Stock Alerts by Category</h3>
-              {(stats.low_stock_medicines || []).length ? (
-                <div className="space-y-3">
-                  {stats.low_stock_medicines.map((row) => <BarRow key={row.category} label={row.category} value={row.count} max={lowStockMax} color="bg-amber-400" />)}
+          <SubViewSelector
+            active={subView}
+            onChange={setSubView}
+            options={[
+              { key: 'all', label: 'All Charts' },
+              { key: 'diseases', label: 'Top Diseases' },
+              { key: 'stock', label: 'Low Stock' }
+            ]}
+          />
+
+          <div className={`grid gap-6 ${subView === 'all' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+            {(subView === 'all' || subView === 'diseases') && (
+              <div className="bg-surface dark:bg-slate-900 rounded-2xl border border-border shadow-sm p-6 min-w-0">
+                <h3 className="font-semibold text-text dark:text-white mb-5 flex items-center gap-2"><FileText size={16} className="text-emerald-500" /> Top Diagnosed Diseases</h3>
+                {(stats.top_diseases || []).length ? (
+                  <div className="h-64 mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats.top_diseases} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} />
+                        <XAxis type="number" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                        <YAxis type="category" dataKey="diagnosis" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} width={100} />
+                        <Tooltip contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '12px', fontSize: '12px', color: tooltipTextColor }} itemStyle={{ color: tooltipTextColor }} />
+                        <Bar dataKey="total" name="Cases" fill="#10b981" radius={[0, 4, 4, 0]} barSize={16} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : <EmptyBlock label="No disease diagnosis data yet" />}
+              </div>
+            )}
+
+            {(subView === 'all' || subView === 'stock') && (
+              <div className="bg-surface dark:bg-slate-900 rounded-2xl border border-border shadow-sm p-6 min-w-0 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-semibold text-text dark:text-white mb-1 flex items-center gap-2">
+                    <FileText size={16} className="text-amber-500" /> Low Stock Alerts by Category
+                  </h3>
+                  <p className="text-xs text-text-light mb-4">Medicines near or below threshold limit.</p>
+                  {(stats.low_stock_medicines || []).length ? (
+                    <div>
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={paginatedStock} layout="vertical">
+                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} />
+                            <XAxis type="number" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                            <YAxis type="category" dataKey="category" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} width={100} />
+                            <Tooltip contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '12px', fontSize: '12px', color: tooltipTextColor }} itemStyle={{ color: tooltipTextColor }} />
+                            <Bar dataKey="count" name="Low Stock Items" fill="#f59e0b" radius={[0, 4, 4, 0]} barSize={16} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {(stats.low_stock_medicines || []).length > 0 && (
+                        <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-100">
+                          <button
+                            disabled={stockPage === 0}
+                            onClick={() => setStockPage(prev => Math.max(0, prev - 1))}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 text-slate-600 transition"
+                            title="Previous Page"
+                          >
+                            <ChevronLeft size={16} />
+                          </button>
+                          <span className="text-xs font-bold text-text-muted">
+                            Page {stockPage + 1} of {Math.max(totalStockPages, 1)}
+                          </span>
+                          <button
+                            disabled={stockPage >= totalStockPages - 1}
+                            onClick={() => setStockPage(prev => Math.min(totalStockPages - 1, prev + 1))}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 text-slate-600 transition"
+                            title="Next Page"
+                          >
+                            <ChevronRight size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : <EmptyBlock label="No low stock alerts" />}
                 </div>
-              ) : <EmptyBlock label="No low stock alerts" />}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {activeTab === 'utilization' && (
-        <div className="space-y-6">
+          <div className="space-y-4">
 
-          {/* ── Top Stat Cards ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              label="Registered Patients"
-              value={formatNumber(summary.registered_patients)}
-              sub="Individuals fully registered for health tracking"
-              color="indigo"
+            {/* "?"? Top Stat Cards "?"? */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard label="Registered Patients" value={formatNumber(summary.registered_patients)} sub="Individuals fully registered for health tracking" color="indigo" />
+              <StatCard label="Active Doctors" value={formatNumber(summary.active_doctors)} sub="Available for scheduling" color="sky" />
+              <StatCard label="Monthly Consults" value={formatNumber(summary.total_consultations)} sub={<>as of <b>{currentMonth}</b> complete consultation</>} color="emerald" />
+              <StatCard label="Reminders" value={formatNumber(summary.cancelled_consultations)} sub="Discontinued consultations" color="rose" />
+            </div>
+
+            <SubViewSelector
+              active={subView}
+              onChange={setSubView}
+              options={[
+                { key: 'all', label: 'All Charts' },
+                { key: 'peak', label: 'Peak Hours' },
+                { key: 'workload', label: 'Workload & Tomorrow' }
+              ]}
             />
 
-            {/* Active Doctors — name + consult count */}
-            <div className="p-5 rounded-2xl border border-transparent bg-gradient-to-br from-sky-500 to-blue-600 col-span-2 lg:col-span-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-white/80">Active Doctors</p>
-              <p className="text-3xl font-black mt-1 text-white">{formatNumber(summary.active_doctors)}</p>
-              {stats.consultations_by_doctor.length > 0 ? (
-                <ul className="mt-2 space-y-1.5">
-                  {stats.consultations_by_doctor.map((doc) => (
-                    <li key={doc.name} className="flex items-center justify-between gap-2 text-xs">
-                      <span className="flex items-center gap-1.5 text-white/90 truncate">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                        {doc.name}
-                      </span>
-                      <span className="font-bold text-sky-800 shrink-0 bg-white/90 px-1.5 py-0.5 rounded-md">
-                        {doc.total} consult{doc.total !== 1 ? 's' : ''}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">No consultations recorded</p>
+            {/* Peak Activity & Workload Distribution */}
+            <div className={`grid gap-6 mb-6 ${subView === 'all' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+              {(subView === 'all' || subView === 'peak') && (
+                <div className="bg-surface dark:bg-slate-900 rounded-2xl border border-border shadow-sm p-6 min-w-0">
+                  <h3 className="font-semibold text-text dark:text-white mb-2 flex items-center gap-2">
+                    <Clock size={16} className="text-amber-500" /> Peak Utilization Hours
+                  </h3>
+                  <p className="text-xs text-text-light mb-5">Consultation traffic volume grouped by hour of the day.</p>
+                  {(stats.peak_hours || []).length > 0 ? (
+                    <div className="h-64 mt-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={stats.peak_hours}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
+                          <XAxis dataKey="hour" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                          <YAxis stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                          <Tooltip contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '12px', fontSize: '12px', color: tooltipTextColor }} itemStyle={{ color: tooltipTextColor }} />
+                          <Bar dataKey="count" name="Consultations" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={18} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : <EmptyBlock label="No hourly utilization data yet" />}
+                </div>
               )}
-              <div className="mt-3 pt-3 border-t border-white/20">
-                <p className="text-xs font-semibold text-white/90">Tomorrow</p>
-                <p className="text-xs text-white/80 mt-0.5">
-                  <span className="font-bold">{formatNumber(summary.active_doctors)}</span> doctor{summary.active_doctors !== 1 ? 's' : ''} available for scheduling
-                </p>
+
+              {(subView === 'all' || subView === 'workload') && (
+                <div className="bg-surface dark:bg-slate-900 rounded-2xl border border-border shadow-sm p-6 min-w-0">
+                  <h3 className="font-semibold text-text dark:text-white mb-2 flex items-center gap-2">
+                    <Stethoscope size={16} className="text-sky-500" /> Doctor Workload Distribution
+                  </h3>
+                  <p className="text-xs text-text-light mb-5">Total assigned consultations distributed across active doctors.</p>
+                  {(stats.consultations_by_doctor || []).length > 0 ? (
+                    <div className="h-64 mt-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={stats.consultations_by_doctor} layout="vertical">
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} />
+                          <XAxis type="number" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} />
+                          <YAxis type="category" dataKey="name" stroke={chartStrokeColor} fontSize={11} tickLine={false} axisLine={false} width={100} />
+                          <Tooltip contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '12px', fontSize: '12px', color: tooltipTextColor }} itemStyle={{ color: tooltipTextColor }} />
+                          <Bar dataKey="total" name="Consultations" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={16} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : <EmptyBlock label="No doctor workload data yet" />}
+                  <div className="mt-5 pt-4 border-t border-border">
+                    <p className="text-sm font-semibold text-text dark:text-white mb-2">Tomorrow's Shift</p>
+                    {(stats.tomorrow_doctors || []).length > 0 ? (
+                      <ul className="space-y-2">
+                        {stats.tomorrow_doctors.map(doc => (
+                          <li key={doc.name} className="flex justify-between items-center text-xs">
+                            <span className="font-medium text-text dark:text-white">{doc.name}</span>
+                            <span className="text-text dark:text-white-muted bg-surface-hover px-2 py-1 rounded-md">{doc.schedule}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-text-muted">No doctors are scheduled for tomorrow.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Live Consultation Pulse */}
+            <div className="bg-surface dark:bg-slate-900 rounded-2xl border border-border shadow-sm overflow-hidden mb-6">
+              <div className="p-6 border-b border-border">
+                <h3 className="font-semibold text-text dark:text-white flex items-center gap-2">
+                  <Activity size={16} className="text-emerald-500" /> Live Consultation Pulse
+                </h3>
+                <p className="text-xs text-text-light mt-1">Real-time feed of the latest consultation updates across the system.</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-surface dark:bg-slate-900-hover/50 text-text-muted font-medium border-b border-border">
+                    <tr>
+                      <th className="px-6 py-3 font-semibold">Latest Update</th>
+                      <th className="px-6 py-3 font-semibold">Status</th>
+                      <th className="px-6 py-3 font-semibold">Attending Doctor</th>
+                      <th className="px-6 py-3 font-semibold">Patient</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border dark:divide-slate-800">
+                    {(stats.recent_consultations || []).length > 0 ? (
+                      stats.recent_consultations.map((c, i) => (
+                        <tr key={i} className="hover:bg-surface-hover/30 dark:hover:bg-slate-800/30 transition-colors">
+                          <td className="px-6 py-3 whitespace-nowrap text-text-light dark:text-slate-400 text-xs">
+                            <span className="font-medium text-text dark:text-white">{c.time}</span>
+                          </td>
+                          <td className="px-6 py-3">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold ${c.status === 'Completed' ? 'bg-emerald-50 text-emerald-700' : c.status === 'Scheduled' ? 'bg-sky-50 text-sky-700' : 'bg-slate-50 text-slate-700'}`}>
+                              {c.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 whitespace-nowrap">
+                            <div className="font-medium text-text dark:text-white">{c.doctor}</div>
+                          </td>
+                          <td className="px-6 py-3 whitespace-nowrap text-text-light font-medium">
+                            {c.patient}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="px-6 py-8 text-center text-text-muted">No recent consultations found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            {/* Monthly Consults — month name bolded */}
-            <div className="p-5 rounded-2xl border border-transparent bg-gradient-to-br from-emerald-500 to-teal-600 ">
-              <p className="text-xs font-bold uppercase tracking-wider text-white/80">Monthly Consults</p>
-              <p className="text-3xl font-black mt-1 text-white">{formatNumber(summary.total_consultations)}</p>
-              <p className="text-[10px] mt-1 text-white/70 uppercase tracking-wide">
-                as of <span className="font-bold">{currentMonth}</span> complete consultation
-              </p>
-            </div>
-
-            <StatCard
-              label="Reminders"
-              value={formatNumber(summary.cancelled_consultations)}
-              sub="Discontinued consultations"
-              color="rose"
-            />
           </div>
+        )}
 
-          {/* ?? Recent System Activity ?? */}
-          <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden mb-6">
-            <div className="p-6 border-b border-border">
-              <h3 className="font-semibold text-text flex items-center gap-2">
-                <Activity size={16} className="text-indigo-500" /> Recent System Activity
-              </h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-surface-hover/50 text-text-muted font-medium border-b border-border">
-                  <tr>
-                    <th className="px-6 py-3">Timestamp</th>
-                    <th className="px-6 py-3">User</th>
-                    <th className="px-6 py-3">Action</th>
-                    <th className="px-6 py-3 min-w-[200px]">Details</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50 text-text">
-                  {(stats.recent_logs || []).slice(0, 5).map((log, i) => (
-                    <tr key={i} className="hover:bg-surface-hover/30 transition-colors">
-                      <td className="px-6 py-3 whitespace-nowrap text-text-light text-xs">{new Date(log.created_at).toLocaleString()}</td>
-                      <td className="px-6 py-3">
-                        <div className="font-medium text-text">{log.user || 'System'}</div>
-                        {log.role && <div className="text-[10px] uppercase tracking-wider text-text-muted mt-0.5">{log.role}</div>}
-                      </td>
-                      <td className="px-6 py-3 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-semibold">
-                          {log.action}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3 text-text-light text-xs">{log.description}</td>
-                    </tr>
-                  ))}
-                  {(!stats.recent_logs || stats.recent_logs.length === 0) && (
-                    <tr>
-                      <td colSpan="4" className="px-6 py-8 text-center text-text-muted">No recent activity recorded.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* ── Export Date Filter Modal ───────────────────────── */}
+      {/* Export Date Filter Modal */}
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-surface border border-border rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200">
+          <div className="bg-surface dark:bg-slate-900 border border-border rounded-2xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200">
 
-            {/* Header */}
+        {/* Header */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-brand-bg flex items-center justify-center">
