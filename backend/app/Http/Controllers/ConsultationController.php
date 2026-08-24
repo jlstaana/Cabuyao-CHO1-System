@@ -9,7 +9,7 @@ class ConsultationController extends Controller {
 
     public function history(Request $request) {
         $user = $request->user();
-        $query = Consultation::with(['patient.user', 'doctor.user', 'form', 'prescription.items.medicine'])
+        $query = Consultation::with(['patient.user', 'doctor.user', 'form', 'vitalSigns', 'prescription.items.medicine'])
             ->orderBy('created_at', 'desc');
 
         if ($user->role === 'Patient') {

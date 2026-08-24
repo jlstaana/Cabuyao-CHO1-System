@@ -9,7 +9,15 @@ class PatientController extends Controller {
         if (!in_array($request->user()->role, ['Admin', 'Staff', 'Doctor'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        $patients = Patient::with(['user', 'record', 'consultations', 'consultations.prescription', 'medicalImages', 'consultations.vitalSigns'])->get();
+        $patients = Patient::with([
+            'user',
+            'record',
+            'consultations.doctor.user',
+            'consultations.form',
+            'consultations.vitalSigns',
+            'consultations.prescription.items.medicine',
+            'medicalImages'
+        ])->get();
         return response()->json($patients);
     }
     public function profile(Request $request) {
@@ -24,7 +32,7 @@ class PatientController extends Controller {
         return response()->json($request->user()->load('patient'));
     }
     public function history(Request $request) {
-        return response()->json($request->user()->patient->consultations()->with('doctor.user', 'prescription.items.medicine')->get());
+        return response()->json($request->user()->patient->consultations()->with(['doctor.user', 'form', 'vitalSigns', 'prescription.items.medicine'])->latest('created_at')->get());
     }
     public function prescriptions(Request $request, Patient $patient) {
         if (!in_array($request->user()->role, ['Admin', 'Staff', 'Doctor'])) {

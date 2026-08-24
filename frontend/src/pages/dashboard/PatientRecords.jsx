@@ -8,7 +8,8 @@ import {
   Calendar, Clock, FileText, Video, ImagePlus,
   AlertCircle, HeartPulse, Phone,
   MapPin, User, ClipboardList, Download, FileImage,
-  Edit, Save, Archive,
+  Edit, Save, Archive, Stethoscope, Pill, CheckCircle2,
+  Activity, Sparkles, ShieldCheck, Thermometer, Droplets
 } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 import Modal from '../../components/Modal';
@@ -39,21 +40,42 @@ function fileLabel(file) {
 function buildPatientRecords(patientsData) {
   return patientsData.map((patient) => {
     const rawConsultations = patient.consultations || [];
-    const formattedConsultations = rawConsultations.map(c => ({
-      id: c.id,
-      date: formatDate(c.scheduled_at || c.created_at),
-      time: formatTime(c.scheduled_at || c.created_at),
-      raw_date: c.scheduled_at,
-      status: c.status,
-      diagnosis: c.form?.diagnosis,
-      notes: c.form?.notes,
-      prescription_id: c.prescription?.id,
-    })).sort((a, b) => b.id - a.id);
+    const formattedConsultations = rawConsultations.map((c, index) => {
+      const doctorName = c.doctor?.user?.name 
+        ? `Dr. ${(c.doctor.user.name || '').replace(/^Dr\.\s*/i, '')}` 
+        : (c.doctor_name || 'Assigned CHO Physician');
+      const specialization = c.doctor?.specialization || c.requested_specialization || 'General Medicine';
+      const vitals = c.vital_signs || c.vitalSigns || null;
+      const prescription = c.prescription || null;
+      const prescriptionItems = prescription?.items || [];
+      const form = c.form || {};
 
-    let vitals = {};
-    const cWithVitals = [...rawConsultations].reverse().find(c => c.vital_signs || c.vitalSigns);
-    if (cWithVitals) vitals = cWithVitals.vital_signs || cWithVitals.vitalSigns;
+      return {
+        id: c.id,
+        encounter_number: rawConsultations.length - index,
+        date: formatDate(c.scheduled_at || c.created_at),
+        time: formatTime(c.scheduled_at || c.created_at),
+        raw_date: c.scheduled_at,
+        status: c.status || 'Completed',
+        doctor: doctorName,
+        specialization: specialization,
+        symptoms: form.symptoms || c.symptoms || '',
+        diagnosis: form.diagnosis || c.diagnosis || '',
+        notes: form.notes || c.notes || '',
+        prescription_id: prescription?.id,
+        prescription_items: prescriptionItems.map(item => ({
+          medicine_name: item.medicine?.name || 'Medication',
+          dosage: item.dosage || '',
+          frequency: item.frequency || '',
+          duration: item.duration || '',
+          instructions: item.instructions || ''
+        })),
+        prescription_notes: prescription?.notes || ''
+      };
+    }).sort((a, b) => b.id - a.id);
 
+    // Latest vitals across consultations or direct patient vitals
+    
     const rawImages = patient.medical_images || patient.medicalImages || [];
     const images = rawImages.map(image => ({
       id: image.id,
@@ -66,20 +88,33 @@ function buildPatientRecords(patientsData) {
       status: 'Uploaded',
     }));
 
+    // Aggregate overall patient clinical metrics & care summary
+    const completedCount = formattedConsultations.filter(c => c.status === 'Completed').length;
+    const scheduledCount = formattedConsultations.filter(c => c.status === 'Scheduled').length;
+    const latestDiagnosis = formattedConsultations.find(c => c.diagnosis)?.diagnosis || 'No documented diagnosis yet';
+    const uniqueDoctors = Array.from(new Set(formattedConsultations.map(c => c.doctor).filter(d => d && !d.includes('Assigned CHO Physician'))));
+    const allDiagnoses = formattedConsultations.filter(c => c.diagnosis).map(c => ({ diagnosis: c.diagnosis, date: c.date, doctor: c.doctor }));
+    const allPrescriptionsCount = formattedConsultations.filter(c => c.prescription_id).length;
+
     return {
       id: patient.id,
       name: patient.user?.name || 'Unknown Patient',
       dob: patient.dob,
       contact: patient.contact_no || 'N/A',
       address: patient.address || 'N/A',
-      category: patient.category || '',
+      category: patient.category || 'General',
       medical_history: patient.record?.medical_history || '',
       blood_type: 'N/A',
-      allergies: 'N/A',
-      last_visit: formattedConsultations[0]?.date || 'N/A',
+      allergies: 'None recorded',
+      last_visit: formattedConsultations[0]?.date || 'No visits yet',
       total_consultations: formattedConsultations.length,
+      completed_consultations: completedCount,
+      scheduled_consultations: scheduledCount,
+      latest_diagnosis: latestDiagnosis,
+      attending_doctors: uniqueDoctors.length > 0 ? uniqueDoctors : (formattedConsultations[0]?.doctor ? [formattedConsultations[0].doctor] : ['Assigned CHO Physician']),
+      all_diagnoses: allDiagnoses,
+      total_prescriptions: allPrescriptionsCount,
       consultations: formattedConsultations,
-      vitals,
       images
     };
   });
@@ -148,15 +183,6 @@ function StatCard({ label, value, icon: Icon, color, sub }) {
   );
 }
 
-function VitalBadge({ label, value, unit, color }) {
-  return (
-    <div className={`rounded-xl p-3 text-center ${color}`}>
-      <p className="text-lg font-black leading-none">{value || '—'}</p>
-      <p className="text-[10px] font-medium mt-0.5 opacity-70">{unit}</p>
-      <p className="text-[10px] font-semibold mt-1 opacity-80">{label}</p>
-    </div>
-  );
-}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function PatientRecords() {
@@ -399,17 +425,30 @@ export default function PatientRecords() {
                       <span className="text-xs text-text-light"> | </span>
                       <p className="text-sm text-text-muted">{calcAge(patient.dob)} yrs</p>
                       <span className="text-xs text-text-light"> | </span>
-                      <span className="flex items-center gap-1 text-sm text-text-muted"><HeartPulse size={13} className="text-text-light" /> {patient.blood_type}</span>
-                      <span className="text-xs text-text-light"> | </span>
+                      
                       <span className="flex items-center gap-1 text-sm text-text-muted"><Phone size={13} className="text-text-light" /> {patient.contact || 'N/A'}</span>
                       <span className="text-xs text-text-light"> | </span>
                       <span className="flex items-center gap-1 text-sm text-text-muted"><MapPin size={13} className="text-text-light" /> {patient.address}</span>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-text-light flex-wrap">
-                      <span className="flex items-center gap-1"><Calendar size={11} /> Last visit: {patient.last_visit}</span>
-                      <span className="flex items-center gap-1"><ClipboardList size={11} /> {patient.total_consultations} consultation{patient.total_consultations !== 1 ? 's' : ''}</span>
-                      {patient.images.length > 0 && (
-                        <span className="flex items-center gap-1"><ImagePlus size={11} /> {patient.images.length} image{patient.images.length !== 1 ? 's' : ''}</span>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-text-muted dark:text-slate-400 flex-wrap">
+                      <span className="flex items-center gap-1"><Calendar size={12} className="text-sky-500" /> Last visit: <b>{patient.last_visit}</b></span>
+                      <span className="text-text-light">•</span>
+                      <span className="flex items-center gap-1"><ClipboardList size={12} className="text-indigo-500" /> <b>{patient.total_consultations}</b> encounter{patient.total_consultations !== 1 ? 's' : ''} ({patient.completed_consultations} completed)</span>
+                      {patient.attending_doctors.length > 0 && (
+                        <>
+                          <span className="text-text-light">•</span>
+                          <span className="flex items-center gap-1 text-text dark:text-slate-300 font-medium">
+                            <Stethoscope size={12} className="text-emerald-500" /> {patient.attending_doctors.slice(0, 2).join(', ')}{patient.attending_doctors.length > 2 ? ` + ${patient.attending_doctors.length - 2} more` : ''}
+                          </span>
+                        </>
+                      )}
+                      {patient.latest_diagnosis !== 'No documented diagnosis yet' && (
+                        <>
+                          <span className="text-text-light">•</span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold text-[11px]">
+                            Dx: {patient.latest_diagnosis}
+                          </span>
+                        </>
                       )}
                     </div>
                   </div>
@@ -454,22 +493,81 @@ export default function PatientRecords() {
 
                     <div className="p-5">
 
-                      {/* ── Overview tab ────────────────────────────────── */}
+                      {/* ── Overview tab with Comprehensive Clinical Summary ────────────────────────────────── */}
                       {tab === 'overview' && (
                         <div className="space-y-5">
+                          {/* Executive Clinical Health Summary Card */}
+                          <div className="rounded-2xl border border-sky-200/80 dark:border-sky-900/40 bg-gradient-to-br from-sky-50/50 via-surface to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 p-5 space-y-4 shadow-sm">
+                            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-border/60 pb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="p-2 rounded-xl bg-sky-500 text-white shadow-sm">
+                                  <Sparkles size={16} />
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-bold text-text dark:text-white">Executive Clinical Summary</h4>
+                                  <p className="text-xs text-text-muted dark:text-slate-400">Consolidated healthcare profile across all consultations</p>
+                                </div>
+                              </div>
+                              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50">
+                                {patient.category || 'General'} Patient
+                              </span>
+                            </div>
+
+                            {/* Summary metrics row */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                              <div className="p-3 rounded-xl bg-surface/80 dark:bg-slate-800/60 border border-border/70 dark:border-slate-800">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted dark:text-slate-400">Total Encounters</p>
+                                <p className="text-lg font-black text-text dark:text-white mt-0.5">{patient.total_consultations}</p>
+                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">{patient.completed_consultations} Completed</p>
+                              </div>
+                              <div className="p-3 rounded-xl bg-surface/80 dark:bg-slate-800/60 border border-border/70 dark:border-slate-800">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted dark:text-slate-400">Prescriptions</p>
+                                <p className="text-lg font-black text-text dark:text-white mt-0.5">{patient.total_prescriptions}</p>
+                                <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">Issued on record</p>
+                              </div>
+                              <div className="p-3 rounded-xl bg-surface/80 dark:bg-slate-800/60 border border-border/70 dark:border-slate-800 col-span-2 sm:col-span-2">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted dark:text-slate-400">Attending Physicians</p>
+                                <p className="text-xs font-bold text-text dark:text-white truncate mt-1 flex items-center gap-1.5">
+                                  <Stethoscope size={14} className="text-sky-500 shrink-0" />
+                                  {patient.attending_doctors.join(', ')}
+                                </p>
+                                <p className="text-[10px] text-text-muted dark:text-slate-400 mt-0.5">Primary medical team</p>
+                              </div>
+                            </div>
+
+                            {/* Latest condition & vital signs snapshot */}
+                            <div className="pt-1">
+                              <div className="p-3.5 rounded-xl bg-surface/80 dark:bg-slate-800/60 border border-border/70 dark:border-slate-800 space-y-1.5">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted dark:text-slate-400 flex items-center gap-1.5">
+                                  <Activity size={13} className="text-amber-500" /> Latest Diagnosis & Clinical Assessment
+                                </p>
+                                <p className="text-xs font-bold text-text dark:text-white">
+                                  {patient.latest_diagnosis}
+                                </p>
+                                {patient.all_diagnoses.length > 1 && (
+                                  <p className="text-[10px] text-text-muted dark:text-slate-400">
+                                    History of {patient.all_diagnoses.length} recorded diagnostic evaluations across consultations
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Demographic Information Grid */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <InfoChip icon={User}     label="Full Name"    value={patient.name} />
                             <InfoChip icon={Calendar} label="Date of Birth" value={`${formatDate(patient.dob)} (${calcAge(patient.dob)} years old)`} />
                             <InfoChip icon={Phone}    label="Contact No."  value={patient.contact} />
                             <InfoChip icon={MapPin}   label="Address"      value={patient.address} />
-                            <InfoChip icon={HeartPulse} label="Blood Type" value={patient.blood_type} />
                             <InfoChip icon={AlertCircle} label="Allergies" value={patient.allergies} />
                             <InfoChip icon={ClipboardList} label="Category" value={patient.category || 'General'} />
                           </div>
+
+                          {/* Medical History Description */}
                           {patient.medical_history && (
                             <div className="rounded-xl border border-border dark:border-slate-800 bg-background dark:bg-slate-900/60 px-4 py-3">
-                              <p className="text-[10px] font-semibold text-text-light uppercase tracking-wide">Medical History</p>
-                              <p className="mt-1 text-sm text-text-muted whitespace-pre-wrap">{patient.medical_history}</p>
+                              <p className="text-[10px] font-bold text-text-light dark:text-slate-400 uppercase tracking-wide">Documented Medical History & Background</p>
+                              <p className="mt-1 text-sm text-text-muted dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{patient.medical_history}</p>
                             </div>
                           )}
 
@@ -495,7 +593,7 @@ export default function PatientRecords() {
                               onClick={() => setTab(patient.id, 'consultations')}
                               className="flex items-center gap-2 px-4 py-2 bg-primary-bg dark:bg-sky-950/40 text-primary-text dark:text-sky-300 rounded-xl text-sm font-medium hover:bg-primary-hover dark:hover:bg-sky-900/40 border border-transparent dark:border-sky-900/30 transition-colors"
                             >
-                              <ClipboardList size={15} /> View Consultations
+                              <ClipboardList size={15} /> View Consultations ({patient.total_consultations})
                             </button>
                             
                             {patient.consultations.some(c => c.status === 'Scheduled' && isUpcoming(c.raw_date)) && (
@@ -516,57 +614,147 @@ export default function PatientRecords() {
                         </div>
                       )}
 
-                      {/* ── Consultations tab ────────────────────────────── */}
+                      {/* ── Consultations Tab (Detailed Encounter Summaries for All Consultations) ────────────────────────────── */}
                       {tab === 'consultations' && (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           {patient.consultations.length === 0 ? (
-                            <p className="text-text-light text-sm text-center py-8">No consultation records yet.</p>
-                          ) : patient.consultations.map((c) => (
-                            <div key={c.id} className="rounded-xl border border-border dark:border-slate-800/80 bg-surface dark:bg-slate-900/50 p-4 space-y-2">
-                              <div className="flex items-center justify-between gap-2 flex-wrap">
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Calendar size={14} className="text-text-light" />
-                                  <span className="font-semibold text-text">{c.date}</span>
-                                  <span className="text-text-light"> | </span>
-                                  <Clock size={14} className="text-text-light" />
-                                  <span className="text-text-muted">{c.time}</span>
-                                </div>
-                                {(() => {
-                                  const style = STATUS_CONFIG[c.status] || STATUS_CONFIG.Scheduled;
-                                  return (
-                                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-sm dark:shadow-none ${style.bg}`}>
-                                      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-                                      {c.status}
-                                    </span>
-                                  );
-                                })()}
-                              </div>
-                              {c.diagnosis && (
-                                <p className="text-sm font-semibold text-text">Dx: {c.diagnosis}</p>
-                              )}
-                              {c.notes && (
-                                <p className="text-sm text-text-muted leading-relaxed">{c.notes}</p>
-                              )}
-                              <div className="flex gap-2 pt-1">
-                                {c.status === 'Scheduled' && (
-                                  <Link
-                                    to={`/room/${c.id}`}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-xs font-medium hover:bg-indigo-600 transition-colors"
-                                  >
-                                    <Video size={13} /> Join Call
-                                  </Link>
-                                )}
-                                {c.prescription_id && (
-                                  <Link
-                                    to="/prescriptions"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-success-bg text-success-text rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors"
-                                  >
-                                    <FileText size={13} /> View Prescription
-                                  </Link>
-                                )}
-                              </div>
+                            <div className="text-center py-10 text-text-light dark:text-slate-500">
+                              <ClipboardList size={32} className="mx-auto mb-2 opacity-40 text-text-muted" />
+                              <p className="text-sm font-semibold text-text-muted dark:text-slate-400">No consultation records on file.</p>
+                              <p className="text-xs text-text-light mt-0.5">Encounters will appear here once booked or conducted.</p>
                             </div>
-                          ))}
+                          ) : (
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between text-xs text-text-muted dark:text-slate-400 px-1">
+                                <span className="font-bold uppercase tracking-wider">
+                                  Encounter History ({patient.consultations.length} total consultation{patient.consultations.length !== 1 ? 's' : ''})
+                                </span>
+                                <span className="text-[11px]">Chronological medical records</span>
+                              </div>
+
+                              {patient.consultations.map((c) => {
+                                const style = STATUS_CONFIG[c.status] || STATUS_CONFIG.Scheduled;
+                                return (
+                                  <div 
+                                    key={c.id} 
+                                    className="rounded-2xl border border-border dark:border-slate-800/90 bg-surface dark:bg-slate-900/60 p-5 space-y-4 shadow-sm hover:border-sky-300 dark:hover:border-slate-700 transition-all"
+                                  >
+                                    {/* Header: Encounter Number, Date/Time, Attending Doctor & Status */}
+                                    <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap border-b border-border/60 dark:border-slate-800 pb-3">
+                                      <div className="flex items-center gap-2.5 flex-wrap">
+                                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black">
+                                          Encounter #{c.encounter_number || c.id}
+                                        </span>
+                                        <div className="flex items-center gap-1.5 text-xs text-text-muted dark:text-slate-400 font-medium">
+                                          <Calendar size={13} className="text-sky-500 shrink-0" />
+                                          <span className="font-bold text-text dark:text-white">{c.date}</span>
+                                          <span className="opacity-40">•</span>
+                                          <Clock size={13} className="text-sky-500 shrink-0" />
+                                          <span>{c.time}</span>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-2">
+                                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border ${style.bg}`}>
+                                          <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                                          {c.status}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Attending Doctor Profile Bar */}
+                                    <div className="flex items-center gap-2.5 bg-slate-50/70 dark:bg-slate-800/40 p-2.5 rounded-xl border border-border/50 dark:border-slate-800/60">
+                                      <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                                        <Stethoscope size={16} />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-text dark:text-white truncate">
+                                          Attending Physician: <span className="text-indigo-600 dark:text-indigo-400">{c.doctor}</span>
+                                        </p>
+                                        <p className="text-[11px] text-text-muted dark:text-slate-400 truncate">
+                                          Specialization: {c.specialization}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* Clinical Summary Breakdown (Symptoms, Diagnosis, Notes) */}
+                                    <div className="space-y-2.5">
+                                      {c.symptoms && (
+                                        <div className="text-xs bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 rounded-xl p-3">
+                                          <p className="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1 mb-1">
+                                            <AlertCircle size={12} /> Chief Complaint / Symptoms Reported:
+                                          </p>
+                                          <p className="text-text dark:text-slate-200 font-medium leading-relaxed">{c.symptoms}</p>
+                                        </div>
+                                      )}
+
+                                      {c.diagnosis ? (
+                                        <div className="text-xs bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 rounded-xl p-3">
+                                          <p className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1 mb-1">
+                                            <Activity size={12} /> Clinical Diagnosis & Assessment:
+                                          </p>
+                                          <p className="text-sm font-bold text-emerald-900 dark:text-emerald-200">{c.diagnosis}</p>
+                                        </div>
+                                      ) : (
+                                        <div className="text-xs text-text-light dark:text-slate-500 italic px-1">
+                                          No formal diagnosis recorded for this consultation session.
+                                        </div>
+                                      )}
+
+                                      {c.notes && (
+                                        <div className="text-xs bg-surface-hover/30 dark:bg-slate-800/30 border border-border/60 dark:border-slate-800 rounded-xl p-3">
+                                          <p className="text-[10px] font-bold text-text-muted dark:text-slate-400 uppercase tracking-wider flex items-center gap-1 mb-1">
+                                            <FileText size={12} /> Doctor's Clinical Notes & Treatment Plan:
+                                          </p>
+                                          <p className="text-text dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{c.notes}</p>
+                                        </div>
+                                      )}
+                                    </div>
+
+
+                                    {/* Prescribed Medications Summary (if issued) */}
+                                    {c.prescription_items && c.prescription_items.length > 0 && (
+                                      <div className="p-3 rounded-xl bg-indigo-50/30 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-900/30 space-y-2">
+                                        <p className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1">
+                                          <Pill size={12} /> Prescribed Medications ({c.prescription_items.length} item{c.prescription_items.length !== 1 ? 's' : ''}):
+                                        </p>
+                                        <div className="space-y-1.5">
+                                          {c.prescription_items.map((item, idx) => (
+                                            <div key={idx} className="flex items-center justify-between text-xs bg-surface dark:bg-slate-900 p-2 rounded-lg border border-border/70 dark:border-slate-800">
+                                              <span className="font-bold text-text dark:text-white">{item.medicine_name}</span>
+                                              <span className="text-text-muted dark:text-slate-400 text-[11px]">
+                                                {item.dosage} {item.frequency && `· ${item.frequency}`} {item.duration && `(${item.duration})`}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Encounter Actions */}
+                                    <div className="flex items-center gap-2 pt-2 border-t border-border/60 dark:border-slate-800">
+                                      {c.status === 'Scheduled' && (
+                                        <Link
+                                          to={`/room/${c.id}`}
+                                          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-500 text-white rounded-xl text-xs font-semibold hover:bg-indigo-600 transition-colors shadow-sm"
+                                        >
+                                          <Video size={13} /> Join Telehealth Call
+                                        </Link>
+                                      )}
+                                      {c.prescription_id && (
+                                        <Link
+                                          to="/prescriptions"
+                                          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-success-bg dark:bg-emerald-950/40 text-success-text dark:text-emerald-300 rounded-xl text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-transparent dark:border-emerald-900/30 transition-colors"
+                                        >
+                                          <FileText size={13} /> View Full Prescription
+                                        </Link>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
 
