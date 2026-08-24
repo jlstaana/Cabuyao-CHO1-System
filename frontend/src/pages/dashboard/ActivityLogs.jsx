@@ -7,16 +7,16 @@ import PageTitle from '../../components/PageTitle';
 import { ShieldCheck, Search, X, Filter, Monitor, AlertTriangle, CheckCircle, LogIn, LogOut, RefreshCw, ChevronLeft, ChevronRight, HeartPulse } from 'lucide-react';
 
 const ACTION_ICONS = {
-  'login':       { icon: LogIn,        color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  'logout':      { icon: LogOut,       color: 'text-text-muted',   bg: 'bg-slate-100'  },
-  'failed':      { icon: AlertTriangle,color: 'text-rose-600',    bg: 'bg-rose-50'    },
-  'unauthorized':{ icon: AlertTriangle,color: 'text-rose-600',    bg: 'bg-rose-50'    },
-  'security':    { icon: AlertTriangle,color: 'text-amber-600',   bg: 'bg-amber-50'   },
-  'system':      { icon: Monitor,      color: 'text-sky-600',     bg: 'bg-sky-50'     },
-  'backup':      { icon: Monitor,      color: 'text-sky-600',     bg: 'bg-sky-50'     },
-  'health':      { icon: Monitor,      color: 'text-sky-600',     bg: 'bg-sky-50'     },
-  'vitals':      { icon: HeartPulse,   color: 'text-rose-600',    bg: 'bg-rose-50'    },
-  'default':     { icon: CheckCircle,  color: 'text-violet-600',  bg: 'bg-violet-50'  },
+  'login':       { icon: LogIn,        color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
+  'logout':      { icon: LogOut,       color: 'text-text-muted dark:text-slate-400',   bg: 'bg-slate-100 dark:bg-slate-800/40'  },
+  'failed':      { icon: AlertTriangle,color: 'text-rose-600 dark:text-rose-400',    bg: 'bg-rose-50 dark:bg-rose-950/30'    },
+  'unauthorized':{ icon: AlertTriangle,color: 'text-rose-600 dark:text-rose-400',    bg: 'bg-rose-50 dark:bg-rose-950/30'    },
+  'security':    { icon: AlertTriangle,color: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-950/30'   },
+  'system':      { icon: Monitor,      color: 'text-sky-600 dark:text-sky-400',     bg: 'bg-sky-50 dark:bg-sky-950/30'     },
+  'backup':      { icon: Monitor,      color: 'text-sky-600 dark:text-sky-400',     bg: 'bg-sky-50 dark:bg-sky-950/30'     },
+  'health':      { icon: Monitor,      color: 'text-sky-600 dark:text-sky-400',     bg: 'bg-sky-50 dark:bg-sky-950/30'     },
+  'vitals':      { icon: HeartPulse,   color: 'text-rose-600 dark:text-rose-400',    bg: 'bg-rose-50 dark:bg-rose-950/30'    },
+  'default':     { icon: CheckCircle,  color: 'text-violet-600 dark:text-violet-400',  bg: 'bg-violet-50 dark:bg-violet-950/30'  },
 };
 
 function getActionMeta(action = '') {
@@ -31,11 +31,11 @@ function getActionMeta(action = '') {
 }
 
 const ROLE_BADGE = {
-  Admin:   'bg-violet-100 text-violet-700',
-  Doctor:  'bg-sky-100 text-sky-700',
-  Staff:   'bg-amber-100 text-amber-700',
-  Patient: 'bg-emerald-100 text-emerald-700',
-  System:  'bg-slate-100 text-text-muted',
+  Admin:   'bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400',
+  Doctor:  'bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400',
+  Staff:   'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400',
+  Patient: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400',
+  System:  'bg-slate-100 dark:bg-slate-800/40 text-text-muted dark:text-slate-400',
 };
 
 function formatDate(ts) {
@@ -281,22 +281,22 @@ export default function ActivityLogs() {
                       {log.action === 'Vital Signs Recorded' && log.description && (
                         <div className="flex flex-wrap gap-1.5 mt-1.5">
                           {log.description.includes('BP:') && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-900/30">
                               🩸 {log.description.match(/BP:\s*([^\s,]+(?:\s*mmHg)?)/i)?.[0] || 'BP'}
                             </span>
                           )}
                           {log.description.includes('HR:') && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/30">
                               ❤️ {log.description.match(/HR:\s*([^\s,]+(?:\s*bpm)?)/i)?.[0] || 'HR'}
                             </span>
                           )}
                           {log.description.includes('Temp:') && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30">
                               🌡️ {log.description.match(/Temp:\s*([^\s,]+(?:\s*°C)?)/i)?.[0] || 'Temp'}
                             </span>
                           )}
                           {(log.description.includes('SpO2:') || log.description.includes('Oxygen:')) && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/30">
                               🫁 {log.description.match(/(?:SpO2|Oxygen):\s*([^\s,]+(?:\s*%)?)/i)?.[0] || 'SpO2'}
                             </span>
                           )}

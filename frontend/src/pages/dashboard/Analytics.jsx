@@ -715,7 +715,7 @@ export default function Analytics() {
       {activeTab === 'consultations' && (
         <div data-tour="page-stats" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard label="Monthly Consultations" value={formatNumber(summary.total_consultations)} sub={<>as of <b>{currentMonth}</b> complete consultation</>} color="sky" />
+            <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} sub={filterDateFrom || filterDateTo || filterDoctorId ? 'For selected filter criteria' : <>as of <b>{currentMonth}</b> consultations</>} color="sky" />
             <StatCard label="Completed" value={formatNumber(getStatusTotal(stats, 'Completed'))} sub="Successfully finished" color="emerald" />
             <StatCard label="Scheduled" value={formatNumber(getStatusTotal(stats, 'Scheduled'))} sub="Upcoming sessions" color="indigo" />
           </div>
@@ -853,10 +853,10 @@ export default function Analytics() {
       {activeTab === 'prescriptions' && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} sub="This month" color="emerald" />
-            <StatCard label="Low Stock Alerts" value={formatNumber(summary.low_stock_count)} sub="Items needing restock" color="amber" />
+            <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} sub={filterDateFrom || filterDateTo || filterCategory ? 'For selected criteria' : 'This month'} color="emerald" />
+            <StatCard label="Low Stock Alerts" value={formatNumber(summary.low_stock_count)} sub={filterCategory ? `In ${filterCategory}` : 'Items needing restock'} color="amber" />
             <StatCard label="Top Diseases" value={formatNumber((stats.top_diseases || []).length)} sub="Based on diagnoses" color="indigo" />
-            <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub="Available in inventory" color="rose" />
+            <StatCard label="Active Medicines" value={formatNumber(summary.active_medicines)} sub={filterCategory ? `${filterCategory} in stock` : 'Available in inventory'} color="rose" />
           </div>
 
           <SubViewSelector

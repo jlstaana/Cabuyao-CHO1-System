@@ -348,7 +348,7 @@ return (
             <p>No files uploaded yet.</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-slate-50 dark:divide-slate-800">
             {filteredUploads.map((img) => (
               <div key={img.id} className="flex items-center gap-4 px-5 py-4 hover:bg-background/60 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-brand-bg flex items-center justify-center flex-shrink-0">

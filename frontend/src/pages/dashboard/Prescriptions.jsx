@@ -224,7 +224,7 @@ export default function Prescriptions() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search by patient, doctor, notes, or Rx number..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-surface text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
             />
             {search && (
               <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors">
@@ -375,7 +375,7 @@ export default function Prescriptions() {
                 rows={2}
                 value={editForm.notes}
                 onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none"
               />
             </div>
 

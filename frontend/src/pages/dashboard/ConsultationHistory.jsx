@@ -9,10 +9,10 @@ import {
 import PageTitle from '../../components/PageTitle';
 
 const STATUS_CONFIG = {
-  Completed:  { color: 'bg-emerald-100 text-success-text', icon: CheckCircle },
-  Scheduled:  { color: 'bg-primary-hover text-primary-text',         icon: Clock },
-  Pending:    { color: 'bg-amber-100 text-warning-text',      icon: Loader2 },
-  Cancelled:  { color: 'bg-surface-hover/50 text-text-muted',      icon: XCircle },
+  Completed:  { color: 'bg-emerald-100 dark:bg-emerald-950/40 text-success-text dark:text-emerald-400 dark:border dark:border-emerald-900/30', icon: CheckCircle },
+  Scheduled:  { color: 'bg-primary-hover dark:bg-sky-950/40 text-primary-text dark:text-sky-400 dark:border dark:border-sky-900/30', icon: Clock },
+  Pending:    { color: 'bg-amber-100 dark:bg-amber-950/40 text-warning-text dark:text-amber-400 dark:border dark:border-amber-900/30', icon: Loader2 },
+  Cancelled:  { color: 'bg-surface-hover/50 dark:bg-slate-800/40 text-text-muted dark:text-slate-400 dark:border dark:border-slate-800', icon: XCircle },
 };
 
 const FILTERS = ['All', 'Completed', 'Scheduled', 'Cancelled'];
@@ -119,7 +119,7 @@ export default function ConsultationHistory() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by doctor, diagnosis, or date..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-surface dark:bg-slate-900 text-text dark:text-white transition-all"
           />
         </div>
         <div className="flex items-center gap-2 overflow-x-auto">
@@ -131,7 +131,7 @@ export default function ConsultationHistory() {
               className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 statusFilter === f
                   ? 'bg-sky-600 text-white shadow-sm'
-                  : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'
+                  : 'bg-surface dark:bg-slate-900 text-text-muted dark:text-slate-400 border border-border dark:border-slate-800 hover:border-sky-300 dark:hover:border-slate-700 hover:text-primary-text'
               }`}
             >
               {f}

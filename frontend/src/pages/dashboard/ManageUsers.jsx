@@ -14,11 +14,11 @@ function generateTempPassword(length = 10) {
 }
 
 const ROLE_STYLES = {
-  Admin:   'bg-fuchsia-100 text-fuchsia-700',
-  Doctor:  'bg-primary-hover text-primary-text',
-  Staff:   'bg-amber-100 text-warning-text',
-  Visitor: 'bg-purple-100 text-purple-700',
-  Patient: 'bg-surface-hover/50 text-text-muted',
+  Admin:   'bg-fuchsia-100 dark:bg-fuchsia-950/40 text-fuchsia-700 dark:text-fuchsia-400 dark:border dark:border-fuchsia-900/30',
+  Doctor:  'bg-primary-hover dark:bg-sky-950/40 text-primary-text dark:text-sky-400 dark:border dark:border-sky-900/30',
+  Staff:   'bg-amber-100 dark:bg-amber-950/40 text-warning-text dark:text-amber-400 dark:border dark:border-amber-900/30',
+  Visitor: 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 dark:border dark:border-purple-900/30',
+  Patient: 'bg-surface-hover/50 dark:bg-slate-800 text-text-muted dark:text-slate-400',
 };
 
 const SPECIALIZATION_OPTIONS = [
@@ -336,7 +336,7 @@ export default function ManageUsers() {
                 <th className="px-6 py-4 font-semibold tracking-wide text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">

@@ -98,18 +98,36 @@ class AnalyticsController extends Controller {
             ->limit(10)
             ->get();
 
-        $topDiseasesQuery = ConsultationForm::whereNotNull('diagnosis');
-        
-        if ($request->has('start_date') && $request->has('end_date')) {
-            $topDiseasesQuery->whereHas('consultation', function($q) use ($request) {
-                $q->whereBetween('consultations.created_at', [$request->start_date, $request->end_date]);
+        $topDiseasesQuery = ConsultationForm::whereNotNull('diagnosis')
+            ->whereHas('consultation', function($q) use ($request) {
+                if ($request->has('start_date') && $request->has('end_date')) {
+                    $q->whereBetween('consultations.created_at', [$request->start_date, $request->end_date]);
+                } else {
+                    $q->whereBetween('consultations.created_at', [now()->startOfMonth(), now()->endOfMonth()]);
+                }
+                if ($request->has('doctor_id') && $request->doctor_id !== '') {
+                    $q->where('doctor_id', $request->doctor_id);
+                }
+                if ($request->has('age_group') && $request->age_group !== '') {
+                    $q->whereHas('patient', function($pq) use ($request) {
+                        $pq->where('category', $request->age_group);
+                    });
+                }
+                if ($request->has('barangay') && $request->barangay !== '') {
+                    $q->whereHas('patient', function($pq) use ($request) {
+                        $pq->where('address', 'like', $request->barangay . '%');
+                    });
+                }
             });
-        }
 
         $topDiseases = $topDiseasesQuery->select('diagnosis', DB::raw('count(*) as total'))
             ->groupBy('diagnosis')->orderByDesc('total')->limit(10)->get();
 
-        $activeMedicines = Medicine::with('batches')->where('status', true)->get();
+        $activeMedicinesQuery = Medicine::with('batches')->where('status', true);
+        if ($request->has('category') && $request->category !== '') {
+            $activeMedicinesQuery->where('category', $request->category);
+        }
+        $activeMedicines = $activeMedicinesQuery->get();
         
         $lowStockMedicines = $activeMedicines->filter(function ($medicine) {
             return $medicine->total_stock <= 20;
@@ -129,6 +147,21 @@ class AnalyticsController extends Controller {
         $totalConsultations = (clone $query)->count();
         $completedConsultations = (clone $query)->where('status', 'Completed')->count();
         $scheduledConsultations = (clone $query)->whereIn('status', ['Scheduled'])->count();
+
+        $patientCountQuery = Patient::where('archived', false);
+        if ($request->has('age_group') && $request->age_group !== '') {
+            $patientCountQuery->where('category', $request->age_group);
+        }
+        if ($request->has('barangay') && $request->barangay !== '') {
+            $patientCountQuery->where('address', 'like', $request->barangay . '%');
+        }
+        $registeredPatientsCount = $patientCountQuery->count();
+
+        $doctorCountQuery = Doctor::query();
+        if ($request->has('doctor_id') && $request->doctor_id !== '') {
+            $doctorCountQuery->where('id', $request->doctor_id);
+        }
+        $activeDoctorsCount = $doctorCountQuery->count();
 
         // Epidemiological Analytics: Patient Demographics (Age Group/Category)
         $byAgeGroup = (clone $query)
@@ -217,9 +250,9 @@ class AnalyticsController extends Controller {
                 'total_consultations' => $totalConsultations,
                 'completed_consultations' => $completedConsultations,
                 'scheduled_consultations' => $scheduledConsultations,
-                'registered_patients' => Patient::where('archived', false)->count(),
-                'active_doctors' => Doctor::count(),
-                'active_medicines' => Medicine::where('status', true)->count(),
+                'registered_patients' => $registeredPatientsCount,
+                'active_doctors' => $activeDoctorsCount,
+                'active_medicines' => $activeMedicines->count(),
                 'low_stock_count' => $lowStockCount,
                 'prescriptions_issued' => $prescriptionsQuery->count(),
             ],

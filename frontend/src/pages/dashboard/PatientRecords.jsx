@@ -86,10 +86,10 @@ function buildPatientRecords(patientsData) {
 }
 
 const STATUS_CONFIG = {
-  Completed:  { bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30', dot: 'bg-emerald-500' },
-  Scheduled:  { bg: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-900/30', dot: 'bg-sky-500' },
-  Pending:    { bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/30', dot: 'bg-amber-500' },
-  Cancelled:  { bg: 'bg-slate-50 dark:bg-slate-800/40 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800', dot: 'bg-slate-500' },
+  Completed:  { bg: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40', dot: 'bg-emerald-500' },
+  Scheduled:  { bg: 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-900/40', dot: 'bg-sky-500' },
+  Pending:    { bg: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/40', dot: 'bg-amber-500' },
+  Cancelled:  { bg: 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800', dot: 'bg-slate-400' },
 };
 
 const isUpcoming = (dateStr) => {
@@ -100,9 +100,9 @@ const isUpcoming = (dateStr) => {
 };
 
 const IMAGE_STATUS_CONFIG = {
-  Reviewed:       { bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30', dot: 'bg-emerald-500' },
-  'Pending Review': { bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/30', dot: 'bg-amber-500' },
-  Uploaded:       { bg: 'bg-slate-50 dark:bg-slate-800/40 text-text-muted dark:text-slate-400 border-slate-200 dark:border-slate-800', dot: 'bg-slate-400' },
+  Reviewed:       { bg: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40', dot: 'bg-emerald-500' },
+  'Pending Review': { bg: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/40', dot: 'bg-amber-500' },
+  Uploaded:       { bg: 'bg-slate-50 dark:bg-slate-800/50 text-text-muted dark:text-slate-400 border-slate-200 dark:border-slate-800', dot: 'bg-slate-400' },
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -416,7 +416,7 @@ export default function PatientRecords() {
 
                   {/* Next scheduled status */}
                   {patient.consultations.some(c => c.status === 'Scheduled' && isUpcoming(c.raw_date)) && (
-                    <span className="hidden sm:flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-primary-hover text-primary-text flex-shrink-0">
+                    <span className="hidden sm:flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-primary-hover dark:bg-sky-950/40 text-primary-text dark:text-sky-400 dark:border dark:border-sky-900/30 flex-shrink-0">
                       <Clock size={11} /> Upcoming
                     </span>
                   )}
@@ -444,7 +444,7 @@ export default function PatientRecords() {
                           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
                             tab === key
                               ? 'bg-sky-600 text-white shadow-sm'
-                              : 'text-text-muted hover:bg-surface-hover hover:text-text-muted'
+                              : 'text-text-muted dark:text-slate-400 hover:bg-surface-hover dark:hover:bg-slate-800/60 hover:text-text'
                           }`}
                         >
                           <Icon size={14} /> {label}
@@ -467,7 +467,7 @@ export default function PatientRecords() {
                             <InfoChip icon={ClipboardList} label="Category" value={patient.category || 'General'} />
                           </div>
                           {patient.medical_history && (
-                            <div className="rounded-xl border border-border bg-background px-4 py-3">
+                            <div className="rounded-xl border border-border dark:border-slate-800 bg-background dark:bg-slate-900/60 px-4 py-3">
                               <p className="text-[10px] font-semibold text-text-light uppercase tracking-wide">Medical History</p>
                               <p className="mt-1 text-sm text-text-muted whitespace-pre-wrap">{patient.medical_history}</p>
                             </div>
@@ -479,13 +479,13 @@ export default function PatientRecords() {
                               <>
                                 <button
                                   onClick={() => openEdit(patient)}
-                                  className="flex items-center gap-2 px-4 py-2 bg-brand-bg text-brand-text rounded-xl text-sm font-medium hover:bg-indigo-100 transition-colors"
+                                  className="flex items-center gap-2 px-4 py-2 bg-brand-bg dark:bg-indigo-950/40 text-brand-text dark:text-indigo-300 rounded-xl text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-transparent dark:border-indigo-900/30 transition-colors"
                                 >
                                   <Edit size={15} /> Edit Record
                                 </button>
                                 <button
                                   onClick={() => openArchive(patient)}
-                                  className="flex items-center gap-2 px-4 py-2 bg-danger-bg text-rose-700 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors"
+                                  className="flex items-center gap-2 px-4 py-2 bg-danger-bg dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 rounded-xl text-sm font-medium hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-transparent dark:border-rose-900/30 transition-colors"
                                 >
                                   <Archive size={15} /> Archive
                                 </button>
@@ -493,7 +493,7 @@ export default function PatientRecords() {
                             )}
                             <button
                               onClick={() => setTab(patient.id, 'consultations')}
-                              className="flex items-center gap-2 px-4 py-2 bg-primary-bg text-primary-text rounded-xl text-sm font-medium hover:bg-primary-hover transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 bg-primary-bg dark:bg-sky-950/40 text-primary-text dark:text-sky-300 rounded-xl text-sm font-medium hover:bg-primary-hover dark:hover:bg-sky-900/40 border border-transparent dark:border-sky-900/30 transition-colors"
                             >
                               <ClipboardList size={15} /> View Consultations
                             </button>
@@ -508,7 +508,7 @@ export default function PatientRecords() {
                             )}
                             <Link
                               to="/prescriptions"
-                              className="flex items-center gap-2 px-4 py-2 bg-success-bg text-success-text rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 bg-success-bg dark:bg-emerald-950/40 text-success-text dark:text-emerald-300 rounded-xl text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-transparent dark:border-emerald-900/30 transition-colors"
                             >
                               <FileText size={15} /> Create Prescription
                             </Link>
@@ -522,7 +522,7 @@ export default function PatientRecords() {
                           {patient.consultations.length === 0 ? (
                             <p className="text-text-light text-sm text-center py-8">No consultation records yet.</p>
                           ) : patient.consultations.map((c) => (
-                            <div key={c.id} className="rounded-xl border border-border p-4 space-y-2">
+                            <div key={c.id} className="rounded-xl border border-border dark:border-slate-800/80 bg-surface dark:bg-slate-900/50 p-4 space-y-2">
                               <div className="flex items-center justify-between gap-2 flex-wrap">
                                 <div className="flex items-center gap-2 text-sm">
                                   <Calendar size={14} className="text-text-light" />
@@ -534,7 +534,7 @@ export default function PatientRecords() {
                                 {(() => {
                                   const style = STATUS_CONFIG[c.status] || STATUS_CONFIG.Scheduled;
                                   return (
-                                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-sm ${style.bg}`}>
+                                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border shadow-sm dark:shadow-none ${style.bg}`}>
                                       <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
                                       {c.status}
                                     </span>
@@ -579,7 +579,7 @@ export default function PatientRecords() {
                               <p className="text-sm">No medical images uploaded by this patient.</p>
                             </div>
                           ) : patient.images.map((img) => (
-                            <div key={img.id} className="flex items-center gap-4 p-3 rounded-xl border border-border hover:bg-background transition-colors">
+                            <div key={img.id} className="flex items-center gap-4 p-3 rounded-xl border border-border dark:border-slate-800/80 bg-surface dark:bg-slate-900/50 hover:bg-background dark:hover:bg-slate-800/60 transition-colors">
                               <div className="w-10 h-10 rounded-xl bg-brand-bg flex items-center justify-center flex-shrink-0">
                                 {isImageType(img.mimeType) ? <FileImage size={18} className="text-indigo-500" /> : <FileText size={18} className="text-indigo-500" />}
                               </div>
@@ -619,7 +619,7 @@ export default function PatientRecords() {
       <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Update Patient Record">
         {selected && (
           <form data-tour="page-form" onSubmit={handleUpdateRecord} className="space-y-4">
-            <div className="rounded-xl border border-brand-border bg-brand-bg px-4 py-3 text-sm text-brand-text">
+            <div className="rounded-xl border border-brand-border dark:border-indigo-900/40 bg-brand-bg dark:bg-indigo-950/40 px-4 py-3 text-sm text-brand-text dark:text-indigo-300">
               Edit permitted patient information. Invalid changes are rejected and the previous record is kept.
             </div>
             <div>
@@ -659,7 +659,7 @@ export default function PatientRecords() {
             </div>
             <div className="pt-2 flex justify-end gap-3">
               <button type="button" onClick={() => setEditModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
-              <button type="submit" className="px-5 py-2.5 bg-indigo-500 text-white font-semibold hover:bg-indigo-600 rounded-xl flex items-center gap-2 shadow-md shadow-indigo-200">
+              <button type="submit" className="px-5 py-2.5 bg-indigo-500 text-white font-semibold hover:bg-indigo-600 rounded-xl flex items-center gap-2 shadow-md dark:shadow-none">
                 <Save size={16} /> Submit Changes
               </button>
             </div>
@@ -670,7 +670,7 @@ export default function PatientRecords() {
       <Modal isOpen={archiveModal} onClose={() => setArchiveModal(false)} title="Archive Patient Record">
         {selected && (
           <form onSubmit={handleArchiveRecord} className="space-y-4">
-            <div className="rounded-xl border border-danger-border bg-danger-bg px-4 py-3 text-sm text-rose-700">
+            <div className="rounded-xl border border-danger-border dark:border-rose-900/40 bg-danger-bg dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
               Provide a reason before archiving {selected.name}. Records with active consultation requests or schedules cannot be archived.
             </div>
             <div>
@@ -686,7 +686,7 @@ export default function PatientRecords() {
             </div>
             <div className="pt-2 flex justify-end gap-3">
               <button type="button" onClick={() => setArchiveModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
-              <button type="submit" className="px-5 py-2.5 bg-rose-500 text-white font-semibold hover:bg-rose-600 rounded-xl flex items-center gap-2 shadow-md shadow-rose-200">
+              <button type="submit" className="px-5 py-2.5 bg-rose-500 text-white font-semibold hover:bg-rose-600 rounded-xl flex items-center gap-2 shadow-md dark:shadow-none">
                 <Archive size={16} /> Confirm Archive
               </button>
             </div>

@@ -316,8 +316,8 @@ function PatientOverview({ user, consultations, prescriptions }) {
         </div>
       </div>
       {vitalEntries === 0 && (
-        <div className="bg-danger-bg border border-rose-200 rounded-2xl p-5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0">
+        <div className="bg-danger-bg border border-rose-200 dark:border-rose-900/30 rounded-2xl p-5 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center flex-shrink-0">
             <AlertCircle size={20} className="text-rose-500" />
           </div>
           <div className="flex-1">
