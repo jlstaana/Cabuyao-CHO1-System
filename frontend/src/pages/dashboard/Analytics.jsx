@@ -1,9 +1,9 @@
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import useThemeStore from '../../store/useThemeStore';
 import api from '../../utils/api';
-import { BarChart2, Activity, Download, TrendingUp, FileText, Users, Clock, Stethoscope, Calendar, X, HeartPulse, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BarChart2, Activity, Download, TrendingUp, FileText, Users, Clock, Stethoscope, Calendar, X, HeartPulse, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PageTitle from '../../components/PageTitle';
 
@@ -27,6 +27,73 @@ const EMPTY_STATS = {
 };
 
 const formatNumber = (value) => Number(value || 0).toLocaleString();
+
+function CompactDropdown({ label, value, options, onChange, placeholder = 'All' }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setIsOpen(false);
+    }
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const selectedOpt = options.find(o => (o.value !== undefined ? String(o.value) : String(o)) === String(value));
+  const displayLabel = value ? (selectedOpt?.label || selectedOpt?.value || selectedOpt || value) : placeholder;
+
+  return (
+    <div className="relative inline-block" ref={ref}>
+      <div className="flex items-center gap-1.5">
+        {label && <span className="text-text-muted dark:text-slate-400 text-xs font-bold uppercase tracking-wider shrink-0">{label}:</span>}
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-lg border border-border dark:border-slate-800 bg-background dark:bg-slate-950 text-text dark:text-white text-xs font-medium w-36 sm:w-44 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+        >
+          <span className="truncate text-left">{displayLabel}</span>
+          <ChevronDown size={13} className={`text-text-light shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1.5 w-48 sm:w-56 max-h-60 overflow-y-auto rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 shadow-2xl p-1.5 z-50 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+          <button
+            type="button"
+            onClick={() => { onChange(''); setIsOpen(false); }}
+            className={`w-full text-left px-3 py-1.5 text-xs rounded-lg transition-colors font-medium ${
+              !value
+                ? 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 font-bold'
+                : 'text-text dark:text-slate-300 hover:bg-surface-hover dark:hover:bg-slate-800'
+            }`}
+          >
+            {placeholder}
+          </button>
+          {options.map((opt) => {
+            const optVal = opt.value !== undefined ? opt.value : opt;
+            const optLabel = opt.label !== undefined ? opt.label : opt;
+            const isSelected = String(value) === String(optVal);
+            return (
+              <button
+                key={optVal}
+                type="button"
+                onClick={() => { onChange(optVal); setIsOpen(false); }}
+                className={`w-full text-left px-3 py-1.5 text-xs rounded-lg transition-colors font-medium truncate ${
+                  isSelected
+                    ? 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 font-bold'
+                    : 'text-text dark:text-slate-300 hover:bg-surface-hover dark:hover:bg-slate-800'
+                }`}
+              >
+                {optLabel}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SubViewSelector({ options, active, onChange }) {
   return (
@@ -557,159 +624,150 @@ export default function Analytics() {
       </div>
 
       {/* Global Filters */}
-      <div className="flex flex-wrap items-center gap-3 bg-surface p-3 sm:px-4 rounded-2xl border border-border shadow-sm">
-         <div className="flex items-center gap-2 mr-2">
-           <Calendar size={14} className="text-sky-500" />
-           <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{activeTab === 'utilization' ? 'Observation Period' : 'Filter Period'}</span>
-         </div>
-         
-         <div className="flex items-center gap-2">
-           <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} max={filterDateTo || undefined} className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500" />
-           <span className="text-text dark:text-white-muted text-xs font-medium">to</span>
-           <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} min={filterDateFrom || undefined} className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500" />
-         </div>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-surface dark:bg-slate-900 p-3 sm:px-4 rounded-2xl border border-border shadow-sm">
+        {/* Left / Date Section */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-1.5 text-text-muted dark:text-slate-400">
+            <Calendar size={14} className="text-sky-500 shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+              {activeTab === 'utilization' ? 'Observation Period' : 'Filter Period'}:
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <input 
+              type="date" 
+              value={filterDateFrom} 
+              onChange={e => setFilterDateFrom(e.target.value)} 
+              max={filterDateTo || undefined} 
+              className="bg-background dark:bg-slate-950 border border-border dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-medium text-text dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 w-28 sm:w-32 cursor-pointer" 
+            />
+            <span className="text-text-muted dark:text-slate-400 text-xs font-medium">to</span>
+            <input 
+              type="date" 
+              value={filterDateTo} 
+              onChange={e => setFilterDateTo(e.target.value)} 
+              min={filterDateFrom || undefined} 
+              className="bg-background dark:bg-slate-950 border border-border dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-medium text-text dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 w-28 sm:w-32 cursor-pointer" 
+            />
+          </div>
+        </div>
 
-         {activeTab === 'prescriptions' && (stats.categories || []).length > 0 && (
-           <div className="flex items-center gap-2">
-             <span className="text-text dark:text-white-muted text-xs font-bold uppercase tracking-wider">Category:</span>
-             <select
-               value={filterCategory}
-               onChange={e => {
-                 const catVal = e.target.value;
-                 setFilterCategory(catVal);
-                 setTimeout(() => {
-                   setLoading(true);
-                   const params = new URLSearchParams();
-                   if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
-                   if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
-                   if (catVal) params.append('category', catVal);
-                   api.get('/analytics/stats?' + params.toString())
-                     .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
-                     .finally(() => setLoading(false));
-                 }, 0);
-               }}
-               className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500"
-             >
-               <option value="">All Categories</option>
-               {stats.categories.map(cat => (
-                 <option key={cat} value={cat}>{cat}</option>
-               ))}
-             </select>
-           </div>
-         )}
+        {/* Right / Context Filter Dropdowns & Actions */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {activeTab === 'prescriptions' && (stats.categories || []).length > 0 && (
+            <CompactDropdown
+              label="Category"
+              value={filterCategory}
+              placeholder="All Categories"
+              options={stats.categories}
+              onChange={catVal => {
+                setFilterCategory(catVal);
+                setTimeout(() => {
+                  setLoading(true);
+                  const params = new URLSearchParams();
+                  if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
+                  if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
+                  if (catVal) params.append('category', catVal);
+                  api.get('/analytics/stats?' + params.toString())
+                    .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
+                    .finally(() => setLoading(false));
+                }, 0);
+              }}
+            />
+          )}
 
-         {activeTab === 'consultations' && (stats.doctors || []).length > 0 && (
-           <div className="flex items-center gap-2">
-             <span className="text-text dark:text-white-muted text-xs font-bold uppercase tracking-wider">Physician:</span>
-             <select
-               value={filterDoctorId}
-               onChange={e => {
-                 const docVal = e.target.value;
-                 setFilterDoctorId(docVal);
-                 setTimeout(() => {
-                   setLoading(true);
-                   const params = new URLSearchParams();
-                   if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
-                   if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
-                   if (docVal) params.append('doctor_id', docVal);
-                   api.get('/analytics/stats?' + params.toString())
-                     .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
-                     .finally(() => setLoading(false));
-                 }, 0);
-               }}
-               className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500"
-             >
-               <option value="">All Doctors</option>
-               {stats.doctors.map(doc => (
-                 <option key={doc.id} value={doc.id}>{doc.name}</option>
-               ))}
-             </select>
-           </div>
-         )}
+          {activeTab === 'consultations' && (stats.doctors || []).length > 0 && (
+            <CompactDropdown
+              label="Physician"
+              value={filterDoctorId}
+              placeholder="All Doctors"
+              options={stats.doctors.map(d => ({ value: d.id, label: d.name }))}
+              onChange={docVal => {
+                setFilterDoctorId(docVal);
+                setTimeout(() => {
+                  setLoading(true);
+                  const params = new URLSearchParams();
+                  if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
+                  if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
+                  if (docVal) params.append('doctor_id', docVal);
+                  api.get('/analytics/stats?' + params.toString())
+                    .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
+                    .finally(() => setLoading(false));
+                }, 0);
+              }}
+            />
+          )}
 
-         {activeTab === 'epidemiology' && (stats.age_groups || []).length > 0 && (
-           <div className="flex items-center gap-2">
-             <span className="text-text dark:text-white-muted text-xs font-bold uppercase tracking-wider">Age Group:</span>
-             <select
-               value={filterAgeGroup}
-               onChange={e => {
-                 const ageVal = e.target.value;
-                 setFilterAgeGroup(ageVal);
-                 setTimeout(() => {
-                   setLoading(true);
-                   const params = new URLSearchParams();
-                   if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
-                   if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
-                   if (ageVal) params.append('age_group', ageVal);
-                   if (filterBarangay) params.append('barangay', filterBarangay);
-                   api.get('/analytics/stats?' + params.toString())
-                     .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
-                     .finally(() => setLoading(false));
-                 }, 0);
-               }}
-               className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500"
-             >
-               <option value="">All Groups</option>
-               {stats.age_groups.map(grp => (
-                 <option key={grp} value={grp}>{grp}</option>
-               ))}
-             </select>
-           </div>
-         )}
+          {activeTab === 'epidemiology' && (stats.age_groups || []).length > 0 && (
+            <CompactDropdown
+              label="Age Group"
+              value={filterAgeGroup}
+              placeholder="All Groups"
+              options={stats.age_groups}
+              onChange={ageVal => {
+                setFilterAgeGroup(ageVal);
+                setTimeout(() => {
+                  setLoading(true);
+                  const params = new URLSearchParams();
+                  if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
+                  if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
+                  if (ageVal) params.append('age_group', ageVal);
+                  if (filterBarangay) params.append('barangay', filterBarangay);
+                  api.get('/analytics/stats?' + params.toString())
+                    .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
+                    .finally(() => setLoading(false));
+                }, 0);
+              }}
+            />
+          )}
 
-         {activeTab === 'epidemiology' && (stats.barangays || []).length > 0 && (
-           <div className="flex items-center gap-2">
-             <span className="text-text dark:text-white-muted text-xs font-bold uppercase tracking-wider">Barangay:</span>
-             <select
-               value={filterBarangay}
-               onChange={e => {
-                 const barVal = e.target.value;
-                 setFilterBarangay(barVal);
-                 setTimeout(() => {
-                   setLoading(true);
-                   const params = new URLSearchParams();
-                   if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
-                   if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
-                   if (filterAgeGroup) params.append('age_group', filterAgeGroup);
-                   if (barVal) params.append('barangay', barVal);
-                   api.get('/analytics/stats?' + params.toString())
-                     .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
-                     .finally(() => setLoading(false));
-                 }, 0);
-               }}
-               className="bg-background dark:bg-slate-950 border border-border rounded-lg px-2.5 py-1.5 text-xs font-medium text-text focus:outline-none focus:ring-2 focus:ring-sky-500"
-             >
-               <option value="">All Barangays</option>
-               {stats.barangays.map(brgy => (
-                 <option key={brgy} value={brgy}>{brgy}</option>
-               ))}
-             </select>
-           </div>
-         )}
-         
-         <div className="flex items-center gap-2 ml-auto">
-           {(filterDateFrom || filterDateTo) && (
-             <button 
-               onClick={() => { 
-                 setFilterDateFrom(''); setFilterDateTo(''); 
-                 setTimeout(() => {
-                   setLoading(true);
-                   api.get('/analytics/stats').then(res => setStats({ ...EMPTY_STATS, ...res.data })).finally(() => setLoading(false));
-                 }, 0);
-               }} 
-               className="text-xs font-semibold text-text-muted hover:text-rose-500 transition-colors px-2"
-             >
-               Clear
-             </button>
-           )}
-           <button 
-             onClick={fetchStats} 
-             disabled={loading}
-             className="bg-sky-50 text-sky-700 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-sky-100 transition-colors disabled:opacity-50 flex items-center gap-2"
-           >
-             {loading ? 'Applying...' : 'Apply Filters'}
-           </button>
-         </div>
+          {activeTab === 'epidemiology' && (stats.barangays || []).length > 0 && (
+            <CompactDropdown
+              label="Barangay"
+              value={filterBarangay}
+              placeholder="All Barangays"
+              options={stats.barangays}
+              onChange={barVal => {
+                setFilterBarangay(barVal);
+                setTimeout(() => {
+                  setLoading(true);
+                  const params = new URLSearchParams();
+                  if (filterDateFrom) params.append('start_date', filterDateFrom + ' 00:00:00');
+                  if (filterDateTo) params.append('end_date', filterDateTo + ' 23:59:59');
+                  if (filterAgeGroup) params.append('age_group', filterAgeGroup);
+                  if (barVal) params.append('barangay', barVal);
+                  api.get('/analytics/stats?' + params.toString())
+                    .then(res => setStats({ ...EMPTY_STATS, ...res.data }))
+                    .finally(() => setLoading(false));
+                }, 0);
+              }}
+            />
+          )}
+
+          <div className="flex items-center gap-2">
+            {(filterDateFrom || filterDateTo || filterCategory || filterDoctorId || filterAgeGroup || filterBarangay) && (
+              <button 
+                onClick={() => { 
+                  setFilterDateFrom(''); setFilterDateTo(''); setFilterCategory(''); setFilterDoctorId(''); setFilterAgeGroup(''); setFilterBarangay('');
+                  setTimeout(() => {
+                    setLoading(true);
+                    api.get('/analytics/stats').then(res => setStats({ ...EMPTY_STATS, ...res.data })).finally(() => setLoading(false));
+                  }, 0);
+                }} 
+                className="text-xs font-semibold text-text-muted dark:text-slate-400 hover:text-rose-500 transition-colors px-2 py-1"
+              >
+                Reset
+              </button>
+            )}
+            <button 
+              onClick={fetchStats} 
+              disabled={loading}
+              className="bg-sky-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-sky-600 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+            >
+              {loading ? 'Applying...' : 'Apply'}
+            </button>
+          </div>
+        </div>
       </div>
 
       {activeTab === 'consultations' && (

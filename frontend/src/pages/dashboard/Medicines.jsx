@@ -4,7 +4,7 @@ import Modal from '../../components/Modal';
 import Skeleton from '../../components/Skeleton';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
-import { Pill, Plus, Search, Archive, Pencil, CheckCircle, AlertCircle, MoreVertical } from 'lucide-react';
+import { Pill, Plus, Search, Archive, Pencil, CheckCircle, AlertCircle, MoreVertical, ChevronDown } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 
 const CATEGORIES = [
@@ -113,6 +113,77 @@ function ActionMenu({ m, onBatches, onEdit, onDeactivate }) {
           <button onClick={() => { setIsOpen(false); onBatches(); }} className="w-full text-left text-emerald-600 hover:text-emerald-800 text-sm font-semibold px-4 py-2.5 hover:bg-emerald-50 transition-colors flex items-center gap-2"><Pill size={14} /> Batches</button>
           <button onClick={() => { setIsOpen(false); onEdit(); }} className="w-full text-left text-primary-text hover:text-sky-800 text-sm font-semibold px-4 py-2.5 hover:bg-primary-bg transition-colors flex items-center gap-2"><Pencil size={14} /> Edit</button>
           {m.status && <button onClick={() => { setIsOpen(false); onDeactivate(); }} className="w-full text-left text-rose-500 hover:text-rose-700 text-sm font-semibold px-4 py-2.5 hover:bg-danger-bg transition-colors flex items-center gap-2"><Archive size={14} /> Deactivate</button>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MedicineCategoryFilter({ categoryFilter, setCategoryFilter, categories, totalCount, getCategoryCount }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setIsOpen(false);
+    }
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const displayLabel = categoryFilter === 'All' ? `All Categories (${totalCount})` : categoryFilter;
+
+  return (
+    <div className="relative w-full sm:w-auto shrink-0" ref={ref}>
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold text-text-muted whitespace-nowrap hidden md:inline">Category:</span>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full sm:w-52 flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border border-border dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background dark:bg-slate-950 text-text dark:text-white text-xs font-medium shadow-sm transition-all"
+        >
+          <span className="truncate text-left">{displayLabel}</span>
+          <ChevronDown size={14} className={`text-text-light shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1.5 w-60 max-h-64 overflow-y-auto rounded-2xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 shadow-2xl p-1.5 z-50 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+          <button
+            type="button"
+            onClick={() => { setCategoryFilter('All'); setIsOpen(false); }}
+            className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl transition-colors font-medium ${
+              categoryFilter === 'All'
+                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-text dark:text-slate-300 hover:bg-surface-hover dark:hover:bg-slate-800'
+            }`}
+          >
+            <span className="truncate">All Categories</span>
+            <span className="text-[10px] text-text-muted dark:text-slate-400 font-bold px-1.5 py-0.5 bg-background dark:bg-slate-800 rounded-md">
+              {totalCount}
+            </span>
+          </button>
+          {categories.map((c) => {
+            const count = getCategoryCount(c);
+            const isSelected = categoryFilter === c;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => { setCategoryFilter(c); setIsOpen(false); }}
+                className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl transition-colors font-medium ${
+                  isSelected
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold'
+                    : 'text-text dark:text-slate-300 hover:bg-surface-hover dark:hover:bg-slate-800'
+                }`}
+              >
+                <span className="truncate text-left pr-2">{c}</span>
+                <span className="text-[10px] text-text-muted dark:text-slate-400 font-bold px-1.5 py-0.5 bg-background dark:bg-slate-800 rounded-md shrink-0">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -228,25 +299,14 @@ export default function Medicines() {
             />
           </div>
 
-          {/* Right-side Category Filter Dropdown with live counts */}
-          <div className="w-full sm:w-auto shrink-0 flex items-center gap-2">
-            <span className="text-xs font-semibold text-text-muted whitespace-nowrap hidden md:inline">Category:</span>
-            <select
-              value={categoryFilter}
-              onChange={e => setCategoryFilter(e.target.value)}
-              className="w-full sm:w-72 px-4 py-2 rounded-xl border border-border dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background dark:bg-slate-950 focus:bg-surface dark:focus:bg-slate-900 text-text dark:text-white transition-all text-sm font-medium"
-            >
-              <option value="All">All Categories ({medicines.length})</option>
-              {CATEGORIES.map(c => {
-                const count = getCategoryCount(c);
-                return (
-                  <option key={c} value={c}>
-                    {c} ({count})
-                  </option>
-                );
-              })}
-            </select>
-          </div>
+          {/* Right-side Category Filter Custom Dropdown */}
+          <MedicineCategoryFilter
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            categories={CATEGORIES}
+            totalCount={medicines.length}
+            getCategoryCount={getCategoryCount}
+          />
         </div>
         {!loading && (
           <div className="px-4 py-2.5 bg-surface-hover/30 border-b border-border text-xs text-text-muted">
