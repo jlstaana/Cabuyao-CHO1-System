@@ -7,6 +7,53 @@ use Illuminate\Support\Str;
 
 class ConsultationController extends Controller {
 
+    
+    public function callEarly(Request $request, $id) {
+        $consultation = Consultation::with(['patient.user', 'doctor.user'])->findOrFail($id);
+        if (!$this->canAccessConsultation($request->user(), $consultation)) {
+            return response()->json(['message' => 'Unauthorized action'], 403);
+        }
+
+        $nowStr = now()->toDateTimeString();
+        $notes = $consultation->notes ?: '';
+        if (!str_contains($notes, '[EARLY_CALL]')) {
+            $consultation->notes = trim($notes . "
+[EARLY_CALL] Doctor is ready early as of " . $nowStr);
+            $consultation->save();
+        }
+
+        \App\Models\AuditLog::create([
+            'user_id'     => $request->user()->id,
+            'action'      => 'Patient Called Early',
+            'description' => "Doctor called patient {$consultation->patient?->user?->name} early for Consultation CN-" . str_pad($id, 6, '0', STR_PAD_LEFT),
+            'ip_address'  => $request->ip(),
+        ]);
+
+        // Dispatch Instant Email Notification
+        $patientEmail = $consultation->patient?->user?->email;
+        $patientName = $consultation->patient?->user?->name ?? 'Patient';
+        $docName = $request->user()->name;
+
+        if ($patientEmail) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Hello {$patientName},\n\nGood news! Your attending physician, Dr. {$docName}, is ready for your teleconsultation ahead of schedule.\n\nPlease click the link below to enter your consultation room now:\n" . url(config('app.url') . "/teleconsultation/{$consultation->id}") . "\n\nStay healthy,\nCity Health Office 1 (CHO1) Cabuyao Telehealth Team",
+                    function ($message) use ($patientEmail, $docName) {
+                        $message->to($patientEmail)
+                                ->subject("🔔 Dr. {$docName} is Ready Early - Cabuyao CHO1 Teleconsultation");
+                    }
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Early call email notification could not be sent: " . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'message' => "Patient {$patientName} has been notified via email & device notification to join early!",
+            'consultation' => $consultation,
+        ]);
+    }
+
     public function history(Request $request) {
         $user = $request->user();
         $query = Consultation::with(['patient.user', 'doctor.user', 'form', 'vitalSigns', 'prescription.items.medicine'])
@@ -83,7 +130,7 @@ class ConsultationController extends Controller {
 
     private function slotIsBooked(Doctor $doctor, \DateTime $requested, $slot, ?int $ignoreConsultationId = null): bool {
         $date = $requested->format('Y-m-d');
-        $capacity = str_contains(strtolower((string) $doctor->specialization), 'general') ? 35 : 18;
+        $capacity = 10;
 
         $bookedCount = Consultation::query()
             ->where('doctor_id', $doctor->id)

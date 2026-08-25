@@ -666,7 +666,24 @@ function TeleconsultationRoomContent() {
     }
 
     try {
-      if (signal.type === 'offer' && user?.role === 'Doctor') {
+      if (signal.type === 'peer_joined') {
+        if (user?.role === 'Patient' && pcRef.current) {
+          // Doctor or peer just entered: regenerate and send a fresh offer immediately
+          const offer = await pcRef.current.createOffer({ iceRestart: true });
+          await pcRef.current.setLocalDescription(offer);
+          sendSignal({ type: 'offer', offer });
+        } else if (user?.role === 'Doctor') {
+          sendSignal({ type: 'doctor_ready' });
+        }
+        return true;
+      } else if (signal.type === 'doctor_ready') {
+        if (user?.role === 'Patient' && pcRef.current && pcRef.current.signalingState === 'stable') {
+          const offer = await pcRef.current.createOffer();
+          await pcRef.current.setLocalDescription(offer);
+          sendSignal({ type: 'offer', offer });
+        }
+        return true;
+      } else if (signal.type === 'offer' && user?.role === 'Doctor') {
         targetSessionId.current = signal.sessionId;
         if (pcRef.current.signalingState !== 'stable' && pcRef.current.signalingState !== 'have-local-offer') {
           console.warn('Ignoring offer - signaling state:', pcRef.current.signalingState);
@@ -867,7 +884,7 @@ function TeleconsultationRoomContent() {
       }
     };
     fetchMessages();
-    const interval = setInterval(fetchMessages, 2000);
+    const interval = setInterval(fetchMessages, callActive ? 800 : 2000);
     return () => {
       active = false;
       clearInterval(interval);
@@ -934,15 +951,38 @@ function TeleconsultationRoomContent() {
               audio: audioConstraints,
             });
             setVideoQuality(initialQuality);
-          } catch {
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: {
-                ...VIDEO_QUALITY_PROFILES.low.constraints,
-                ...(selectedCameraId ? { deviceId: { exact: selectedCameraId } } : {})
-              },
-              audio: audioConstraints,
-            });
-            setVideoQuality('low');
+          } catch (camErr) {
+            console.warn("Primary camera access failed, trying low constraints or fallback:", camErr);
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 640 }, height: { ideal: 360 } },
+                audio: true,
+              });
+              setVideoQuality('low');
+            } catch (fallbackErr) {
+              console.warn("Camera in use (e.g. localhost testing in 2 tabs). Generating placeholder video track:", fallbackErr);
+              // Localhost single-webcam simulation track
+              const fbCanvas = document.createElement('canvas');
+              fbCanvas.width = 640;
+              fbCanvas.height = 480;
+              const ctx = fbCanvas.getContext('2d');
+              ctx.fillStyle = '#0f172a';
+              ctx.fillRect(0, 0, 640, 480);
+              ctx.fillStyle = '#38bdf8';
+              ctx.font = 'bold 24px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillText(`${user?.role || 'Participant'} (Localhost Feed)`, 320, 240);
+              ctx.fillStyle = '#94a3b8';
+              ctx.font = '16px sans-serif';
+              ctx.fillText('Camera shared on localhost', 320, 275);
+              const canvasStream = fbCanvas.captureStream(15);
+              try {
+                const aud = await navigator.mediaDevices.getUserMedia({ audio: true });
+                aud.getAudioTracks().forEach(t => canvasStream.addTrack(t));
+              } catch {}
+              stream = canvasStream;
+              setVideoQuality('low');
+            }
           }
         } else {
           // Re-use lobby stream (don't blink the camera)
@@ -1020,10 +1060,15 @@ function TeleconsultationRoomContent() {
 
         pcRef.current = pc;
 
+        // Notify room that we joined
+        sendSignal({ type: 'peer_joined', role: user?.role });
+
         if (user?.role === 'Patient') {
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           sendSignal({ type: 'offer', offer });
+        } else if (user?.role === 'Doctor') {
+          sendSignal({ type: 'doctor_ready' });
         }
 
         // Broadcast initial hardware state to the other peer
@@ -1179,8 +1224,11 @@ function TeleconsultationRoomContent() {
     }
   };
 
+      const lastPointRef = useRef(null);
+
   const getSignaturePoint = (event) => {
     const canvas = signatureCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const clientY = event.touches ? event.touches[0].clientY : event.clientY;
@@ -1192,30 +1240,63 @@ function TeleconsultationRoomContent() {
 
   const startSignature = (event) => {
     event.preventDefault();
-    signatureDrawingRef.current = true;
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
     const point = getSignaturePoint(event);
+    signatureDrawingRef.current = true;
+    lastPointRef.current = point;
+
     signatureStrokesRef.current.push([point]);
     setHasSignature(true);
-    redrawSignature();
+
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#0f2b5c';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 1.3, 0, Math.PI * 2);
+    ctx.fillStyle = '#0f2b5c';
+    ctx.fill();
   };
 
   const drawSignature = (event) => {
     if (!signatureDrawingRef.current) return;
     event.preventDefault();
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
     const point = getSignaturePoint(event);
+    const prevPoint = lastPointRef.current;
+    if (!prevPoint) return;
+
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#0f2b5c';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(prevPoint.x, prevPoint.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+
+    lastPointRef.current = point;
+
     const strokes = signatureStrokesRef.current;
     if (strokes.length > 0) {
       strokes[strokes.length - 1].push(point);
-      redrawSignature();
     }
   };
 
   const stopSignature = () => {
     signatureDrawingRef.current = false;
+    lastPointRef.current = null;
   };
 
   const clearSignature = () => {
     signatureStrokesRef.current = [];
+    lastPointRef.current = null;
     setHasSignature(false);
     const canvas = signatureCanvasRef.current;
     if (!canvas) return;
@@ -1228,8 +1309,8 @@ function TeleconsultationRoomContent() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#1e3a8a';
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#0f2b5c';
+    ctx.lineWidth = 2.6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -1250,25 +1331,33 @@ function TeleconsultationRoomContent() {
     const points = strokes.flat();
     if (points.length === 0) return '';
 
-    const minX = Math.max(0, Math.min(...points.map((point) => point.x)) - 18);
-    const minY = Math.max(0, Math.min(...points.map((point) => point.y)) - 18);
-    const maxX = Math.min(720, Math.max(...points.map((point) => point.x)) + 18);
-    const maxY = Math.min(220, Math.max(...points.map((point) => point.y)) + 18);
-    const viewBoxWidth = Math.max(80, maxX - minX);
-    const viewBoxHeight = Math.max(34, maxY - minY);
+    const rawMinX = Math.min(...points.map((p) => p.x));
+    const rawMinY = Math.min(...points.map((p) => p.y));
+    const rawMaxX = Math.max(...points.map((p) => p.x));
+    const rawMaxY = Math.max(...points.map((p) => p.y));
+
+    const minX = Math.max(0, rawMinX - 30);
+    const minY = Math.max(0, rawMinY - 20);
+    const maxX = Math.min(800, rawMaxX + 30);
+    const maxY = Math.min(240, rawMaxY + 20);
+    const viewBoxWidth = Math.max(120, maxX - minX);
+    const viewBoxHeight = Math.max(45, maxY - minY);
 
     const paths = strokes
       .map((stroke) => {
+        if (stroke.length === 1) {
+          return `<circle cx="${stroke[0].x.toFixed(1)}" cy="${stroke[0].y.toFixed(1)}" r="1.5" fill="#0f2b5c"/>`;
+        }
         const [first, ...rest] = stroke;
         const pathData = [
           `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`,
           ...rest.map((point) => `L ${point.x.toFixed(1)} ${point.y.toFixed(1)}`),
         ].join(' ');
-        return `<path d="${pathData}" fill="none" stroke="#1e3a8a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+        return `<path d="${pathData}" fill="none" stroke="#0f2b5c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`;
       })
       .join('');
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${viewBoxWidth.toFixed(1)} ${viewBoxHeight.toFixed(1)}" width="36" height="10" preserveAspectRatio="xMidYMid meet">${paths}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${viewBoxWidth.toFixed(1)} ${viewBoxHeight.toFixed(1)}" width="140" height="42" preserveAspectRatio="xMidYMid meet">${paths}</svg>`;
   };
 
   const completeConsultation = async (e) => {
@@ -1309,6 +1398,10 @@ function TeleconsultationRoomContent() {
   };
 
   const addPrescriptionItem = () => {
+    if (prescriptionItems.length >= 5) {
+      toast.error('Single-page e-prescriptions are set for up to 5 medicines.');
+      return;
+    }
     setPrescriptionItems([...prescriptionItems, { id: crypto.randomUUID(), medicine_id: '', dosage: '', frequency: '' }]);
   };
 
@@ -1501,9 +1594,15 @@ function TeleconsultationRoomContent() {
                   <textarea value={diagnosis} onChange={e=>setDiagnosis(e.target.value)} placeholder="Official Diagnosis..." className="w-full px-4 py-2 rounded-xl border border-border text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none h-16 shrink-0 text-text" required />
                   
                   <div className="border border-border rounded-xl p-3 bg-background flex-1 overflow-y-auto">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm font-semibold text-text-muted flex items-center gap-1"><Pill size={14}/> Prescribe Medicines</span>
-                      <button type="button" onClick={addPrescriptionItem} className="text-xs bg-emerald-100 text-success-text px-2 py-1 rounded hover:bg-emerald-200 font-bold flex items-center"><Plus size={12}/> Add</button>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-bold text-text-muted flex items-center gap-1">
+                        <Pill size={13}/> Prescribe Medicines ({prescriptionItems.length}/5 max)
+                      </span>
+                      {prescriptionItems.length < 5 && (
+                        <button type="button" onClick={addPrescriptionItem} className="text-[11px] bg-emerald-100 dark:bg-emerald-950/80 text-success-text px-2.5 py-1 rounded-lg hover:bg-emerald-200 font-bold flex items-center gap-1 transition-all">
+                          <Plus size={11}/> Add Item
+                        </button>
+                      )}
                     </div>
                     
                     <div className="space-y-3">

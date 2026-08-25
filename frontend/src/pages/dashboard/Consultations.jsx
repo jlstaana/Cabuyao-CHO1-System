@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 function formatTime12h(timeStr) {
   if (!timeStr) return '';
   const [h, m] = timeStr.split(':');
@@ -30,7 +30,7 @@ function formatScheduleSummary(availability) {
 }
 
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import Modal from '../../components/Modal';
@@ -188,6 +188,17 @@ function fullName(user) {
   return user?.name || 'Unknown Patient';
 }
 
+
+function calcAge(dob) {
+  if (!dob) return 0;
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age -= 1;
+  return age;
+}
+
 function formatPatientAge(dob) {
   if (!dob) return 'N/A';
   const birthDate = new Date(dob);
@@ -241,42 +252,32 @@ function getDoctorSlotsForDate(doctor, date) {
 
   const avail = (doctor.availability || []).filter(slot => slot.day_of_week === day);
 
-  // Generate 24 hourly slots (DFA standard viewing)
+  // If doctor has whole-day leave on this date, return no slots
+  if (leaves.some(l => !l.start_time)) {
+    return [];
+  }
+
+  const activeBlocks = [...avail, ...extraSlots];
+  if (activeBlocks.length === 0) return [];
+
   const slots = [];
   for (let i = 0; i < 24; i++) {
     const start = String(i).padStart(2, '0') + ':00';
     const end = String(i + 1).padStart(2, '0') + ':00';
     
-    // Check if this hour is covered by availability or an extra_slot exception
-    let isCovered = avail.some(a => start >= String(a.start_time).slice(0, 5) && start < String(a.end_time).slice(0, 5));
-    if (!isCovered) {
-      isCovered = extraSlots.some(e => start >= String(e.start_time).slice(0, 5) && start < String(e.end_time).slice(0, 5));
-    }
+    // Find if this hour is covered by the doctor's real availability
+    const parentBlock = activeBlocks.find(a => start >= String(a.start_time).slice(0, 5) && start < String(a.end_time).slice(0, 5));
+    if (!parentBlock) continue; // Only keep real available hours — no fake unavailable clutter!
 
-    // Check if this hour is blocked by a leave
-    if (leaves.length > 0) {
-      if (leaves.some(l => !l.start_time)) {
-        isCovered = false; // Whole day leave
-      } else {
-        if (leaves.some(l => start >= String(l.start_time).slice(0, 5) && start < String(l.end_time).slice(0, 5))) {
-          isCovered = false;
-        }
-      }
-    }
-
-    // Determine the original block that covers this (for quota tracking)
-    let parentBlock = null;
-    if (isCovered) {
-      parentBlock = avail.find(a => start >= String(a.start_time).slice(0, 5) && start < String(a.end_time).slice(0, 5));
-      if (!parentBlock) {
-        parentBlock = extraSlots.find(e => start >= String(e.start_time).slice(0, 5) && start < String(e.end_time).slice(0, 5));
-      }
+    // Skip if blocked by specific timed leave
+    if (leaves.some(l => l.start_time && start >= String(l.start_time).slice(0, 5) && start < String(l.end_time).slice(0, 5))) {
+      continue;
     }
 
     slots.push({
       start_time: start,
       end_time: end === '24:00' ? '23:59' : end,
-      isAvailable: isCovered,
+      isAvailable: true,
       parentBlock
     });
   }
@@ -348,7 +349,7 @@ function doctorSlotStatus(doctor, date, slot) {
     && String(booked.end_time).slice(0, 5) === checkEnd
   ));
 
-  const capacity = booked?.capacity || doctor.slot_capacity || 18;
+  const capacity = booked?.capacity || doctor.slot_capacity || 10;
   const bookedCount = booked?.booked_count || 0;
   const remaining = Math.max((booked?.remaining ?? (capacity - bookedCount)), 0);
 
@@ -526,74 +527,72 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
   }
 
 // ─── DOCTOR VIEW ──────────────────────────────────────────────────────────────
-function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, onCancel, availabilityStatus, onOpenAvailability }) {
+function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, onCancel, onCallEarly, availabilityStatus, onOpenAvailability }) {
   const [tab, setTab] = useState('Scheduled');
-  const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
 
   const cancelled = consultations.filter(c => c.status === 'Cancelled' || c.status === 'Missed');
   const scheduled = consultations.filter(c => c.status === 'Scheduled');
   const completed = consultations.filter(c => c.status === 'Completed');
 
-  const counts = { Scheduled: scheduled.length, Completed: completed.length, Cancelled: cancelled.length };
   const baseFiltered = tab === 'Scheduled' ? scheduled : tab === 'Completed' ? completed : cancelled;
 
   const filtered = baseFiltered.filter(c => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return (
-      c.patient?.user?.name?.toLowerCase().includes(q) ||
+      (c.patient?.user?.name || '').toLowerCase().includes(q) ||
       (c.form?.symptoms || '').toLowerCase().includes(q) ||
       (c.form?.diagnosis || '').toLowerCase().includes(q) ||
       `cn-${String(c.id).padStart(6, '0')}`.includes(q)
     );
   }).sort((a, b) => {
-    if (tab === 'Completed') return new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at);
+    if (tab === 'Completed' || tab === 'Cancelled') return new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at);
     return new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
   });
 
   return (
     <div className="space-y-6">
-      {/* Summary strip */}
+      {/* Availability Bar */}
       {availabilityStatus ? (
-        <div className={`rounded-2xl border px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${availabilityStatus.is_available_now ? 'bg-success-bg border-emerald-200 text-success-text' : 'bg-warning-bg border-amber-200 text-warning-text'}`}>
-          <div className="flex items-center gap-2 font-semibold">
-            <span className={`h-2.5 w-2.5 rounded-full ${availabilityStatus.is_available_now ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-            {availabilityStatus.doctor_type || 'Resident'} doctor | {availabilityStatus.is_available_now ? 'Active and on schedule now' : 'Active but outside scheduled hours'}
+        <div className={`rounded-2xl border px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm ${availabilityStatus.is_available_now ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-200' : 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-200'}`}>
+          <div className="flex items-center gap-2.5 font-bold text-sm">
+            <span className={`h-3 w-3 rounded-full shrink-0 ${availabilityStatus.is_available_now ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+            <span>{availabilityStatus.doctor_type || 'Resident'} Physician · {availabilityStatus.is_available_now ? 'Active & On Schedule Now' : 'Active (Outside Scheduled Hours)'}</span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <p className="text-xs font-medium opacity-80">{availabilityStatus.scheduleLabel || 'No fixed schedule set'}</p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <p className="text-xs font-semibold opacity-90">{availabilityStatus.scheduleLabel || 'No fixed schedule set'}</p>
             <button
               data-tour="page-primary-action"
               onClick={onOpenAvailability}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-surface/80 px-3 py-1.5 text-xs font-bold text-text-muted hover:bg-surface transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-slate-800 px-3.5 py-1.5 text-xs font-extrabold text-slate-800 dark:text-white border border-border dark:border-slate-700 hover:bg-surface-hover transition-all shadow-sm shrink-0"
             >
-              <Settings size={13} /> Availability Settings
+              <Settings size={14} /> Schedule Settings
             </button>
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-surface px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="rounded-2xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
           <div>
-            <p className="font-semibold text-text">Availability settings</p>
-            <p className="text-xs text-text-light mt-0.5">Set your doctor type, available days, and time slots.</p>
+            <p className="font-bold text-text dark:text-white">Doctor Weekly Availability</p>
+            <p className="text-xs text-text-light dark:text-slate-400 mt-0.5">Configure your consultation working hours and exception dates.</p>
           </div>
           <button
             data-tour="page-primary-action"
             onClick={onOpenAvailability}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary-bg px-4 py-2 text-sm font-bold text-primary-text hover:bg-primary-hover transition-colors"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white hover:bg-sky-700 transition-colors shadow-sm"
           >
-            <Settings size={15} /> Open Settings
+            <Settings size={15} /> Configure Hours
           </button>
         </div>
       )}
 
-      {/* Summary strip / Filter cards */}
+      {/* Summary Stat Cards */}
       <div data-tour="page-stats" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { label: 'Scheduled', status: 'Scheduled', count: scheduled.length, sub: 'Upcoming' },
-          { label: 'Completed', status: 'Completed', count: completed.length, sub: 'Finished' },
-            { label: 'Cancelled', status: 'Cancelled', count: cancelled.length, sub: 'Discontinued' },
+          { label: 'Scheduled Queue', status: 'Scheduled', count: scheduled.length, sub: 'Upcoming patients' },
+          { label: 'Completed', status: 'Completed', count: completed.length, sub: 'Finished consultations' },
+          { label: 'Cancelled / Missed', status: 'Cancelled', count: cancelled.length, sub: 'Discontinued requests' },
         ].map(s => (
           <InteractiveStatCard
             key={s.label}
@@ -605,17 +604,23 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
         ))}
       </div>
 
-      {/* Tabs & Search */}
+      {/* Tabs & Search Filter */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="flex gap-2">
           {['Scheduled', 'Completed', 'Cancelled'].map(t => {
             const Icon = TAB_ICON[t] || Stethoscope;
+            const count = t === 'Scheduled' ? scheduled.length : t === 'Completed' ? completed.length : cancelled.length;
             return (
-              <button key={t} onClick={() => setTab(t)}
-                className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                  tab === t 
+                    ? 'bg-sky-600 text-white shadow-sm' 
+                    : 'bg-surface dark:bg-slate-900/60 text-text-muted dark:text-slate-400 border border-border dark:border-slate-800 hover:border-sky-300 hover:text-text dark:hover:text-white'
+                }`}
               >
-                <Icon size={14} /> {t}
-
+                <Icon size={15} /> {t} <span className="ml-1 opacity-80">({count})</span>
               </button>
             );
           })}
@@ -629,109 +634,149 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search by patient name or symptoms..."
-              className="w-full pl-9 pr-9 py-2 rounded-xl border border-border bg-surface text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+              placeholder="Search patient or symptoms..."
+              className="w-full pl-9 pr-9 py-2 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
                 aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-all"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-text-muted hover:text-rose-600 transition-all"
               >
                 <X size={14} />
               </button>
             )}
           </div>
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch('')}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-200 bg-danger-bg text-rose-600 text-xs font-semibold hover:bg-rose-100 transition-all shrink-0"
-            >
-              <X size={13} /> Clear
-            </button>
-          )}
         </div>
       </div>
 
       {!loading && (
-        <p className="text-xs text-text-muted mt-3">
-          Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{consultations.length}</span> consultations
+        <p className="text-xs text-text-muted dark:text-slate-400">
+          Showing <span className="font-bold text-text dark:text-white">{filtered.length}</span> of <span className="font-bold text-text dark:text-white">{consultations.length}</span> total consultations
         </p>
       )}
 
-      {/* Queue list */}
-      <div data-tour="page-list" className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
+      {/* Patient Queue List */}
+      <div data-tour="page-list" className="bg-surface dark:bg-slate-900/60 rounded-2xl border border-border dark:border-slate-800 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-6 space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
+          <div className="p-6 space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}</div>
         ) : filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <CheckCircle size={32} className="mx-auto mb-2 text-emerald-400" />
-            <p className="font-semibold text-text-muted">{`No \${tab.toLowerCase()} consultations.`}</p>
+          <div className="py-16 text-center space-y-2">
+            <CheckCircle size={36} className="mx-auto text-emerald-400 opacity-80" />
+            <p className="font-bold text-text dark:text-white">No {tab.toLowerCase()} consultations in your queue.</p>
+            <p className="text-xs text-text-light dark:text-slate-400">New patient bookings will appear here automatically.</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-50">
-            {filtered.map((c, i) => (
-              <div key={c.id} className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4 hover:bg-background/60 transition-colors">
-                <div className="flex items-center gap-4">
-                  {/* Queue number */}
-                <div className="w-9 h-9 rounded-xl bg-surface-hover/50 text-text-muted flex items-center justify-center font-black text-sm flex-shrink-0">
-                  {i + 1}
-                </div>
-                {/* Patient avatar */}
-                <div className="w-10 h-10 rounded-full bg-brand-bg text-indigo-600 flex items-center justify-center font-bold flex-shrink-0">
-                  {(c.patient?.user?.name || 'P').charAt(0)}
-                </div>
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-text">{c.patient?.user?.name || 'Unknown Patient'}</p>
-                  <div className="flex flex-wrap gap-3 text-xs text-text-light mt-0.5">
-                    <span className="flex items-center gap-1"><Calendar size={11} /> {new Date(c.created_at).toLocaleDateString()}</span>
-                    {c.scheduled_at && <span className="flex items-center gap-1"><Clock size={11} /> Scheduled: {new Date(c.scheduled_at).toLocaleString()}</span>}
+          <div className="divide-y divide-border/60 dark:divide-slate-800">
+            {filtered.map((c, i) => {
+              const isPWD = Boolean(c.patient?.category?.includes('PWD'));
+              const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
+              const isCalledEarly = Boolean(c.notes?.includes('[EARLY_CALL]'));
+
+              return (
+                <div key={c.id} className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 sm:p-5 hover:bg-background/40 dark:hover:bg-slate-800/30 transition-colors">
+                  <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                    {/* Queue number */}
+                    <div className="w-10 h-10 rounded-2xl bg-surface-hover/60 dark:bg-slate-800 text-text-muted dark:text-slate-300 flex items-center justify-center font-black text-sm shrink-0 border border-border/70 dark:border-slate-700 shadow-sm">
+                      #{i + 1}
+                    </div>
+
+                    {/* Patient Avatar */}
+                    <div className="w-11 h-11 rounded-2xl bg-sky-100 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold text-base shrink-0 border border-sky-200 dark:border-sky-800/50 shadow-sm">
+                      {(c.patient?.user?.name || 'P').charAt(0).toUpperCase()}
+                    </div>
+
+                    {/* Info */}
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-black text-sm sm:text-base text-text dark:text-white truncate">
+                          {c.patient?.user?.name || 'Unknown Patient'}
+                        </p>
+                        {isPWD && (
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                            ♿ PWD
+                          </span>
+                        )}
+                        {isSenior && (
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                            👴 Senior
+                          </span>
+                        )}
+                        {isCalledEarly && (
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 animate-pulse">
+                            🔔 Called Early
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-text-light dark:text-slate-400">
+                        {c.scheduled_at && (
+                          <span className="flex items-center gap-1 font-semibold text-sky-700 dark:text-sky-400">
+                            <Clock size={13} /> {new Date(c.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <Stethoscope size={13} /> {c.requested_specialization || 'General Medicine'}
+                        </span>
+                      </div>
+
+                      {c.form?.symptoms && (
+                        <p className="text-xs text-text-muted dark:text-slate-300 line-clamp-1 italic">
+                          "{c.form.symptoms}"
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-center">
+                    {c.status === 'Scheduled' && (
+                      <>
+                        <Link
+                          to={`/teleconsultation/${c.id}`}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+                        >
+                          <Video size={15} /> Enter Room
+                        </Link>
+                        {!isCalledEarly && (
+                          <button
+                            type="button"
+                            onClick={() => onCallEarly && onCallEarly(c)}
+                            className="px-3.5 py-2 rounded-xl border border-sky-300 dark:border-sky-800/60 bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40 font-bold text-xs flex items-center gap-1 transition-all"
+                            title="Notify this patient via email & push alert that you are ready ahead of schedule"
+                          >
+                            🔔 Call In Early
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onReschedule(c)}
+                          className="px-3 py-2 rounded-xl border border-border dark:border-slate-700 bg-surface dark:bg-slate-800 text-text-muted dark:text-slate-300 hover:text-text font-bold text-xs flex items-center gap-1 transition-all"
+                        >
+                          <Calendar size={14} /> Reschedule
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onCancel(c)}
+                          className="px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 font-bold text-xs flex items-center gap-1 transition-all"
+                        >
+                          <XCircle size={14} /> Cancel
+                        </button>
+                      </>
+                    )}
+                    {c.status === 'Completed' && (
+                      <Link
+                        to="/prescriptions"
+                        className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold text-xs flex items-center gap-1.5 hover:bg-emerald-100 transition-all"
+                      >
+                        <FilePlus size={15} /> View Prescription
+                      </Link>
+                    )}
                   </div>
                 </div>
-                </div>
-                
-                {/* Actions */}
-                <div className="flex flex-wrap items-center gap-2 flex-shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
-                  {c.status === 'DELETED_STATUS' && (
-                    <>
-                      <span className="text-xs text-amber-600 bg-warning-bg border border-amber-200 px-3 py-1.5 rounded-lg font-medium">
-                        Awaiting doctor
-                      </span>
-                      <button onClick={() => onReview(c)} className="flex items-center gap-1.5 px-3 py-2 bg-primary-bg text-primary-text rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors">
-                        <FileText size={15} /> Review
-                      </button>
-                      <button onClick={() => onAccept(c)} className="flex items-center gap-1.5 px-3 py-2 bg-success-bg text-success-text rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
-                        <CheckCircle size={15} /> Accept
-                      </button>
-                      <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-3 py-2 bg-danger-bg text-danger-text rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
-                        <XCircle size={15} /> Cancel
-                      </button>
-                    </>
-                  )}
-                  {c.status === 'Scheduled' && (
-                    <>
-                      <button onClick={() => onReschedule(c)} className="flex items-center gap-1.5 px-3 py-2 bg-primary-bg text-primary-text rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors">
-                        <Calendar size={15} /> Reschedule
-                      </button>
-                      <button onClick={() => onCancel(c)} className="flex items-center gap-1.5 px-3 py-2 bg-danger-bg text-danger-text rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
-                        <XCircle size={15} /> Cancel
-                      </button>
-                      <Link to={`/room/${c.id}`} className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-semibold hover:bg-indigo-600 transition-colors shadow-sm">
-                        <Video size={16} /> Join Call
-                      </Link>
-                    </>
-                  )}
-                  {c.status === 'Completed' && (
-                    <Link to="/prescriptions" className="flex items-center gap-2 px-4 py-2 bg-success-bg text-success-text rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">
-                      <FilePlus size={16} /> E-Prescribe
-                    </Link>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -905,6 +950,7 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function Consultations() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [loading, setLoading]     = useState(true);
   const [consultations, setConsultations] = useState([]);
@@ -929,6 +975,36 @@ export default function Consultations() {
 
   
   const [isUploadingMini, setIsUploadingMini] = useState(false);
+  // Request notification permissions for device alerts
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  // Trigger Device / Browser Notification when early call is received
+  const notifiedIdsRef = useRef(new Set());
+  useEffect(() => {
+    if (user?.role === 'Patient' && consultations.length > 0) {
+      consultations.forEach(c => {
+        if (c.status === 'Scheduled' && c.notes?.includes('[EARLY_CALL]') && !notifiedIdsRef.current.has(c.id)) {
+          notifiedIdsRef.current.add(c.id);
+          if ('Notification' in window && Notification.permission === 'granted') {
+            const n = new Notification('🔔 Doctor is Ready Early!', {
+              body: `Dr. ${(c.doctor?.user?.name || 'Your doctor').replace(/^Dr\.\s*/i, '')} is ready for you now. Tap to join room.`,
+              icon: '/CHO1-Logo.png',
+              tag: `early-call-${c.id}`,
+            });
+            n.onclick = () => {
+              window.focus();
+              navigate(`/teleconsultation/${c.id}`);
+            };
+          }
+        }
+      });
+    }
+  }, [consultations, user, navigate]);
+  const [quickDocType, setQuickDocType] = useState('PWD ID Card');
 
   const handleMiniUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -944,7 +1020,7 @@ export default function Consultations() {
       setIsUploadingMini(true);
       const fd = new FormData();
       fd.append('image', file);
-      fd.append('document_type', 'Other'); // Default type for quick uploads
+      fd.append('document_type', quickDocType || 'Other');
       fd.append('notes', 'Attached during consultation request');
 
       const response = await api.post('/medical-images', fd, {
@@ -1065,6 +1141,16 @@ const fetchConsultations = async () => {
   const handleReview = (c) => {
     setSelected(c);
     setReviewModal(true);
+  };
+
+  const handleCallEarly = async (c) => {
+    try {
+      const res = await api.post(`/consultations/${c.id}/call-early`);
+      toast.success(res.data?.message || 'Patient notified to join early!');
+      fetchConsultations();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to notify patient');
+    }
   };
 
   const handleAccept = async (c) => {
@@ -1245,7 +1331,7 @@ const fetchConsultations = async () => {
       </header>
 
       {user?.role === 'Patient' && <PatientView consultations={consultations} loading={loading} onRequest={handleRequest} onReschedule={handleReschedule} onCancel={handleCancel} />}
-      {user?.role === 'Doctor'  && <DoctorView consultations={consultations} loading={loading} onAccept={handleAccept} onReview={handleReview} onReschedule={handleReschedule} onCancel={handleCancel} availabilityStatus={currentDoctorAvailability} onOpenAvailability={openAvailabilitySettings} />}
+      {user?.role === 'Doctor'  && <DoctorView consultations={consultations} loading={loading} onAccept={handleAccept} onReview={handleReview} onReschedule={handleReschedule} onCancel={handleCancel} onCallEarly={handleCallEarly} availabilityStatus={currentDoctorAvailability} onOpenAvailability={openAvailabilitySettings} />}
       {(user?.role === 'Admin' || user?.role === 'Staff') && (
         <AdminView consultations={consultations} loading={loading} onReschedule={handleReschedule} onCancel={handleCancel} />
       )}
@@ -1569,41 +1655,70 @@ const fetchConsultations = async () => {
             />
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-text-muted">Attached Medical Images</label>
-              <div>
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <label className="block text-xs font-bold uppercase tracking-wider text-text-muted dark:text-slate-400">
+                Attached Files & Verification IDs
+              </label>
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={quickDocType}
+                  onChange={(e) => setQuickDocType(e.target.value)}
+                  className="text-[11px] font-bold px-2 py-1 rounded-lg border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-slate-200 outline-none"
+                >
+                  <option value="PWD ID Card">🆔 PWD ID Card</option>
+                  <option value="Senior Citizen ID">👴 Senior Citizen ID</option>
+                  <option value="Disability Certificate">📄 Disability Certificate</option>
+                  <option value="Lab Test Results">🩺 Lab Results</option>
+                  <option value="Prescription Photo">💊 Prescription Rx</option>
+                  <option value="Other">📁 Other Document</option>
+                </select>
                 <input type="file" id="mini-upload" className="hidden" accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx" onChange={handleMiniUpload} disabled={isUploadingMini} />
-                <label htmlFor="mini-upload" className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded-md border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 cursor-pointer transition-colors ${isUploadingMini ? 'opacity-50 cursor-wait' : ''}`}>
-                  <FilePlus size={12} />
-                  {isUploadingMini ? 'Uploading...' : 'Quick Upload'}
+                <label htmlFor="mini-upload" className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg border border-sky-200 dark:border-sky-800/60 bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40 cursor-pointer transition-colors shadow-sm ${isUploadingMini ? 'opacity-50 cursor-wait' : ''}`}>
+                  <FilePlus size={13} />
+                  {isUploadingMini ? 'Attaching...' : 'Attach'}
                 </label>
               </div>
             </div>
+
+            {/* In-modal PWD / Senior ID reminder */}
+            {(user?.patient?.category?.includes('PWD') || user?.patient?.category === 'Senior Citizen') && (
+              <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/40 text-[11px] text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                <span className="text-sm shrink-0">♿</span>
+                <p className="leading-tight">
+                  <b>Priority Verification:</b> Don't forget to attach your <b>PWD or Senior ID</b> so your doctor can verify your priority lane status.
+                </p>
+              </div>
+            )}
+
             {medicalImages.length > 0 ? (
-              <div className="rounded-xl border border-border bg-surface overflow-hidden">
-                <div className="max-h-32 overflow-y-auto divide-y divide-border">
+              <div className="rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900/60 overflow-hidden shadow-sm">
+                <div className="max-h-32 overflow-y-auto divide-y divide-border dark:divide-slate-800">
                   {medicalImages.map(img => (
                     <div key={img.id} className="flex items-center justify-between px-3 py-2">
-                      <div className="flex flex-col truncate">
-                        <span className="text-xs font-semibold text-text truncate">{img.original_name || img.file_path.split('/').pop()}</span>
-                        <span className="text-[10px] text-text-light">{img.document_type || 'Document'}</span>
+                      <div className="flex flex-col truncate pr-2">
+                        <span className="text-xs font-semibold text-text dark:text-slate-200 truncate">{img.original_name || img.file_path.split('/').pop()}</span>
+                        <span className="text-[10px] text-text-light dark:text-slate-400 font-medium">
+                          {img.document_type?.toLowerCase().includes('id') ? `🆔 ${img.document_type}` : img.document_type || 'Document'}
+                        </span>
                       </div>
-                      <span className="shrink-0 ml-2 inline-flex items-center rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-bold text-success-text">Attached</span>
+                      <span className="shrink-0 inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 px-2 py-0.5 text-[10px] font-bold">
+                        Attached
+                      </span>
                     </div>
                   ))}
                 </div>
-                <div className="bg-background px-3 py-2 border-t border-border flex justify-between items-center">
-                  <p className="text-[10px] text-text-light">
-                    These files will be accessible to your doctor.
+                <div className="bg-background dark:bg-slate-950 px-3 py-2 border-t border-border dark:border-slate-800 flex justify-between items-center">
+                  <p className="text-[10px] text-text-light dark:text-slate-400">
+                    Visible to your doctor.
                   </p>
-                  <Link to="/medical-images" className="text-[10px] text-sky-600 font-medium hover:underline">Manage all</Link>
+                  <Link to="/medical-images" className="text-[10px] text-sky-600 dark:text-sky-400 font-bold hover:underline">Manage all files</Link>
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-4 text-center">
-                <p className="text-xs text-text-muted">No medical images attached.</p>
-                <p className="text-[10px] text-text-light mt-1">Click "Quick Upload" above to attach files directly.</p>
+              <div className="rounded-xl border border-dashed border-border dark:border-slate-800 bg-surface dark:bg-slate-900/30 px-4 py-4 text-center">
+                <p className="text-xs text-text-muted dark:text-slate-400 font-medium">No files or IDs attached yet.</p>
+                <p className="text-[10px] text-text-light dark:text-slate-500 mt-0.5">Select document type and click "Attach" above.</p>
               </div>
             )}
           </div>
@@ -1656,45 +1771,52 @@ const fetchConsultations = async () => {
             ) : (
       <div data-tour="page-list" className="space-y-3">
                 {matchingAvailableDoctors.length > 1 && (
-                  <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-border">
+                  <div className="flex items-center justify-between bg-surface dark:bg-slate-800/60 p-3 rounded-2xl border border-border dark:border-slate-800 gap-3 shadow-sm">
                     <button
                       type="button"
                       onClick={() => setRequestDoctorIndex(prev => Math.max(prev - 1, 0))}
                       disabled={requestDoctorIndex === 0}
-                      className="p-1.5 rounded-lg border border-border bg-surface dark:bg-slate-900 text-text-muted hover:text-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border dark:border-slate-700 bg-background text-text-muted hover:text-text disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-bold shrink-0"
                     >
-                      <ChevronLeft size={16} />
+                      <ChevronLeft size={15} /> Prev
                     </button>
-                    <span className="text-xs font-bold text-text-muted dark:text-slate-400">
-                      Doctor {requestDoctorIndex + 1} of {matchingAvailableDoctors.length}
-                    </span>
+                    <div className="text-center min-w-0">
+                      <p className="text-sm font-black text-text dark:text-white truncate">
+                        Dr. {(matchingAvailableDoctors[requestDoctorIndex]?.name || '').replace(/^Dr\.\s*/i, '')}
+                      </p>
+                      <p className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">
+                        Doctor {requestDoctorIndex + 1} of {matchingAvailableDoctors.length} · {matchingAvailableDoctors[requestDoctorIndex]?.specialization}
+                      </p>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setRequestDoctorIndex(prev => Math.min(prev + 1, matchingAvailableDoctors.length - 1))}
                       disabled={requestDoctorIndex === matchingAvailableDoctors.length - 1}
-                      className="p-1.5 rounded-lg border border-border bg-surface dark:bg-slate-900 text-text-muted hover:text-text disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border dark:border-slate-700 bg-background text-text-muted hover:text-text disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-bold shrink-0"
                     >
-                      <ChevronRight size={16} />
+                      Next <ChevronRight size={15} />
                     </button>
                   </div>
                 )}
                 {[matchingAvailableDoctors[requestDoctorIndex]].filter(Boolean).map((doctor) => (
-                  <div key={`request-slots-${doctor.id}`} className="rounded-lg border border-border bg-background p-3">
-                    <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm font-bold text-text">Dr. {(doctor.name || '').replace(/^Dr\.\s*/i, '')}</p>
-                        <p className="text-xs text-text-light">{doctor.doctor_type || 'Resident'} · {doctor.specialization} · {doctor.slot_capacity || 18} slots per block</p>
+                  <div key={`request-slots-${doctor.id}`} className="rounded-2xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900/60 p-4 space-y-3 shadow-sm">
+                    <div className="flex items-center justify-between gap-3 border-b border-border/60 dark:border-slate-800 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 flex items-center justify-center font-bold text-lg shrink-0">
+                          <Stethoscope size={20} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-text dark:text-white">
+                            Dr. {(doctor.name || '').replace(/^Dr\.\s*/i, '')}
+                          </p>
+                          <p className="text-xs text-text-light dark:text-slate-400">
+                            {doctor.doctor_type || 'Resident Physician'} · {doctor.specialization}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-1.5 mt-1 sm:mt-0">
-                        {groupAndFormatAvailability(doctor.availability).map((item) => (
-                          <span 
-                            key={item.day} 
-                            className="inline-flex items-center gap-1 rounded-md bg-slate-50 dark:bg-slate-800/60 px-2 py-0.5 text-[10px] font-bold text-text-muted dark:text-slate-300 border border-slate-200 dark:border-slate-700/80"
-                          >
-                            <span className="text-sky-500 dark:text-sky-400 uppercase tracking-wider">{item.day.slice(0, 3)}</span>: {item.slots.join(', ')}
-                          </span>
-                        ))}
-                      </div>
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 shrink-0">
+                        Choose Slot Below
+                      </span>
                     </div>
                     {(doctor.availability?.length > 0 || doctor.exceptions?.length > 0) ? (
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
@@ -1705,15 +1827,17 @@ const fetchConsultations = async () => {
                           return (
                             <div
                               key={`${doctor.id}-${date.toISOString()}`}
-                              className={`min-h-28 rounded-lg border p-2 ${
-                                isSelectedDate ? 'border-sky-300 bg-primary-bg' : 'border-border bg-surface'
+                              className={`min-h-28 rounded-xl border p-2.5 transition-all ${
+                                isSelectedDate 
+                                  ? 'border-sky-400 dark:border-sky-600 bg-sky-50/60 dark:bg-sky-950/40 shadow-sm' 
+                                  : 'border-border/80 dark:border-slate-800 bg-background/80 dark:bg-slate-900/40'
                               }`}
                             >
-                              <p className={`mb-2 text-xs font-bold ${isSelectedDate ? 'text-primary-text' : 'text-text-muted'}`}>
+                              <p className={`mb-2 text-xs font-bold text-center ${isSelectedDate ? 'text-sky-700 dark:text-sky-300' : 'text-text-muted dark:text-slate-400'}`}>
                                 {shortDayLabel(date)}
                               </p>
                               {slots.length === 0 ? (
-                                <p className="rounded-md bg-background px-2 py-2 text-center text-[11px] font-medium text-text-light">
+                                <p className="rounded-lg bg-surface/60 dark:bg-slate-800/40 px-2 py-3 text-center text-[11px] font-medium text-text-light dark:text-slate-500">
                                   No slots
                                 </p>
                               ) : (
@@ -1728,19 +1852,28 @@ const fetchConsultations = async () => {
                                       <button
                                         key={`${doctor.id}-${dateKey(date)}-${slot.start_time}-${slot.end_time}`}
                                         type="button"
-                                        disabled={!slot.isAvailable || isFull}
+                                        disabled={isFull}
                                         onClick={() => setRequestForm((form) => ({ ...form, scheduled_at: dateTimeLocalValue(date, slotStart), doctor_id: doctor.id }))}
-                                        className={`w-full rounded-md px-2 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
-                                          !slot.isAvailable ? 'bg-surface/50 text-text-muted/30 cursor-not-allowed border border-border' : isFull ? 'bg-danger-bg text-rose-400 line-through' : isSelectedSlot
-                                              ? 'bg-sky-600 text-white shadow-sm'
-                                              : 'bg-success-bg text-success-text hover:bg-emerald-100'
+                                        className={`w-full rounded-xl px-2.5 py-2 text-xs font-bold transition-all border disabled:cursor-not-allowed ${
+                                          isFull 
+                                            ? 'bg-rose-50/60 dark:bg-rose-950/30 text-rose-500 dark:text-rose-400 border-rose-200 dark:border-rose-900/40 cursor-not-allowed opacity-60' 
+                                            : isSelectedSlot
+                                              ? 'bg-sky-600 dark:bg-sky-500 text-white border-transparent shadow-md ring-2 ring-sky-400/50'
+                                              : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:scale-[1.02]'
                                         }`}
                                       >
-                                        {timeRangeLabel(slot)} · <span className={
-                                          !slot.isAvailable ? 'text-text-muted/50' : isFull ? 'text-rose-500' : isSelectedSlot ? 'text-sky-100' : slotStatus.remaining <= 2 ? 'text-rose-600 dark:text-rose-400 font-extrabold' : (slotStatus.remaining / slotStatus.capacity <= 0.4) ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-emerald-600 dark:text-emerald-400'
-                                        }>
-                                          {!slot.isAvailable ? 'Unavailable' : isFull ? 'Full' : `${slotStatus.remaining} left`}
-                                        </span>
+                                        <div className="font-extrabold text-[11px]">{timeRangeLabel(slot)}</div>
+                                        <div className={`text-[10px] mt-0.5 font-bold ${
+                                          isFull 
+                                            ? 'text-rose-600 dark:text-rose-400' 
+                                            : isSelectedSlot 
+                                              ? 'text-sky-100' 
+                                              : slotStatus.remaining <= 2 
+                                                ? 'text-amber-700 dark:text-amber-300 font-black' 
+                                                : 'text-emerald-700 dark:text-emerald-400'
+                                        }`}>
+                                          {isFull ? '● Full (10/10)' : `● ${slotStatus.remaining} slots left`}
+                                        </div>
                                       </button>
                                     );
                                   })}

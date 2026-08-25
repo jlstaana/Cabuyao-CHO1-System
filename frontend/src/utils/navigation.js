@@ -48,7 +48,7 @@ export function buildNavGroups(role) {
       {
         label: 'Prescriptions',
         links: [
-          { path: '/prescriptions', label: 'Create E-Prescription',   icon: FileText },
+          { path: '/prescriptions', label: 'E-Prescriptions',         icon: FileText },
           { path: '/medicines',     label: 'Medicine Database',       icon: Pill },
         ],
       },
@@ -99,10 +99,9 @@ export function buildNavGroups(role) {
       links: [
         { path: '/dashboard',     label: 'Overview',          icon: Home },
         { path: '/consultations', label: 'Consultations',     icon: Stethoscope },
-        { path: '/prescriptions', label: 'E-Prescriptions',  icon: FileText },
-        { path: '/medicines',     label: 'Medicine List',     icon: Pill },
+        { path: '/prescriptions', label: 'Prescriptions',     icon: FileText },
+        { path: '/medicines',     label: 'Medicine Inventory',icon: Pill },
         { path: '/users',         label: 'Manage Users',      icon: Users },
-        { path: '/activity-logs', label: 'Activity Logs',       icon: ShieldCheck },
       ],
     },
   ];

@@ -7,8 +7,18 @@ use Illuminate\Support\Facades\DB;
 class AnalyticsController extends Controller {
     public function stats(Request $request) {
         $query = Consultation::query();
-        if ($request->has('start_date') && $request->has('end_date')) {
-            $query->whereBetween('consultations.created_at', [$request->start_date, $request->end_date]);
+        $startDate = $request->input('start_date') ?? $request->input('date_from');
+        $endDate = $request->input('end_date') ?? $request->input('date_to');
+        if ($startDate && $endDate) {
+            $s = str_contains($startDate, ':') ? $startDate : $startDate . ' 00:00:00';
+            $e = str_contains($endDate, ':') ? $endDate : $endDate . ' 23:59:59';
+            $query->whereBetween('consultations.created_at', [$s, $e]);
+        } else if ($startDate) {
+            $s = str_contains($startDate, ':') ? $startDate : $startDate . ' 00:00:00';
+            $query->where('consultations.created_at', '>=', $s);
+        } else if ($endDate) {
+            $e = str_contains($endDate, ':') ? $endDate : $endDate . ' 23:59:59';
+            $query->where('consultations.created_at', '<=', $e);
         } else {
             $query->whereBetween('consultations.created_at', [now()->startOfMonth(), now()->endOfMonth()]);
         }

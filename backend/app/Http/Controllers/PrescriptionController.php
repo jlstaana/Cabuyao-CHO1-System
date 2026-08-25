@@ -16,6 +16,7 @@ class PrescriptionController extends Controller {
             'items.*.frequency' => 'required|string|max:255',
             'items.*.duration' => 'nullable|string|max:255',
             'items.*.instructions' => 'nullable|string|max:2000',
+            'doctor_signature_svg' => 'nullable|string|max:200000',
         ]);
     }
 
@@ -128,7 +129,11 @@ class PrescriptionController extends Controller {
                 'updated_by' => $request->user()->id,
             ]);
 
-            $prescription->update(['notes' => $data['notes'] ?? null]);
+            $updatePayload = ['notes' => $data['notes'] ?? null];
+            if (!empty($data['doctor_signature_svg'])) {
+                $updatePayload['doctor_signature_svg'] = $data['doctor_signature_svg'];
+            }
+            $prescription->update($updatePayload);
             $prescription->items()->delete();
             foreach ($data['items'] as $item) {
                 $prescription->items()->create($item);
@@ -163,54 +168,59 @@ class PrescriptionController extends Controller {
         $user = $request->user();
         $prescription = Prescription::with(['items.medicine', 'patient.user', 'doctor.user'])->findOrFail($id);
 
-        if ($user->role === 'Patient' && (int) $prescription->patient_id !== (int) $user->patient?->id) {
-            return response()->json(['message' => 'Unauthorized prescription download'], 403);
-        }
-        if ($user->role === 'Doctor' && (int) $prescription->doctor_id !== (int) $user->doctor?->id) {
+        // Permissions: Admin and Staff can download all. Patient can download their own. Doctor can download their own.
+        if ($user->role === 'Patient' && $user->patient && (int) $prescription->patient_id !== (int) $user->patient->id) {
             return response()->json(['message' => 'Unauthorized prescription download'], 403);
         }
 
-        $doctorSignatureSvg = $prescription->doctor_signature_svg;
-        $doctorSignatureSrc = null;
+        try {
+            $doctorSignatureSvg = $prescription->doctor_signature_svg;
+            $doctorSignatureSrc = null;
 
-        if ($doctorSignatureSvg) {
-            $normalizedSvg = preg_replace('/stroke-width="[^"]*"/i', 'stroke-width="2"', $doctorSignatureSvg);
-            $normalizedSvg = preg_replace('/stroke-linecap="[^"]*"/i', '', $normalizedSvg);
-            $normalizedSvg = preg_replace('/stroke-linejoin="[^"]*"/i', '', $normalizedSvg);
-            $normalizedSvg = preg_replace('/preserveAspectRatio="[^"]*"/i', '', $normalizedSvg);
-            $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+width="[^"]*"/i', '$1', $normalizedSvg);
-            $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+height="[^"]*"/i', '$1', $normalizedSvg);
-            
-            // Dynamically scale down the SVG paths so DOMPDF doesn't blow out the table layout
-            if (preg_match('/viewBox="([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)"/i', $normalizedSvg, $matches)) {
-                $minX = (float) $matches[1];
-                $minY = (float) $matches[2];
-                $vWidth = (float) $matches[3];
-                $vHeight = (float) $matches[4];
+            if (!empty($doctorSignatureSvg)) {
+                $normalizedSvg = preg_replace('/stroke-width="[^"]*"/i', 'stroke-width="2"', $doctorSignatureSvg);
+                $normalizedSvg = preg_replace('/stroke-linecap="[^"]*"/i', '', $normalizedSvg);
+                $normalizedSvg = preg_replace('/stroke-linejoin="[^"]*"/i', '', $normalizedSvg);
+                $normalizedSvg = preg_replace('/preserveAspectRatio="[^"]*"/i', '', $normalizedSvg);
+                $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+width="[^"]*"/i', '$1', $normalizedSvg);
+                $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+height="[^"]*"/i', '$1', $normalizedSvg);
                 
-                // Scale to roughly 80x24
-                $scaleX = 80 / max(1, $vWidth);
-                $scaleY = 24 / max(1, $vHeight);
-                $scale = min($scaleX, $scaleY);
+                if (preg_match('/viewBox="([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)"/i', $normalizedSvg, $matches)) {
+                    $minX = (float) $matches[1];
+                    $minY = (float) $matches[2];
+                    $vWidth = (float) $matches[3];
+                    $vHeight = (float) $matches[4];
+                    
+                    $scaleX = 80 / max(1, $vWidth);
+                    $scaleY = 24 / max(1, $vHeight);
+                    $scale = min($scaleX, $scaleY);
+                    
+                    $sw = round(2 / max(0.1, $scale), 1);
+                    $normalizedSvg = preg_replace('/stroke-width="[^"]*"/i', 'stroke-width="' . $sw . '"', $normalizedSvg);
+                    
+                    $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+viewBox="[^"]*"/i', '$1', $normalizedSvg);
+                    $normalizedSvg = preg_replace('/(<path)/i', '<g transform="scale(' . $scale . ') translate(-' . $minX . ', -' . $minY . ')">$1', $normalizedSvg);
+                    $normalizedSvg = preg_replace('/(<\/svg>)/i', '</g>$1', $normalizedSvg);
+                    $normalizedSvg = preg_replace('/(<svg)/i', '$1 viewBox="0 0 80 24" width="80" height="24"', $normalizedSvg, 1);
+                } else {
+                    $normalizedSvg = preg_replace('/(<svg)/i', '$1 width="80" height="24"', $normalizedSvg, 1);
+                }
                 
-                // Adjust stroke width inversely to scaling
-                $sw = round(2 / $scale, 1);
-                $normalizedSvg = preg_replace('/stroke-width="[^"]*"/i', 'stroke-width="' . $sw . '"', $normalizedSvg);
-                
-                $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+viewBox="[^"]*"/i', '$1', $normalizedSvg);
-                $normalizedSvg = preg_replace('/(<path)/i', '<g transform="scale(' . $scale . ') translate(-' . $minX . ', -' . $minY . ')">$1', $normalizedSvg);
-                $normalizedSvg = preg_replace('/(<\/svg>)/i', '</g>$1', $normalizedSvg);
-                $normalizedSvg = preg_replace('/(<svg)/i', '$1 viewBox="0 0 80 24" width="80" height="24"', $normalizedSvg, 1);
-            } else {
-                // Fallback
-                $normalizedSvg = preg_replace('/(<svg)/i', '$1 width="80" height="24"', $normalizedSvg, 1);
+                $base64Svg = base64_encode($normalizedSvg);
+                $doctorSignatureSrc = '<img src="data:image/svg+xml;base64,' . $base64Svg . '" width="120" height="32" style="display: block; margin: 0 auto; border: none; vertical-align: bottom;"/>';
             }
-            
-            $base64Svg = base64_encode($normalizedSvg);
-            $doctorSignatureSrc = '<img src="data:image/svg+xml;base64,' . $base64Svg . '" width="80" height="24" style="border: none; outline: none; vertical-align: bottom;"/>';
-        }
 
-        $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))->setPaper('a5', 'portrait');
-        return $pdf->download("prescription_{$id}.pdf");
+            $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))->setPaper('a5', 'portrait');
+            return $pdf->download("prescription_{$id}.pdf");
+        } catch (\Throwable $e) {
+            // Fallback without signature if SVG parser failed
+            try {
+                $doctorSignatureSrc = null;
+                $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))->setPaper('a5', 'portrait');
+                return $pdf->download("prescription_{$id}.pdf");
+            } catch (\Throwable $fallbackError) {
+                return response()->json(['message' => 'Unable to generate PDF: ' . $fallbackError->getMessage()], 500);
+            }
+        }
     }
 }

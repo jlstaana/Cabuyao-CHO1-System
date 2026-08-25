@@ -4,7 +4,7 @@ import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import {
-  Activity, Users, FileText, HeartPulse, Stethoscope,
+  Activity, Users, User, FileText, HeartPulse, Stethoscope,
   Clock, CheckCircle, Calendar, Pill, BarChart2, ShieldCheck,
   Video, ClipboardList, AlertCircle, ImagePlus,
 } from 'lucide-react';
@@ -199,8 +199,8 @@ function QuickActions({ admin = false, patient = false }) {
         <QuickLink to="/medicines" icon={Pill} label="Medicine List" color="text-success-text"  />
         {admin && <QuickLink to="/analytics" icon={BarChart2} label="View Reports" color="text-brand-text"  />}
         <QuickLink to="/consultations" icon={ClipboardList} label="Consultations" color="text-rose-700"  />
-        {patient && <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700"  />}
-        {patient && <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-warning-text"  />}
+        {patient && <QuickLink to="/profile" icon={User} label="My Profile" color="text-primary-text"  />}
+        {patient && <QuickLink to="/medical-images" icon={ImagePlus} label="Medical Files" color="text-warning-text"  />}
       </div>
     </div>
   );
@@ -285,20 +285,19 @@ function PatientOverview({ user, consultations, prescriptions }) {
     return (d.getTime() + 15 * 60 * 1000) > now.getTime();
   };
   const upcoming = consultations.find((c) => c.status === 'Scheduled' && isUpcoming(c.scheduled_at));
-  const vitalEntries = consultations.filter((c) => c.vital_signs || c.vitalSigns).length;
-  
+  const completedCount = consultations.filter((c) => c.status === 'Completed').length;
   const totalRequests = consultations.length;
 
   return (
     <>
       <header className="mb-8">
-        <PageTitle icon={HeartPulse} title={`Hello, ${user?.name?.split(' ')[0]}!`} description="Here's your health summary and upcoming activities." iconClassName="bg-danger-bg text-danger-text" />
+        <PageTitle icon={Stethoscope} title={`Hello, ${user?.name?.split(' ')[0]}!`} description="Here's your health summary and upcoming activities." iconClassName="bg-primary-bg text-primary-text" />
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Total Consultations" value={totalRequests} icon={Stethoscope} color="text-sky-500"  sub="Consultation history" />
-        <StatCard label="E-Prescriptions" value={prescriptions.length} icon={FileText} color="text-emerald-500"  sub="Generated prescriptions" />
-        <StatCard label="Vital Sign Records" value={vitalEntries} icon={HeartPulse} color="text-rose-500"  sub="Recorded health logs" />
-        <StatCard label="Upcoming Appointment" value={upcoming?.scheduled_at ? new Date(upcoming.scheduled_at).toLocaleDateString() : 'None'} icon={Calendar} color="text-indigo-500"  sub="Scheduled consultation" />
+        <StatCard label="Total Consultations" value={totalRequests} icon={Stethoscope} color="text-sky-500" sub="All time appointments" />
+        <StatCard label="Completed Sessions" value={completedCount} icon={CheckCircle} color="text-emerald-500" sub="Completed medical visits" />
+        <StatCard label="Active Prescriptions" value={prescriptions.length} icon={FileText} color="text-amber-500" sub="Generated prescriptions" />
+        <StatCard label="Upcoming Appointment" value={upcoming?.scheduled_at ? new Date(upcoming.scheduled_at).toLocaleDateString() : 'None'} icon={Calendar} color="text-indigo-500" sub="Scheduled consultation" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <ConsultationQueue consultations={consultations} />
@@ -308,27 +307,13 @@ function PatientOverview({ user, consultations, prescriptions }) {
             <p className="text-xs text-text-light mt-0.5">Frequently used tools and shortcuts.</p>
           </div>
           <div className="space-y-3">
-            <QuickLink to="/consultations" icon={Video} label="Request Teleconsult" color="text-primary-text"  />
-            <QuickLink to="/vitals" icon={HeartPulse} label="Record Vital Signs" color="text-rose-700"  />
-            <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Image" color="text-warning-text"  />
-            <QuickLink to="/prescriptions" icon={FileText} label="View Prescriptions" color="text-success-text"  />
+            <QuickLink to="/consultations" icon={Video} label="Book Consultation" color="text-primary-text" />
+            <QuickLink to="/profile" icon={User} label="My Profile & PWD Status" color="text-brand-text" />
+            <QuickLink to="/medical-images" icon={ImagePlus} label="Upload Medical Files & IDs" color="text-warning-text" />
+            <QuickLink to="/prescriptions" icon={FileText} label="View Prescriptions" color="text-success-text" />
           </div>
         </div>
       </div>
-      {vitalEntries === 0 && (
-        <div className="bg-danger-bg border border-rose-200 dark:border-rose-900/30 rounded-2xl p-5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center flex-shrink-0">
-            <AlertCircle size={20} className="text-rose-500" />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-rose-800">Vital Signs Reminder</p>
-            <p className="text-sm text-danger-text mt-0.5">No vital signs have been recorded yet.</p>
-          </div>
-          <Link to="/vitals" className="flex-shrink-0 px-4 py-2 bg-rose-500 text-white rounded-xl text-sm font-medium hover:bg-rose-600 transition-colors">
-            Record Now
-          </Link>
-        </div>
-      )}
     </>
   );
 }

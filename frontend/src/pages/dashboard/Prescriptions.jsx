@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import api from '../../utils/api';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
-import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar, Search, X, Filter, Activity, Pill, Stethoscope } from 'lucide-react';
+import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar, Search, X, Filter, Activity, Pill, Stethoscope, PenLine, Eraser, CheckCircle } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 import Modal from '../../components/Modal';
 import useAuthStore from '../../store/useAuthStore';
@@ -108,23 +108,172 @@ export default function Prescriptions() {
       const response = await api.get(`/prescriptions/${prescriptionId}/download`, {
         responseType: 'blob',
       });
-      const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `prescription_${prescriptionId}.pdf`;
+      link.download = `CHO1_Prescription_RX-${String(prescriptionId).padStart(6, '0')}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch {
-      toast.error('Failed to download prescription PDF');
+      toast.success('Prescription PDF downloaded!');
+    } catch (err) {
+      let msg = 'Failed to download prescription PDF';
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const json = JSON.parse(text);
+          if (json.message) msg = json.message;
+        } catch {
+          /* fallback to default */
+        }
+      }
+      toast.error(msg);
     } finally {
       setDownloadingId(null);
     }
   };
 
+      // E-Signature: Crisp, Non-Cutting, Ultra-Responsive Pen Engine
+  const signatureCanvasRef = useRef(null);
+  const isDrawingRef = useRef(false);
+  const lastPointRef = useRef(null);
+  const [signatureStrokes, setSignatureStrokes] = useState([]);
+  const [hasSignature, setHasSignature] = useState(false);
+
+  const getCanvasPoint = (e) => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: ((clientX - rect.left) / rect.width) * canvas.width,
+      y: ((clientY - rect.top) / rect.height) * canvas.height,
+    };
+  };
+
+  const startSignature = (e) => {
+    e.preventDefault();
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    const point = getCanvasPoint(e);
+    isDrawingRef.current = true;
+    lastPointRef.current = point;
+
+    setSignatureStrokes((prev) => [...prev, [point]]);
+    setHasSignature(true);
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.strokeStyle = '#0f2b5c';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 1.3, 0, Math.PI * 2);
+    ctx.fillStyle = '#0f2b5c';
+    ctx.fill();
+  };
+
+  const drawSignature = (e) => {
+    if (!isDrawingRef.current) return;
+    e.preventDefault();
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    const point = getCanvasPoint(e);
+    const prevPoint = lastPointRef.current;
+    if (!prevPoint) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.strokeStyle = '#0f2b5c';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(prevPoint.x, prevPoint.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+
+    lastPointRef.current = point;
+
+    setSignatureStrokes((prev) => {
+      if (!prev.length) return [[point]];
+      const next = [...prev];
+      next[next.length - 1] = [...next[next.length - 1], point];
+      return next;
+    });
+  };
+
+  const stopSignature = () => {
+    isDrawingRef.current = false;
+    lastPointRef.current = null;
+  };
+
+  const clearSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    lastPointRef.current = null;
+    setSignatureStrokes([]);
+    setHasSignature(false);
+  };
+
+  const buildSignatureSvg = () => {
+    const strokes = signatureStrokes.filter((stroke) => stroke.length > 0);
+    if (!strokes.length) return null;
+    const points = strokes.flat();
+    if (!points.length) return null;
+
+    // Generous bounding box margin (30px) so wide loops & flourishes are NEVER cut off
+    const rawMinX = Math.min(...points.map((p) => p.x));
+    const rawMinY = Math.min(...points.map((p) => p.y));
+    const rawMaxX = Math.max(...points.map((p) => p.x));
+    const rawMaxY = Math.max(...points.map((p) => p.y));
+
+    const minX = Math.max(0, rawMinX - 30);
+    const minY = Math.max(0, rawMinY - 20);
+    const maxX = Math.min(800, rawMaxX + 30);
+    const maxY = Math.min(240, rawMaxY + 20);
+    const viewBoxWidth = Math.max(120, maxX - minX);
+    const viewBoxHeight = Math.max(45, maxY - minY);
+
+    const paths = strokes
+      .map((stroke) => {
+        if (stroke.length === 1) {
+          return `<circle cx="${stroke[0].x.toFixed(1)}" cy="${stroke[0].y.toFixed(1)}" r="1.5" fill="#0f2b5c"/>`;
+        }
+        const [first, ...rest] = stroke;
+        const d = [
+          `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`,
+          ...rest.map((p) => `L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`),
+        ].join(' ');
+        return `<path d="${d}" fill="none" stroke="#0f2b5c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+      })
+      .join('');
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${viewBoxWidth.toFixed(1)} ${viewBoxHeight.toFixed(1)}" width="140" height="42" preserveAspectRatio="xMidYMid meet">${paths}</svg>`;
+  };
+
   const openEdit = (prescription) => {
     setSelected(prescription);
+    setSignatureStrokes([]);
+    setHasSignature(false);
+    setTimeout(() => {
+      const canvas = signatureCanvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }, 50);
     setEditForm({
       notes: prescription.notes || '',
       items: prescription.items?.length
@@ -162,6 +311,10 @@ export default function Prescriptions() {
         notes: editForm.notes,
         items: editForm.items.map((item) => ({ ...item, medicine_id: Number(item.medicine_id) })),
       };
+      if (hasSignature) {
+        const svg = buildSignatureSvg();
+        if (svg) payload.doctor_signature_svg = svg;
+      }
       const response = await api.put(`/prescriptions/${selected.id}`, payload);
       const updated = response.data?.prescription;
       if (updated) {
@@ -329,16 +482,21 @@ export default function Prescriptions() {
               </div>
             </div>
 
-            <div className="space-y-2 mb-6 flex-1">
+            <div className="space-y-2.5 mb-6 flex-1">
               <p className="text-sm flex items-center gap-2 text-text-muted">
-                <User size={16} className="text-text-light" /> Patient: {p.patient?.user?.name || 'Unknown Patient'}
+                <User size={15} className="text-text-light" /> <span className="font-semibold text-text">Patient:</span> {p.patient?.user?.name || 'Unknown Patient'}
               </p>
               <p className="text-sm flex items-center gap-2 text-text-muted">
-                <User size={16} className="text-text-light" /> Prescribed By: Dr. {p.doctor?.user?.name || 'Unknown Doctor'}
+                <Stethoscope size={15} className="text-text-light" /> <span className="font-semibold text-text">Prescribed By:</span> Dr. {p.doctor?.user?.name || 'Unknown Doctor'}
               </p>
               <p className="text-sm flex items-center gap-2 text-text-muted">
-                <Calendar size={16} className="text-text-light" /> Issued On: {new Date(p.created_at).toLocaleDateString()}
+                <Calendar size={15} className="text-text-light" /> <span className="font-semibold text-text">Issued On:</span> {new Date(p.created_at).toLocaleDateString()}
               </p>
+
+              <div className="mt-4 pt-3 border-t border-border/70 flex items-center gap-2 text-xs text-text-light bg-surface-hover/40 px-3 py-2 rounded-xl">
+                <span>🔒</span>
+                <span className="italic">Medication details are encrypted & confidential. Download official PDF to view.</span>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -410,10 +568,49 @@ export default function Prescriptions() {
               ))}
             </div>
 
+            {/* Doctor E-Signature Update Pad */}
+            <div className="border border-border rounded-2xl bg-surface p-4 space-y-3 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-xs font-bold text-text flex items-center gap-1.5">
+                    <PenLine size={14} className="text-emerald-600" /> Updated Doctor E-Signature
+                  </span>
+                  <p className="text-[11px] text-text-light mt-0.5">
+                    Draw your signature below for this update, or leave blank to keep your current signature on file.
+                  </p>
+                </div>
+                {hasSignature && (
+                  <button
+                    type="button"
+                    onClick={clearSignature}
+                    className="text-xs bg-surface-hover/70 text-text-muted px-2.5 py-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-bold flex items-center gap-1 shrink-0"
+                  >
+                    <Eraser size={12} /> Clear
+                  </button>
+                )}
+              </div>
+              
+              <div className="w-full">
+                <canvas
+                  ref={signatureCanvasRef}
+                  width={720}
+                  height={180}
+                  onMouseDown={startSignature}
+                  onMouseMove={drawSignature}
+                  onMouseUp={stopSignature}
+                  onMouseLeave={stopSignature}
+                  onTouchStart={startSignature}
+                  onTouchMove={drawSignature}
+                  onTouchEnd={stopSignature}
+                  className="h-36 w-full rounded-xl bg-background cursor-crosshair touch-none border border-border shadow-inner"
+                />
+              </div>
+            </div>
+
             <div className="pt-2 flex justify-end gap-3">
               <button type="button" onClick={() => setEditModal(false)} className="px-5 py-2.5 text-text-muted font-medium hover:bg-surface-hover rounded-xl transition-colors">Cancel</button>
               <button type="submit" className="px-5 py-2.5 bg-emerald-500 text-white font-semibold hover:bg-emerald-600 rounded-xl flex items-center gap-2 shadow-md shadow-emerald-200">
-                <Save size={16} /> Submit Update
+                <Save size={16} /> Submit Update & Sign
               </button>
             </div>
           </form>

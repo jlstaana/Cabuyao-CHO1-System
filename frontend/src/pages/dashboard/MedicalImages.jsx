@@ -20,15 +20,35 @@ const ALLOWED_TYPES = [
 const MAX_SIZE_MB = 20;
 const IMAGE_MIME_PREFIX = 'image/';
 
-const IMAGE_TYPES = [
-  'X-Ray',
-  'Lab Test Results',
-  'Prescription Photo',
-  'Medical Certificate',
-  'CT Scan',
-  'Ultrasound',
-  'Other',
+export const DOCUMENT_CATEGORIES = [
+  {
+    category: 'Identification & Priority Cards',
+    icon: '🆔',
+    types: [
+      'PWD ID Card',
+      'Senior Citizen ID',
+      'Disability Certificate',
+      'PhilHealth Member ID',
+      'Barangay Health Certificate / Indigency',
+      'Government / National ID',
+    ]
+  },
+  {
+    category: 'Clinical & Diagnostic Records',
+    icon: '🩺',
+    types: [
+      'Medical Certificate',
+      'Lab Test Results',
+      'Prescription Photo',
+      'X-Ray',
+      'CT Scan',
+      'Ultrasound',
+      'Other',
+    ]
+  }
 ];
+
+const ALL_DOCUMENT_TYPES = DOCUMENT_CATEGORIES.flatMap(c => c.types);
 
 function formatSize(bytes) {
   if (!bytes) return 'N/A';
@@ -64,7 +84,8 @@ export default function MedicalImages() {
   const [uploads, setUploads] = useState([]);
 
   const [previews, setPreviews] = useState([]); // files staged for upload
-  const [imageType, setImageType] = useState('X-Ray');
+  const [selectedCategory, setSelectedCategory] = useState('Identification & Priority Cards');
+  const [imageType, setImageType] = useState('PWD ID Card');
   const [notes, setNotes] = useState('');
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -277,25 +298,56 @@ return (
           </div>
         )}
 
-        {/* Metadata fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Metadata fields: Separate Category, Document Type, and Notes */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-bold text-white/90 mb-1 uppercase tracking-wide">Document Type</label>
+            <label className="block text-xs font-bold text-white/90 mb-1 uppercase tracking-wide">
+              1. Document Category
+            </label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                const newCat = e.target.value;
+                setSelectedCategory(newCat);
+                const firstType = DOCUMENT_CATEGORIES.find(c => c.category === newCat)?.types[0] || 'Other';
+                setImageType(firstType);
+              }}
+              className="w-full px-4 py-2.5 rounded-xl border-none bg-white text-slate-900 outline-none focus:ring-4 focus:ring-white/30 shadow-inner font-bold text-sm"
+            >
+              {DOCUMENT_CATEGORIES.map((cat) => (
+                <option key={cat.category} value={cat.category}>
+                  {cat.icon} {cat.category}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-white/90 mb-1 uppercase tracking-wide">
+              2. Specific Document Type / ID
+            </label>
             <select
               value={imageType}
               onChange={(e) => setImageType(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border-none bg-white text-slate-900 outline-none focus:ring-4 focus:ring-white/30 shadow-inner font-medium text-sm"
             >
-              {IMAGE_TYPES.map((t) => <option key={t}>{t}</option>)}
+              {(DOCUMENT_CATEGORIES.find(c => c.category === selectedCategory)?.types || []).map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
             </select>
           </div>
+
           <div>
-            <label className="block text-xs font-bold text-white/90 mb-1 uppercase tracking-wide">Notes (optional)</label>
+            <label className="block text-xs font-bold text-white/90 mb-1 uppercase tracking-wide">
+              3. Notes / ID Number (Optional)
+            </label>
             <input
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Taken at Cabuyao District Hospital"
+              placeholder="e.g. ID #1234-5678 or Clinic name"
               className="w-full px-4 py-2.5 rounded-xl border-none bg-white text-slate-900 placeholder-slate-400 outline-none focus:ring-4 focus:ring-white/30 shadow-inner font-medium text-sm"
             />
           </div>
@@ -335,10 +387,18 @@ return (
             <select 
               value={filterType}
               onChange={e => setFilterType(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-lg border border-border bg-background focus:ring-2 focus:ring-sky-500/20 outline-none"
+              className="px-3 py-1.5 text-sm rounded-lg border border-border bg-background focus:ring-2 focus:ring-sky-500/20 outline-none font-medium"
             >
-              <option value="All">All Types</option>
-              {IMAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              <option value="All">All Documents</option>
+              {DOCUMENT_CATEGORIES.map((cat) => (
+                <optgroup key={cat.category} label={`${cat.icon} ${cat.category}`}>
+                  {cat.types.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
         </div>

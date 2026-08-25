@@ -179,7 +179,7 @@ function EmptyBlock({ label }) {
 }
 
 function tableRows(rows, columns) {
-  if (!rows.length) {
+  if (!rows || !rows.length) {
     return `<tr><td colspan="${columns.length}" style="text-align:center;color:#94a3b8;font-style:italic;padding:16px 12px;border:1px solid #e2e8f0;">No records available</td></tr>`;
   }
   return rows.map((row, i) => {
@@ -199,40 +199,62 @@ function dataTable(headers, bodyHtml) {
   return `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:0;"><thead><tr>${headCells}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
 }
 
+function kpiCard(label, value, color) {
+  return `
+    <td style="padding:0 8px 0 0;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:3px solid ${color};background:#f8fafc;">
+        <tr><td style="padding:12px 14px;">
+          <div style="font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;">${label}</div>
+          <div style="font-size:22px;font-weight:800;color:${color};line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${value}</div>
+        </td></tr>
+      </table>
+    </td>`;
+}
+
+function twoCol(leftContent, rightContent) {
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="width:49%;padding-right:14px;vertical-align:top;">${leftContent}</td>
+        <td style="width:49%;vertical-align:top;">${rightContent}</td>
+      </tr>
+    </table>`;
+}
+
 // Returns an array of complete HTML strings — one per PDF page
 function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom, dateTo) {
-  const summary = stats.summary || {};
-  const statusRows  = stats.consultations_by_status.map((r) => ({ Status: r.status, Total: r.total }));
-  const doctorRows  = stats.consultations_by_doctor.map((r) => ({ Doctor: r.name, Consultations: r.total }));
-  const diseaseRows = (stats.top_diseases || []).map((r) => ({ Disease: r.diagnosis, Cases: r.total }));
-  const lowStockRows = (stats.low_stock_medicines || []).map((r) => ({ Category: r.category, 'Low Stock Count': r.count }));
-  
-    const topDiagnosis = (stats.top_diseases && stats.top_diseases.length > 0) ? stats.top_diseases[0].diagnosis : 'N/A';
-    const topBarangay = (stats.cases_by_barangay && stats.cases_by_barangay.length > 0) ? stats.cases_by_barangay[0].barangay : 'N/A';
-    const topDemo = (stats.demographics_by_age && stats.demographics_by_age.length > 0) ? stats.demographics_by_age[0].category : 'N/A';
-    const totalBarangays = (stats.cases_by_barangay || []).length;
+  const summary = stats?.summary || {};
+  const statusRows = (stats?.consultations_by_status || []).map((r) => ({ Status: r.status, Total: r.total }));
+  const doctorRows = (stats?.consultations_by_doctor || []).map((r) => ({ Doctor: r.name, Consultations: r.total }));
+  const diseaseRows = (stats?.top_diseases || []).map((r) => ({ Disease: r.diagnosis, Cases: r.total }));
+  const lowStockRows = (stats?.low_stock_medicines || []).map((r) => ({ Category: r.category, 'Low Stock Count': r.count }));
 
-    const epiKpiGrid = `
-      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;table-layout:fixed;">
-        <tr>
-          ${kpiCard('Top Diagnosis', topDiagnosis, '#f43f5e')}
-          ${kpiCard('Most Affected Area', topBarangay, '#f59e0b')}
-          ${kpiCard('Primary Demo', topDemo, '#0ea5e9')}
-          <td style="padding:0;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:3px solid #10b981;background:#f8fafc;">
-              <tr><td style="padding:12px 14px;">
-                <div style="font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;">Barangays Covered</div>
-                <div style="font-size:18px;font-weight:800;color:#10b981;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${totalBarangays}</div>
-              </td></tr>
-            </table>
-          </td>
-        </tr>
-      </table>`;
+  const topDiagnosis = (stats?.top_diseases && stats.top_diseases.length > 0) ? stats.top_diseases[0].diagnosis : 'N/A';
+  const topBarangay = (stats?.cases_by_barangay && stats.cases_by_barangay.length > 0) ? stats.cases_by_barangay[0].barangay : 'N/A';
+  const topDemo = (stats?.demographics_by_age && stats.demographics_by_age.length > 0) ? stats.demographics_by_age[0].category : 'N/A';
+  const totalBarangays = (stats?.cases_by_barangay || []).length;
 
-    const volumeRows  = stats.time_based_volume.map((r) => ({ Date: r.date, Consultations: r.count }));
-  const ageRows = (stats.demographics_by_age || []).map((r) => ({ Category: r.category, Cases: r.total }));
-  const barangayRows = (stats.cases_by_barangay || []).map((r) => ({ Barangay: r.barangay, Cases: r.total }));
-  const logRows     = stats.recent_logs.map((r) => ({
+  const epiKpiGrid = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;table-layout:fixed;">
+      <tr>
+        ${kpiCard('Top Diagnosis', topDiagnosis, '#f43f5e')}
+        ${kpiCard('Most Affected Area', topBarangay, '#f59e0b')}
+        ${kpiCard('Primary Demo', topDemo, '#0ea5e9')}
+        <td style="padding:0;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:3px solid #10b981;background:#f8fafc;">
+            <tr><td style="padding:12px 14px;">
+              <div style="font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;">Barangays Covered</div>
+              <div style="font-size:18px;font-weight:800;color:#10b981;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${totalBarangays}</div>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>`;
+
+  const volumeRows = (stats?.time_based_volume || []).map((r) => ({ Date: r.date, Consultations: r.count }));
+  const ageRows = (stats?.demographics_by_age || []).map((r) => ({ Category: r.category, Cases: r.total }));
+  const barangayRows = (stats?.cases_by_barangay || []).map((r) => ({ Barangay: r.barangay, Cases: r.total }));
+  const logRows = (stats?.recent_logs || []).map((r) => ({
     Date: formatDateTime(r.created_at), User: r.user || 'System',
     Role: r.role || 'N/A', Action: r.action, IP: r.ip_address || 'N/A',
   }));
@@ -292,16 +314,6 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
 
   const wrap = (content) => `<!doctype html><html lang="en"><head><meta charset="utf-8"/></head><body style="${BODY}">${content}${pageFooter}</body></html>`;
 
-  const kpiCard = (label, value, color) => `
-    <td style="padding:0 8px 0 0;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:3px solid ${color};background:#f8fafc;">
-        <tr><td style="padding:12px 14px;">
-          <div style="font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;">${label}</div>
-          <div style="font-size:22px;font-weight:800;color:${color};line-height:1;">${value}</div>
-        </td></tr>
-      </table>
-    </td>`;
-
   const kpiGrid = `
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;table-layout:fixed;">
       <tr>
@@ -316,14 +328,6 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
             </td></tr>
           </table>
         </td>
-      </tr>
-    </table>`;
-
-  const twoCol = (leftContent, rightContent) => `
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <tr>
-        <td style="width:49%;padding-right:14px;vertical-align:top;">${leftContent}</td>
-        <td style="width:49%;vertical-align:top;">${rightContent}</td>
       </tr>
     </table>`;
 
@@ -389,7 +393,7 @@ function buildReportPages(stats, generatedAt, generatedBy, logoDataUrl, dateFrom
       )}
     `),
 
-    // PAGE 4 — Activity Log + Signatures
+    // PAGE 5 — Activity Log + Signatures
     wrap(`
       ${miniHeader('System Activity Log')}
       ${sectionHeader('Recent System Activity Log', '#64748b')}

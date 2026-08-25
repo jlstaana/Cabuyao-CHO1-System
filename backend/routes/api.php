@@ -57,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/consultations/{id}/status', [ConsultationController::class, 'updateStatus']);
     Route::post('/consultations/{id}/status', [ConsultationController::class, 'updateStatus']);
     Route::post('/consultations/{id}/complete', [ConsultationController::class, 'complete']);
+    Route::post('/consultations/{id}/call-early', [ConsultationController::class, 'callEarly'])->middleware('role:Doctor,Admin,Staff');
     
     // Medicines & Prescriptions
     Route::get('/medicines', [MedicineController::class, 'index']);

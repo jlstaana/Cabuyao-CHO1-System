@@ -94,7 +94,7 @@ class DoctorController extends Controller
 
     private function slotCapacityForDoctor(Doctor $doctor): int
     {
-        return str_contains(strtolower((string) $doctor->specialization), 'general') ? 35 : 18;
+        return 10;
     }
 
     private function bookedSlotsForDoctor(Doctor $doctor)

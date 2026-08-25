@@ -28,7 +28,7 @@ class PatientController extends Controller {
             $request->user()->update(['name' => $request->name]);
         }
         $patient = $request->user()->patient;
-        $patient->update($request->only(['dob', 'address', 'contact_no']));
+        $patient->update($request->only(['dob', 'address', 'contact_no', 'category']));
         return response()->json($request->user()->load('patient'));
     }
     public function history(Request $request) {

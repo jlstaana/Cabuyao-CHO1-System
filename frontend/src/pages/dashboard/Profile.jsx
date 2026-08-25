@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import { User, Clock, Save, Key, Camera, Pencil } from 'lucide-react';
@@ -14,7 +15,7 @@ export default function Profile() {
   const [showPwdModal, setShowPwdModal] = useState(false);
   const [profile, setProfile] = useState({
     name: user?.name || '',
-    contact_no: '', dob: '', address: '',
+    contact_no: '', dob: '', address: '', category: '',
     specialization: '', license_no: '',
   });
   const [pwdForm, setPwdForm] = useState({ current_password: '', password: '', password_confirmation: '' });
@@ -30,6 +31,7 @@ export default function Profile() {
             contact_no: res.data.patient?.contact_no || '',
             dob: res.data.patient?.dob || '',
             address: res.data.patient?.address || '',
+            category: res.data.patient?.category || '',
           }));
         }
       }).catch(console.error);
@@ -191,7 +193,57 @@ export default function Profile() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-text-muted mb-1">Home Address</label>
-                    <textarea value={profile.address} onChange={e => setProfile({ ...profile, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" rows="3" />
+                    <textarea value={profile.address} onChange={e => setProfile({ ...profile, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" rows="2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-muted mb-1">Patient Classification / Category</label>
+                    <select
+                      value={profile.category || 'General'}
+                      onChange={e => setProfile({ ...profile, category: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none text-sm"
+                    >
+                      <option value="General">General (Regular Patient)</option>
+                      <option value="PWD">PWD (Person With Disability)</option>
+                      <option value="Senior Citizen">Senior Citizen (60+)</option>
+                    </select>
+                    {profile.category === 'PWD' && (
+                      <div className="mt-2 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/40 text-xs text-blue-800 dark:text-blue-300 flex items-start justify-between gap-3 flex-wrap">
+                        <div className="flex items-start gap-2 max-w-md">
+                          <span className="text-lg leading-none">♿</span>
+                          <div>
+                            <p className="font-bold">PWD Priority Verification Required</p>
+                            <p className="mt-0.5 text-blue-700 dark:text-blue-300/90 leading-relaxed">
+                              Upload your official <b>PWD ID Card</b> or <b>Disability Medical Certificate</b> so doctors & CHO1 staff can verify and grant priority lane access.
+                            </p>
+                          </div>
+                        </div>
+                        <Link
+                          to="/medical-images"
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs shadow-sm transition-colors shrink-0"
+                        >
+                          Upload PWD ID →
+                        </Link>
+                      </div>
+                    )}
+                    {profile.category === 'Senior Citizen' && (
+                      <div className="mt-2 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-xs text-amber-800 dark:text-amber-300 flex items-start justify-between gap-3 flex-wrap">
+                        <div className="flex items-start gap-2 max-w-md">
+                          <span className="text-lg leading-none">👴</span>
+                          <div>
+                            <p className="font-bold">Senior Citizen Priority Verification</p>
+                            <p className="mt-0.5 text-amber-700 dark:text-amber-300/90 leading-relaxed">
+                              Upload your official <b>OSCA Senior ID Card</b> in your files for quick on-record verification.
+                            </p>
+                          </div>
+                        </div>
+                        <Link
+                          to="/medical-images"
+                          className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs shadow-sm transition-colors shrink-0"
+                        >
+                          Upload Senior ID →
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
