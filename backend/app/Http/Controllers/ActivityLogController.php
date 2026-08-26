@@ -122,6 +122,7 @@ class ActivityLogController extends Controller
                 'software' => true,
                 'security' => true,
                 'hardware' => true,
+                'typhoon_mode' => 'none',
             ];
             if (!is_dir(dirname($path))) {
                 mkdir(dirname($path), 0755, true);
@@ -129,13 +130,15 @@ class ActivityLogController extends Controller
             file_put_contents($path, json_encode($default, JSON_PRETTY_PRINT));
             return response()->json($default);
         }
-        $config = json_decode(file_get_contents($path), true);
-        return response()->json($config ?: [
+        $config = json_decode(file_get_contents($path), true) ?: [];
+        $defaults = [
             'system' => true,
             'software' => true,
             'security' => true,
             'hardware' => true,
-        ]);
+            'typhoon_mode' => 'none',
+        ];
+        return response()->json(array_merge($defaults, $config));
     }
 
     public function updateLoggingConfig(Request $request)
@@ -146,11 +149,23 @@ class ActivityLogController extends Controller
             'software' => (bool)$request->input('software', true),
             'security' => (bool)$request->input('security', true),
             'hardware' => (bool)$request->input('hardware', true),
+            'typhoon_mode' => $request->input('typhoon_mode', 'none'),
         ];
         if (!is_dir(dirname($path))) {
             mkdir(dirname($path), 0755, true);
         }
         file_put_contents($path, json_encode($config, JSON_PRETTY_PRINT));
         return response()->json($config);
+    }
+
+    public function getTyphoonMode(Request $request)
+    {
+        $path = storage_path('app/logging_config.json');
+        $mode = 'none';
+        if (file_exists($path)) {
+            $config = json_decode(file_get_contents($path), true);
+            $mode = $config['typhoon_mode'] ?? 'none';
+        }
+        return response()->json(['typhoon_mode' => $mode]);
     }
 }

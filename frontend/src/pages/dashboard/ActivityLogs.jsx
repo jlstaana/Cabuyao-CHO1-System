@@ -66,6 +66,7 @@ export default function ActivityLogs() {
     software: true,
     security: true,
     hardware: true,
+    typhoon_mode: 'none',
   });
   const [savingConfig, setSavingConfig] = useState(false);
 
@@ -187,6 +188,37 @@ export default function ActivityLogs() {
                         </div>
                       </div>
                     ))}
+                    
+                    {/* Typhoon Mode Dropdown */}
+                    <div className="border-t border-border dark:border-slate-800 pt-3 mt-3">
+                      <label className="block text-[10px] font-extrabold text-text-light dark:text-slate-400 uppercase tracking-wider mb-1.5">🌀 Typhoon Staffing Mode</label>
+                      <select
+                        value={config.typhoon_mode || 'none'}
+                        onChange={async (e) => {
+                          const newMode = e.target.value;
+                          const newConfig = { ...config, typhoon_mode: newMode };
+                          setConfig(newConfig);
+                          setSavingConfig(true);
+                          try {
+                            await api.post('/admin/logging-config', newConfig);
+                            toast.success(`Typhoon mode updated to ${newMode.replace('_', ' ').toUpperCase()}`);
+                            fetchLogs({ page: 1 });
+                          } catch {
+                            toast.error('Failed to update typhoon staffing mode');
+                          } finally {
+                            setSavingConfig(false);
+                          }
+                        }}
+                        className="w-full bg-background dark:bg-slate-950 border border-border dark:border-slate-800 rounded-lg px-2 py-1 text-[11px] font-bold text-text dark:text-white focus:outline-none focus:ring-1 focus:ring-violet-500 cursor-pointer"
+                      >
+                        <option value="none">Disabled (All Doctors)</option>
+                        <option value="team_a">Team A Active (Emergency)</option>
+                        <option value="team_b">Team B Active (Emergency)</option>
+                      </select>
+                      <p className="text-[8.5px] text-text-light dark:text-slate-400 leading-normal mt-1">
+                        Restricts scheduling and room availability to the active emergency response team.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

@@ -118,6 +118,51 @@ class ConsultationController extends Controller {
         return $aliases[$value] ?? [$specialization];
     }
 
+    private function activeTyphoonMode(): string {
+        $path = storage_path('app/logging_config.json');
+        if (file_exists($path)) {
+            $config = json_decode(file_get_contents($path), true);
+            return $config['typhoon_mode'] ?? 'none';
+        }
+        return 'none';
+    }
+
+    private function isPHHoliday($date): bool {
+        $carbonDate = \Carbon\Carbon::parse($date);
+        $month = $carbonDate->month;
+        $day = $carbonDate->day;
+
+        // Static Philippine Holidays (yearly)
+        $staticHolidays = [
+            '1-1',   // New Year's Day
+            '4-9',   // Araw ng Kagitingan
+            '5-1',   // Labor Day
+            '6-12',  // Independence Day
+            '11-1',  // All Saints' Day
+            '11-2',  // All Souls' Day
+            '11-30', // Bonifacio Day
+            '12-8',  // Feast of the Immaculate Conception
+            '12-25', // Christmas Day
+            '12-30', // Rizal Day
+            '12-31', // Last Day of the Year
+        ];
+
+        if (in_array("{$month}-{$day}", $staticHolidays)) {
+            return true;
+        }
+
+        // Dynamic Philippine Holidays:
+        // National Heroes Day: Last Monday of August
+        if ($month === 8 && $carbonDate->isMonday()) {
+            $temp = $carbonDate->copy()->addWeek();
+            if ($temp->month !== 8) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function matchingDoctor(?string $specialization, ?string $scheduledAt): ?Doctor {
         if (!$specialization) {
             return null;
@@ -133,6 +178,14 @@ class ConsultationController extends Controller {
             ->where(function ($q) {
                 $q->whereNull('active_until')->orWhere('active_until', '>=', now());
             });
+
+        // Apply Typhoon Team staffing constraint (Team C acts as balance/standby for both A and B)
+        $typhoonMode = $this->activeTyphoonMode();
+        if ($typhoonMode === 'team_a') {
+            $query->whereIn('team', ['A', 'C']);
+        } elseif ($typhoonMode === 'team_b') {
+            $query->whereIn('team', ['B', 'C']);
+        }
 
         $doctors = $query->get();
         if (!$scheduledAt) {
@@ -174,6 +227,15 @@ class ConsultationController extends Controller {
     }
 
     private function doctorIsAvailable(Doctor $doctor, ?string $scheduledAt, ?int $ignoreConsultationId = null): bool {
+        // Typhoon Mode Team A/B staffing constraints (Team C acts as balance/standby for both A and B)
+        $typhoonMode = $this->activeTyphoonMode();
+        if ($typhoonMode === 'team_a' && !in_array($doctor->team, ['A', 'C'])) {
+            return false;
+        }
+        if ($typhoonMode === 'team_b' && !in_array($doctor->team, ['B', 'C'])) {
+            return false;
+        }
+
         $doctor->loadMissing('availability');
         if (!$scheduledAt || $doctor->availability->isEmpty()) {
             return true;
@@ -240,6 +302,26 @@ class ConsultationController extends Controller {
         ]);
 
         $patientId = $request->user()->patient->id;
+
+        // PH Holiday Check
+        $scheduledAt = \Carbon\Carbon::parse($data['scheduled_at']);
+        if ($this->isPHHoliday($scheduledAt)) {
+            return response()->json(['message' => 'Consultations cannot be scheduled on Philippine holidays.'], 422);
+        }
+
+        // Typhoon Mode staff selection restriction (Team C acts as balance/standby for both A and B)
+        $typhoonMode = $this->activeTyphoonMode();
+        if (!empty($data['doctor_id'])) {
+            $doctor = Doctor::find($data['doctor_id']);
+            if ($doctor) {
+                if ($typhoonMode === 'team_a' && !in_array($doctor->team, ['A', 'C'])) {
+                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Typhoon emergency staffing (Team A and Team C active). Only Team A & C doctors are available.'], 422);
+                }
+                if ($typhoonMode === 'team_b' && !in_array($doctor->team, ['B', 'C'])) {
+                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Typhoon emergency staffing (Team B and Team C active). Only Team B & C doctors are available.'], 422);
+                }
+            }
+        }
 
         // 1. Penalty System: Check for 3 or more missed appointments this month
         $missedCount = Consultation::where('patient_id', $patientId)
@@ -468,9 +550,23 @@ class ConsultationController extends Controller {
         }
         if ($request->status === 'Scheduled') {
             $scheduledAt = $data['scheduled_at'] ?? $c->scheduled_at?->toDateTimeString();
+
+            // PH Holiday Check
+            if ($scheduledAt && $this->isPHHoliday($scheduledAt)) {
+                return response()->json(['message' => 'Consultations cannot be scheduled on Philippine holidays.'], 422);
+            }
+
             $scheduledDoctor = $this->selectedDoctorForSchedule($user, $c, $data);
 
             if ($scheduledDoctor && !$this->doctorIsAvailable($scheduledDoctor, $scheduledAt, $c->id)) {
+                $typhoonMode = $this->activeTyphoonMode();
+                if ($typhoonMode === 'team_a' && !in_array($scheduledDoctor->team, ['A', 'C'])) {
+                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Typhoon emergency staffing (Team A and Team C active).'], 422);
+                }
+                if ($typhoonMode === 'team_b' && !in_array($scheduledDoctor->team, ['B', 'C'])) {
+                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Typhoon emergency staffing (Team B and Team C active).'], 422);
+                }
+
                 $message = $user->role === 'Doctor'
                     ? 'You are not available or the selected slot is already full.'
                     : 'The selected doctor is not available or the selected slot is already full.';

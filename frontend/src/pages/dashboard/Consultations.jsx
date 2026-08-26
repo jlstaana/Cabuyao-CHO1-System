@@ -1133,6 +1133,13 @@ export default function Consultations() {
   const [requestForm, setRequestForm] = useState(EMPTY_REQUEST_FORM);
   const [requestWeekOffset, setRequestWeekOffset] = useState(0);
   const [rescheduleWeekOffset, setRescheduleWeekOffset] = useState(0);
+  const [typhoonMode, setTyphoonMode] = useState('none');
+  useEffect(() => {
+    if (!user) return;
+    api.get('/system/typhoon-mode')
+      .then(res => setTyphoonMode(res.data.typhoon_mode || 'none'))
+      .catch(() => {});
+  }, [user]);
   const [availabilityForm, setAvailabilityForm] = useState({
     doctor_type: 'Resident',
     availability: [{ ...EMPTY_AVAILABILITY_SLOT, _id: crypto.randomUUID() }],
@@ -1766,9 +1773,19 @@ const fetchConsultations = async () => {
 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 <div className="lg:col-span-4 space-y-4">
 
-          <div className="rounded-xl border border-sky-100 bg-primary-bg px-4 py-3 text-sm text-primary-text">
-            Enter your consultation details and select your preferred schedule.
-          </div>
+          {typhoonMode !== 'none' ? (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700 font-semibold animate-pulse flex items-start gap-2 shadow-sm">
+              <span className="text-sm leading-none mt-0.5">🌀</span>
+              <div>
+                <b>Typhoon Staffing Mode Active ({typhoonMode === 'team_a' ? 'Team A & C' : 'Team B & C'} On-Duty)</b><br />
+                Some doctors or specializations may be off-duty. Only active emergency response staff (active team + core Team C standby) can take appointments.
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-sky-100 bg-primary-bg px-4 py-3 text-sm text-primary-text">
+              Enter your consultation details and select your preferred schedule.
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-text-muted mb-1">Available Doctor Specialization</label>
             <select

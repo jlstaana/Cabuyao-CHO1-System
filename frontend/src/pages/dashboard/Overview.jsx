@@ -417,6 +417,14 @@ export default function Overview() {
   const [consultations, setConsultations] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [medicines, setMedicines] = useState([]);
+  const [typhoonMode, setTyphoonMode] = useState('none');
+
+  useEffect(() => {
+    if (!user) return;
+    api.get('/system/typhoon-mode')
+      .then(res => setTyphoonMode(res.data.typhoon_mode || 'none'))
+      .catch(() => {});
+  }, [user]);
 
   useEffect(() => {
     if (!user?.role) return;
@@ -458,7 +466,22 @@ export default function Overview() {
   }, [user]);
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
+      {typhoonMode !== 'none' && (
+        <div className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900/30 rounded-2xl animate-pulse shadow-sm">
+          <div className="p-2 bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 rounded-xl">
+            <AlertCircle size={20} className="animate-spin" style={{ animationDuration: '4s' }} />
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-rose-800 dark:text-rose-400 uppercase tracking-wide">
+              🌀 Typhoon Emergency Staffing Active ({typhoonMode === 'team_a' ? 'Team A & C' : 'Team B & C'} On-Duty)
+            </h4>
+            <p className="text-xs text-rose-700 dark:text-rose-350 leading-relaxed mt-1">
+              Due to weather advisory and active local emergency protocols, normal teleconsultation staffing has been adjusted. Only <b>{typhoonMode === 'team_a' ? 'Team A & Team C (Standby)' : 'Team B & Team C (Standby)'}</b> physicians are currently active and taking calls.
+            </p>
+          </div>
+        </div>
+      )}
       {user?.role === 'Admin' && <AdminOverview user={user} stats={stats} />}
       {user?.role === 'Doctor' && <DoctorOverview user={user} consultations={consultations} prescriptions={prescriptions} />}
       {user?.role === 'Patient' && <PatientOverview user={user} consultations={consultations} prescriptions={prescriptions} />}

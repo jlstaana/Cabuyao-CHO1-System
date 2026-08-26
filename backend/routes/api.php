@@ -69,6 +69,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/medicines/{id}/batches/{batchId}', [MedicineController::class, 'updateBatch'])->middleware('role:Admin,Staff');
     Route::delete('/medicines/{id}/batches/{batchId}', [MedicineController::class, 'deleteBatch'])->middleware('role:Admin,Staff');
     
+    Route::get('/system/typhoon-mode', [App\Http\Controllers\ActivityLogController::class, 'getTyphoonMode']);
+    
     Route::get('/prescriptions', [PrescriptionController::class, 'index']);
     Route::post('/prescriptions', [PrescriptionController::class, 'store']);
     Route::put('/prescriptions/{id}', [PrescriptionController::class, 'update']);
