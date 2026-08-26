@@ -364,20 +364,32 @@ function doctorSlotStatus(doctor, date, slot) {
 
 // ─── PATIENT VIEW ─────────────────────────────────────────────────────────────
 function PatientView({ consultations, loading, onRequest, onReschedule, onCancel }) {
-  const tabs = ['Scheduled'];
+  const tabs = ['Scheduled', 'Completed', 'Cancelled'];
   const [tab, setTab] = useState('Scheduled');
   
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState('list');
 
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
   const filtered = consultations.filter(c => {
     const matchTab = tab === 'All' || c.status === tab;
+    if (!matchTab) return false;
+
+    if (tab === 'Completed' || tab === 'Cancelled') {
+      const d = new Date(c.scheduled_at || c.created_at);
+      const isCurrentMonth = d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      if (!isCurrentMonth) return false;
+    }
+
     const q = search.trim().toLowerCase();
     const matchSearch = !q
       || c.doctor?.user?.name?.toLowerCase().includes(q)
       || c.requested_specialization?.toLowerCase().includes(q)
       || (c.status || '').toLowerCase().includes(q);
-    return matchTab && matchSearch;
+    return matchSearch;
   }).sort((a, b) => {
     if (tab === 'Completed') return new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at);
     return new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
@@ -405,10 +417,18 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
         <div className="flex gap-2 overflow-x-auto pb-1">
           {tabs.map(t => {
             const Icon = TAB_ICON[t] || Stethoscope;
+            const count = consultations.filter(c => {
+              if (c.status !== t) return false;
+              if (t === 'Completed' || t === 'Cancelled') {
+                const d = new Date(c.scheduled_at || c.created_at);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+              }
+              return true;
+            }).length;
             return (
               <button key={t} onClick={() => setTab(t)}
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
-              ><Icon size={14} /> {t}</button>
+              ><Icon size={14} /> {t} ({count})</button>
             );
           })}
         </div>
@@ -465,6 +485,16 @@ function PatientView({ consultations, loading, onRequest, onReschedule, onCancel
           </div>
         </div>
       </div>
+
+      {!loading && (
+        <p className="text-xs text-text-muted dark:text-slate-400">
+          {tab === 'Scheduled' ? (
+            <>Showing <span className="font-bold text-text dark:text-white">{filtered.length}</span> active scheduled appointments</>
+          ) : (
+            <>Showing <span className="font-bold text-text dark:text-white">{filtered.length}</span> {tab.toLowerCase()} consultations <span className="font-semibold text-sky-600 dark:text-sky-400">for this month</span></>
+          )}
+        </p>
+      )}
 
       {/* Content */}
       {viewMode === 'calendar' ? (
@@ -531,9 +561,44 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
   const [tab, setTab] = useState('Scheduled');
   const [search, setSearch] = useState('');
 
-  const cancelled = consultations.filter(c => c.status === 'Cancelled' || c.status === 'Missed');
+  const { user } = useAuthStore();
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const cancelled = consultations.filter(c => {
+    if (c.doctor_id !== user?.doctor?.id) return false;
+    if (c.status !== 'Cancelled' && c.status !== 'Missed') return false;
+    const d = new Date(c.scheduled_at || c.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
   const scheduled = consultations.filter(c => c.status === 'Scheduled');
-  const completed = consultations.filter(c => c.status === 'Completed');
+
+  const completed = consultations.filter(c => {
+    if (c.doctor_id !== user?.doctor?.id) return false;
+    if (c.status !== 'Completed') return false;
+    const d = new Date(c.scheduled_at || c.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  const canCallEarly = (c) => {
+    if (!c.scheduled_at) return false;
+    const sched = new Date(c.scheduled_at);
+    const now = new Date();
+    const isToday = sched.getDate() === now.getDate() &&
+                    sched.getMonth() === now.getMonth() &&
+                    sched.getFullYear() === now.getFullYear();
+    if (!isToday) return false;
+
+    const hour = now.getHours();
+    if (hour < 8 || hour >= 17) return false;
+
+    const diffMs = sched.getTime() - now.getTime();
+    const diffMins = diffMs / (1000 * 60);
+    return diffMins >= -15 && diffMins <= 60;
+  };
 
   const baseFiltered = tab === 'Scheduled' ? scheduled : tab === 'Completed' ? completed : cancelled;
 
@@ -546,10 +611,37 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       (c.form?.diagnosis || '').toLowerCase().includes(q) ||
       `cn-${String(c.id).padStart(6, '0')}`.includes(q)
     );
-  }).sort((a, b) => {
-    if (tab === 'Completed' || tab === 'Cancelled') return new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at);
-    return new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
   });
+
+  if (tab === 'Scheduled') {
+    const priorityGroup = [];
+    const regularGroup = [];
+
+    filtered.forEach(c => {
+      const isPWD = Boolean(c.patient?.category?.includes('PWD'));
+      const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
+      if (isPWD || isSenior) {
+        priorityGroup.push(c);
+      } else {
+        regularGroup.push(c);
+      }
+    });
+
+    const sortByDate = (a, b) => new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
+    priorityGroup.sort(sortByDate);
+    regularGroup.sort(sortByDate);
+
+    const interleaved = [];
+    let pIdx = 0;
+    let rIdx = 0;
+    while (pIdx < priorityGroup.length || rIdx < regularGroup.length) {
+      if (pIdx < priorityGroup.length) interleaved.push(priorityGroup[pIdx++]);
+      if (rIdx < regularGroup.length) interleaved.push(regularGroup[rIdx++]);
+    }
+    filtered.splice(0, filtered.length, ...interleaved);
+  } else {
+    filtered.sort((a, b) => new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at));
+  }
 
   return (
     <div className="space-y-6">
@@ -591,8 +683,8 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       <div data-tour="page-stats" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: 'Scheduled Queue', status: 'Scheduled', count: scheduled.length, sub: 'Upcoming patients' },
-          { label: 'Completed', status: 'Completed', count: completed.length, sub: 'Finished consultations' },
-          { label: 'Cancelled / Missed', status: 'Cancelled', count: cancelled.length, sub: 'Discontinued requests' },
+          { label: 'Completed', status: 'Completed', count: completed.length, sub: 'Finished this month' },
+          { label: 'Cancelled / Missed', status: 'Cancelled', count: cancelled.length, sub: 'Cancelled / Missed this month' },
         ].map(s => (
           <InteractiveStatCard
             key={s.label}
@@ -653,7 +745,11 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
 
       {!loading && (
         <p className="text-xs text-text-muted dark:text-slate-400">
-          Showing <span className="font-bold text-text dark:text-white">{filtered.length}</span> of <span className="font-bold text-text dark:text-white">{consultations.length}</span> total consultations
+          {tab === 'Scheduled' ? (
+            <>Showing <span className="font-bold text-text dark:text-white">{filtered.length}</span> active scheduled appointments</>
+          ) : (
+            <>Showing <span className="font-bold text-text dark:text-white">{filtered.length}</span> {tab.toLowerCase()} consultations <span className="font-semibold text-sky-600 dark:text-sky-400">for this month</span></>
+          )}
         </p>
       )}
 
@@ -742,9 +838,18 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
                         {!isCalledEarly && (
                           <button
                             type="button"
+                            disabled={!canCallEarly(c)}
                             onClick={() => onCallEarly && onCallEarly(c)}
-                            className="px-3.5 py-2 rounded-xl border border-sky-300 dark:border-sky-800/60 bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40 font-bold text-xs flex items-center gap-1 transition-all"
-                            title="Notify this patient via email & push alert that you are ready ahead of schedule"
+                            className={`px-3.5 py-2 rounded-xl border font-bold text-xs flex items-center gap-1 transition-all ${
+                              canCallEarly(c)
+                                ? 'border-sky-300 dark:border-sky-800/60 bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40 cursor-pointer'
+                                : 'border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text-muted dark:text-slate-500 cursor-not-allowed opacity-50'
+                            }`}
+                            title={
+                              canCallEarly(c)
+                                ? "Notify this patient via email & push alert that you are ready ahead of schedule"
+                                : "Only available on the day of appointment, starting 1 hour before scheduled time (8:00 AM - 5:00 PM)"
+                            }
                           >
                             🔔 Call In Early
                           </button>
@@ -790,19 +895,57 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
   const [viewMode, setViewMode] = useState('list');
   const [search, setSearch] = useState('');
 
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
   const filtered = consultations.filter(c => {
     const matchTab = c.status === tab;
+    if (!matchTab) return false;
+
+    if (tab === 'Completed' || tab === 'Cancelled') {
+      const d = new Date(c.scheduled_at || c.created_at);
+      const isCurrentMonth = d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      if (!isCurrentMonth) return false;
+    }
+
     const q = search.trim().toLowerCase();
-    if (!q) return matchTab;
-    const matchSearch =
+    const matchSearch = !q ||
       c.patient?.user?.name?.toLowerCase().includes(q) ||
       c.doctor?.user?.name?.toLowerCase().includes(q) ||
       `cn-${String(c.id).padStart(6, '0')}`.includes(q);
-    return matchTab && matchSearch;
-  }).sort((a, b) => {
-    if (tab === 'Completed' || tab === 'Cancelled') return new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at);
-    return new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
+    return matchSearch;
   });
+
+  if (tab === 'Scheduled') {
+    const priorityGroup = [];
+    const regularGroup = [];
+
+    filtered.forEach(c => {
+      const isPWD = Boolean(c.patient?.category?.includes('PWD'));
+      const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
+      if (isPWD || isSenior) {
+        priorityGroup.push(c);
+      } else {
+        regularGroup.push(c);
+      }
+    });
+
+    const sortByDate = (a, b) => new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
+    priorityGroup.sort(sortByDate);
+    regularGroup.sort(sortByDate);
+
+    const interleaved = [];
+    let pIdx = 0;
+    let rIdx = 0;
+    while (pIdx < priorityGroup.length || rIdx < regularGroup.length) {
+      if (pIdx < priorityGroup.length) interleaved.push(priorityGroup[pIdx++]);
+      if (rIdx < regularGroup.length) interleaved.push(regularGroup[rIdx++]);
+    }
+    filtered.splice(0, filtered.length, ...interleaved);
+  } else {
+    filtered.sort((a, b) => new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at));
+  }
 
   return (
     <div className="space-y-6">
@@ -810,17 +953,27 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
       <div data-tour="page-stats" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { status: 'Scheduled', sub: 'Upcoming sessions' },
-          { status: 'Completed', sub: 'Successfully finished' },
-          { status: 'Cancelled', sub: 'Discontinued requests' }
-        ].map(s => (
-          <InteractiveStatCard
-            key={s.status}
-            status={s.status}
-            label={s.status}
-            count={consultations.filter(c => c.status === s.status).length}
-            sub={s.sub}
-          />
-        ))}
+          { status: 'Completed', sub: 'Completed this month' },
+          { status: 'Cancelled', sub: 'Cancelled this month' }
+        ].map(s => {
+          const count = consultations.filter(c => {
+            if (c.status !== s.status) return false;
+            if (s.status === 'Completed' || s.status === 'Cancelled') {
+              const d = new Date(c.scheduled_at || c.created_at);
+              return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            }
+            return true;
+          }).length;
+          return (
+            <InteractiveStatCard
+              key={s.status}
+              status={s.status}
+              label={s.status}
+              count={count}
+              sub={s.sub}
+            />
+          );
+        })}
       </div>
 
       {/* Tabs & Search */}
@@ -828,10 +981,18 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
         <div className="flex gap-2 overflow-x-auto pb-1">
           {['Scheduled','Completed','Cancelled'].map(t => {
             const Icon = TAB_ICON[t] || Stethoscope;
+            const count = consultations.filter(c => {
+              if (c.status !== t) return false;
+              if (t === 'Completed' || t === 'Cancelled') {
+                const d = new Date(c.scheduled_at || c.created_at);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+              }
+              return true;
+            }).length;
             return (
               <button key={t} onClick={() => setTab(t)}
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t ? 'bg-sky-600 text-white shadow-sm' : 'bg-surface text-text-muted border border-border hover:border-sky-300 hover:text-primary-text'}`}
-              ><Icon size={14} /> {t} ({consultations.filter(c => c.status === t).length})</button>
+              ><Icon size={14} /> {t} ({count})</button>
             );
           })}
         </div>
@@ -872,7 +1033,11 @@ function AdminView({ consultations, loading, onReschedule, onCancel }) {
 
       {!loading && (
         <p className="text-xs text-text-muted -mt-3">
-          Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{consultations.length}</span> consultations
+          {tab === 'Scheduled' ? (
+            <>Showing <span className="font-semibold text-text">{filtered.length}</span> active scheduled appointments</>
+          ) : (
+            <>Showing <span className="font-semibold text-text">{filtered.length}</span> {tab.toLowerCase()} consultations <span className="font-semibold text-sky-600">for this month</span></>
+          )}
         </p>
       )}
 
@@ -1043,7 +1208,7 @@ export default function Consultations() {
 
 const fetchConsultations = async () => {
     try {
-      const res = await api.get('/consultations');
+      const res = await api.get('/consultations?show_all=1');
       setConsultations(res.data);
     } catch { toast.error('Failed to load consultations'); }
     finally   { setLoading(false); }
@@ -1051,7 +1216,7 @@ const fetchConsultations = async () => {
 
   useEffect(() => {
     let isActive = true;
-    api.get('/consultations')
+    api.get('/consultations?show_all=1')
       .then(res => {
         if (isActive) setConsultations(res.data);
       })

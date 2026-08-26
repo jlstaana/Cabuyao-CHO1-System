@@ -16,7 +16,7 @@ export default function Profile() {
   const [profile, setProfile] = useState({
     name: user?.name || '',
     contact_no: '', dob: '', address: '', category: '',
-    specialization: '', license_no: '',
+    specialization: '', license_no: '', ptr_no: '',
   });
   const [pwdForm, setPwdForm] = useState({ current_password: '', password: '', password_confirmation: '' });
 
@@ -44,6 +44,7 @@ export default function Profile() {
             name: res.data.name || p.name,
             specialization: res.data.doctor?.specialization || '',
             license_no: res.data.doctor?.license_no || '',
+            ptr_no: res.data.doctor?.ptr_no || '',
           }));
         }
       }).catch(console.error);
@@ -250,7 +251,7 @@ export default function Profile() {
 
               {user?.role === 'Doctor' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-text-muted mb-1">Specialization</label>
                       <input value={profile.specialization} onChange={e => setProfile({ ...profile, specialization: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. General Practice" />
@@ -258,6 +259,10 @@ export default function Profile() {
                     <div>
                       <label className="block text-sm font-medium text-text-muted mb-1 flex items-center gap-2"><Clock size={16} /> License Number</label>
                       <input value={profile.license_no} onChange={e => setProfile({ ...profile, license_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-muted mb-1 flex items-center gap-2">PTR Number</label>
+                      <input value={profile.ptr_no} onChange={e => setProfile({ ...profile, ptr_no: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-sky-500/20 outline-none" placeholder="e.g. PTR-1234567" />
                     </div>
                   </div>
                 </div>

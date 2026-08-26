@@ -24,6 +24,7 @@
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.15.0",
     "recharts": "^3.8.1",
+    "signature_pad": "^5.1.4",
     "zustand": "^5.0.13"
   },
   "devDependencies": {

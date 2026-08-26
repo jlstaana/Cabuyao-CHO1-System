@@ -55,9 +55,10 @@ function buildPatientRecords(patientsData) {
         encounter_number: rawConsultations.length - index,
         date: formatDate(c.scheduled_at || c.created_at),
         time: formatTime(c.scheduled_at || c.created_at),
-        raw_date: c.scheduled_at,
+        raw_date: c.scheduled_at || c.created_at,
         status: c.status || 'Completed',
         doctor: doctorName,
+        doctor_id: c.doctor_id,
         specialization: specialization,
         symptoms: form.symptoms || c.symptoms || '',
         diagnosis: form.diagnosis || c.diagnosis || '',
@@ -328,42 +329,78 @@ export default function PatientRecords() {
   });
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      {/* Header */}
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <PageTitle icon={Users} title="Patient Records" description={canEditRecords ? 'Open patient records, update permitted information, and review history.' : 'View medical history, patient documents, and consultations for your patients.'} iconClassName="bg-brand-bg text-indigo-600" />
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard 
-          label="Total Patients" 
-          value={patients.length} 
-          icon={Users} 
-          color="sky" 
-          sub="Registered in system" 
-        />
-        <StatCard 
-          label="Old Patients" 
-          value={patients.filter(p => p.total_consultations > 1).length} 
-          icon={HeartPulse} 
-          color="emerald" 
-          sub="> 1 consultation" 
-        />
-        <StatCard 
-          label="New Patients" 
-          value={patients.filter(p => p.total_consultations <= 1).length} 
-          icon={User} 
-          color="indigo" 
-          sub="≤ 1 consultation" 
-        />
-        <StatCard 
-          label="Upcoming" 
-          value={patients.filter(p => p.consultations.some(c => c.status === 'Scheduled' && isUpcoming(c.raw_date))).length} 
-          icon={Clock} 
-          color="amber" 
-          sub="Scheduled consultations" 
-        />
-      </div>
+      {(() => {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const monthlyStatsPatients = patients.filter(p => {
+          return p.consultations.some(c => {
+            const d = new Date(c.raw_date || c.created_at);
+            const isCurrentMonth = d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            if (!isCurrentMonth) return false;
+            if (user?.role === 'Doctor') {
+              return c.doctor_id === user?.doctor?.id;
+            }
+            return true;
+          });
+        });
+
+        const totalPatientsCount = monthlyStatsPatients.length;
+        const oldPatientsCount = monthlyStatsPatients.filter(p => p.total_consultations > 1).length;
+        const newPatientsCount = monthlyStatsPatients.filter(p => p.total_consultations <= 1).length;
+
+        const upcomingCount = monthlyStatsPatients.filter(p => {
+          return p.consultations.some(c => {
+            if (c.status !== 'Scheduled') return false;
+            const d = new Date(c.raw_date);
+            const isCurrentMonth = d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            if (user?.role === 'Doctor') {
+              return isCurrentMonth && c.doctor_id === user?.doctor?.id;
+            }
+            return isCurrentMonth;
+          });
+        }).length;
+
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard 
+              label="Total Patients" 
+              value={totalPatientsCount} 
+              icon={Users} 
+              color="sky" 
+              sub="Consulted this month" 
+            />
+            <StatCard 
+              label="Old Patients" 
+              value={oldPatientsCount} 
+              icon={HeartPulse} 
+              color="emerald" 
+              sub="Returning this month" 
+            />
+            <StatCard 
+              label="New Patients" 
+              value={newPatientsCount} 
+              icon={User} 
+              color="indigo" 
+              sub="First-time this month" 
+            />
+            <StatCard 
+              label="Upcoming" 
+              value={upcomingCount} 
+              icon={Clock} 
+              color="amber" 
+              sub="Scheduled this month" 
+            />
+          </div>
+        );
+      })()}
 
       {/* Search and Filters */}
       <div data-tour="page-search" className="flex flex-col sm:flex-row gap-3">

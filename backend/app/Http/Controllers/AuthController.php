@@ -141,7 +141,7 @@ class AuthController extends Controller {
             throw ValidationException::withMessages(['email' => ['Invalid credentials or inactive account.']]);
         }
         AuditLog::create(['user_id' => $user->id, 'action' => 'Login', 'description' => 'User logged into the system.', 'ip_address' => $request->ip()]);
-        return response()->json(['token' => $user->createToken('auth')->plainTextToken, 'user' => $user]);
+        return response()->json(['token' => $user->createToken('auth')->plainTextToken, 'user' => $user->load('doctor', 'patient')]);
     }
     public function forgotPassword(Request $request) {
         $request->validate(['email' => 'required|email']);

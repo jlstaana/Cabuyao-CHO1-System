@@ -310,6 +310,96 @@
             margin-top: 4px;
             text-align: center;
         }
+
+        /* Dynamic overrides based on number of medicines */
+        @php
+            $itemCount = count($prescription->items);
+            if ($itemCount === 1) {
+                $tableFontSize = '11px';
+                $thFontSize = '10px';
+                $thPadding = '9px 12px';
+                $tdPadding = '12px 12px';
+                $nameFontSize = '11.5px';
+                $descFontSize = '9.5px';
+                $rxSymbolSize = '28px';
+                $notesMinHeight = '65px';
+                $notesTitleSize = '11px';
+                $notesFontSize = '9.5px';
+            } elseif ($itemCount === 2) {
+                $tableFontSize = '10px';
+                $thFontSize = '9.5px';
+                $thPadding = '7px 9px';
+                $tdPadding = '9px 9px';
+                $nameFontSize = '10.5px';
+                $descFontSize = '8.5px';
+                $rxSymbolSize = '25px';
+                $notesMinHeight = '48px';
+                $notesTitleSize = '10px';
+                $notesFontSize = '9px';
+            } elseif ($itemCount === 3) {
+                $tableFontSize = '9px';
+                $thFontSize = '9px';
+                $thPadding = '5px 7px';
+                $tdPadding = '7px 7px';
+                $nameFontSize = '9.5px';
+                $descFontSize = '8px';
+                $rxSymbolSize = '23px';
+                $notesMinHeight = '36px';
+                $notesTitleSize = '9.5px';
+                $notesFontSize = '8.5px';
+            } elseif ($itemCount === 4) {
+                $tableFontSize = '8.5px';
+                $thFontSize = '8.5px';
+                $thPadding = '4px 6px';
+                $tdPadding = '5px 6px';
+                $nameFontSize = '9px';
+                $descFontSize = '7.5px';
+                $rxSymbolSize = '22px';
+                $notesMinHeight = '28px';
+                $notesTitleSize = '9px';
+                $notesFontSize = '8px';
+            } else {
+                $tableFontSize = '8px';
+                $thFontSize = '8px';
+                $thPadding = '3px 5px';
+                $tdPadding = '3.5px 5px';
+                $nameFontSize = '8.5px';
+                $descFontSize = '7.5px';
+                $rxSymbolSize = '20px';
+                $notesMinHeight = '20px';
+                $notesTitleSize = '9px';
+                $notesFontSize = '8px';
+            }
+        @endphp
+
+        .medicines-table {
+            font-size: {{ $tableFontSize }} !important;
+        }
+        .medicines-table th {
+            font-size: {{ $thFontSize }} !important;
+            padding: {{ $thPadding }} !important;
+        }
+        .medicines-table td {
+            padding: {{ $tdPadding }} !important;
+        }
+        .medicine-name {
+            font-size: {{ $nameFontSize }} !important;
+        }
+        .medicine-desc {
+            font-size: {{ $descFontSize }} !important;
+        }
+        .rx-symbol {
+            font-size: {{ $rxSymbolSize }} !important;
+        }
+        .instructions {
+            min-height: {{ $notesMinHeight }} !important;
+        }
+        .instructions h3 {
+            font-size: {{ $notesTitleSize }} !important;
+        }
+        .instructions p {
+            font-size: {{ $notesFontSize }} !important;
+        }
     </style>
 </head>
 
@@ -460,8 +550,7 @@
                     <p class="doctor-name">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
                     <p class="doctor-license">PRC Lic. No.: {{ optional($doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}</p>
                     <p class="doctor-license">{{ optional($doctor)->specialization ?? 'General Practice' }}</p>
-                    <p class="doctor-license">PTR No.: ____________ &nbsp; S2 No.: ____________</p>
-                    <div class="stamp">E-SIGNED</div>
+                    <p class="doctor-license">PTR No.: {{ optional($doctor)->ptr_no ?: 'PTR-' . (8765000 + $prescription->doctor_id) }}</p>
                 </td>
             </tr>
         </table>

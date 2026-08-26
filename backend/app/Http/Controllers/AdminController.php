@@ -35,6 +35,7 @@ class AdminController extends Controller {
             'user_id' => $user->id,
             'specialization' => $request->specialization,
             'license_no' => $request->license_no ?: 'VIS-' . str_pad($user->id, 6, '0', STR_PAD_LEFT),
+            'ptr_no' => 'PTR-' . (8765000 + $user->id),
             'active_until' => $request->expires_at,
             'doctor_type' => $request->access_type === 'visiting' ? 'Visiting' : 'Resident',
         ]);

@@ -13,7 +13,7 @@ Route::middleware('throttle:60,1')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (\Illuminate\Http\Request $request) {
-        return $request->user();
+        return $request->user()->load('doctor', 'patient');
     });
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
@@ -86,4 +86,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Activity Logs (Admin & Staff only)
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->middleware('role:Admin,Staff');
+    Route::get('/admin/logging-config', [ActivityLogController::class, 'getLoggingConfig'])->middleware('role:Admin,Staff');
+    Route::post('/admin/logging-config', [ActivityLogController::class, 'updateLoggingConfig'])->middleware('role:Admin');
 });

@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import SignaturePad from 'signature_pad';
 import api from '../../utils/api';
 import Skeleton from '../../components/Skeleton';
 import toast from 'react-hot-toast';
-import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar, Search, X, Filter, Activity, Pill, Stethoscope, PenLine, Eraser, CheckCircle } from 'lucide-react';
+import { FileText, Download, User, Edit, Plus, Trash2, Save, Calendar, Search, X, Filter, Activity, Pill, Stethoscope, PenLine, Eraser, CheckCircle, Clock } from 'lucide-react';
 import PageTitle from '../../components/PageTitle';
 import Modal from '../../components/Modal';
 import useAuthStore from '../../store/useAuthStore';
@@ -135,143 +136,59 @@ export default function Prescriptions() {
     }
   };
 
-      // E-Signature: Crisp, Non-Cutting, Ultra-Responsive Pen Engine
-  const signatureCanvasRef = useRef(null);
-  const isDrawingRef = useRef(false);
-  const lastPointRef = useRef(null);
-  const [signatureStrokes, setSignatureStrokes] = useState([]);
+  // E-Signature: Crisp, Non-Cutting, Ultra-Responsive Pen Engine
+  const signaturePadInstanceRef = useRef(null);
   const [hasSignature, setHasSignature] = useState(false);
 
-  const getCanvasPoint = (e) => {
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return {
-      x: ((clientX - rect.left) / rect.width) * canvas.width,
-      y: ((clientY - rect.top) / rect.height) * canvas.height,
-    };
-  };
+  const signatureCanvasRef = useCallback((canvas) => {
+    if (canvas !== null) {
+      // Fix cursor alignment by setting internal resolution to match display size 1:1
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
 
-  const startSignature = (e) => {
-    e.preventDefault();
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const point = getCanvasPoint(e);
-    isDrawingRef.current = true;
-    lastPointRef.current = point;
-
-    setSignatureStrokes((prev) => [...prev, [point]]);
-    setHasSignature(true);
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.strokeStyle = '#0f2b5c';
-    ctx.lineWidth = 2.6;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, 1.3, 0, Math.PI * 2);
-    ctx.fillStyle = '#0f2b5c';
-    ctx.fill();
-  };
-
-  const drawSignature = (e) => {
-    if (!isDrawingRef.current) return;
-    e.preventDefault();
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const point = getCanvasPoint(e);
-    const prevPoint = lastPointRef.current;
-    if (!prevPoint) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.strokeStyle = '#0f2b5c';
-    ctx.lineWidth = 2.6;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    ctx.beginPath();
-    ctx.moveTo(prevPoint.x, prevPoint.y);
-    ctx.lineTo(point.x, point.y);
-    ctx.stroke();
-
-    lastPointRef.current = point;
-
-    setSignatureStrokes((prev) => {
-      if (!prev.length) return [[point]];
-      const next = [...prev];
-      next[next.length - 1] = [...next[next.length - 1], point];
-      return next;
-    });
-  };
-
-  const stopSignature = () => {
-    isDrawingRef.current = false;
-    lastPointRef.current = null;
-  };
+      if (signaturePadInstanceRef.current) {
+        signaturePadInstanceRef.current.off();
+      }
+      const pad = new SignaturePad(canvas, {
+        minWidth: 0.8,
+        maxWidth: 2.2,
+        penColor: '#0f2b5c',
+        throttle: 16,
+      });
+      pad.addEventListener('beginStroke', () => {
+        setHasSignature(true);
+      });
+      signaturePadInstanceRef.current = pad;
+    } else {
+      if (signaturePadInstanceRef.current) {
+        signaturePadInstanceRef.current.off();
+        signaturePadInstanceRef.current = null;
+      }
+    }
+  }, []);
 
   const clearSignature = () => {
-    const canvas = signatureCanvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (signaturePadInstanceRef.current) {
+      signaturePadInstanceRef.current.clear();
     }
-    lastPointRef.current = null;
-    setSignatureStrokes([]);
     setHasSignature(false);
   };
 
   const buildSignatureSvg = () => {
-    const strokes = signatureStrokes.filter((stroke) => stroke.length > 0);
-    if (!strokes.length) return null;
-    const points = strokes.flat();
-    if (!points.length) return null;
-
-    // Generous bounding box margin (30px) so wide loops & flourishes are NEVER cut off
-    const rawMinX = Math.min(...points.map((p) => p.x));
-    const rawMinY = Math.min(...points.map((p) => p.y));
-    const rawMaxX = Math.max(...points.map((p) => p.x));
-    const rawMaxY = Math.max(...points.map((p) => p.y));
-
-    const minX = Math.max(0, rawMinX - 30);
-    const minY = Math.max(0, rawMinY - 20);
-    const maxX = Math.min(800, rawMaxX + 30);
-    const maxY = Math.min(240, rawMaxY + 20);
-    const viewBoxWidth = Math.max(120, maxX - minX);
-    const viewBoxHeight = Math.max(45, maxY - minY);
-
-    const paths = strokes
-      .map((stroke) => {
-        if (stroke.length === 1) {
-          return `<circle cx="${stroke[0].x.toFixed(1)}" cy="${stroke[0].y.toFixed(1)}" r="1.5" fill="#0f2b5c"/>`;
-        }
-        const [first, ...rest] = stroke;
-        const d = [
-          `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`,
-          ...rest.map((p) => `L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`),
-        ].join(' ');
-        return `<path d="${d}" fill="none" stroke="#0f2b5c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`;
-      })
-      .join('');
-
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${viewBoxWidth.toFixed(1)} ${viewBoxHeight.toFixed(1)}" width="140" height="42" preserveAspectRatio="xMidYMid meet">${paths}</svg>`;
+    if (!signaturePadInstanceRef.current || signaturePadInstanceRef.current.isEmpty()) {
+      return '';
+    }
+    const dataUrl = signaturePadInstanceRef.current.toDataURL("image/svg+xml");
+    const base64 = dataUrl.split(',')[1];
+    return atob(base64);
   };
 
   const openEdit = (prescription) => {
     setSelected(prescription);
-    setSignatureStrokes([]);
     setHasSignature(false);
     setTimeout(() => {
-      const canvas = signatureCanvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (ctx && canvas) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (signaturePadInstanceRef.current) {
+        signaturePadInstanceRef.current.clear();
       }
     }, 50);
     setEditForm({
@@ -327,6 +244,15 @@ export default function Prescriptions() {
     }
   };
 
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthlyPrescriptions = prescriptions.filter(p => {
+    const d = new Date(p.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
   return (
     <div className="animate-in fade-in duration-500">
       <div className="flex justify-between items-center mb-6">
@@ -337,10 +263,10 @@ export default function Prescriptions() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard 
           label="Total Prescriptions" 
-          value={prescriptions.length} 
+          value={monthlyPrescriptions.length} 
           icon={FileText} 
           color="sky" 
-          sub="All records" 
+          sub="Issued this month" 
         />
         <StatCard 
           label="Issued Today" 
@@ -351,17 +277,17 @@ export default function Prescriptions() {
         />
         <StatCard 
           label="Items Prescribed" 
-          value={prescriptions.reduce((acc, p) => acc + (p.items?.length || 0), 0)} 
+          value={monthlyPrescriptions.reduce((acc, p) => acc + (p.items?.length || 0), 0)} 
           icon={Pill} 
           color="indigo" 
-          sub="Total medicines dispensed" 
+          sub="Medicines prescribed this month" 
         />
         <StatCard 
           label="Active Doctors" 
-          value={new Set(prescriptions.map(p => p.doctor_id).filter(Boolean)).size} 
+          value={new Set(monthlyPrescriptions.map(p => p.doctor_id).filter(Boolean)).size} 
           icon={Stethoscope} 
           color="amber" 
-          sub="Prescribing physicians" 
+          sub="Prescribing this month" 
         />
       </div>
 
@@ -460,64 +386,91 @@ export default function Prescriptions() {
              </div>
            ))
         ) : filtered.length === 0 ? (
-           <div className="col-span-full p-8 text-center text-text-muted bg-surface rounded-2xl border border-border">
-             {hasActiveFilters ? (
-               <div className="space-y-2">
-                 <p className="font-medium">No prescriptions match your search.</p>
-                 <button onClick={clearFilters} className="text-sm text-emerald-600 hover:underline">Clear filters</button>
-               </div>
-             ) : 'No prescriptions found.'}
-           </div>
-        ) : filtered.map(p => (
-          <div key={p.id} className="bg-surface rounded-2xl p-6 shadow-sm border border-border flex flex-col">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <span className="text-xs font-mono text-text-muted">RX-{String(p.id).padStart(6, '0')}</span>
-                <h3 className="font-bold text-lg text-text line-clamp-1 mt-0.5">
-                  {p.notes || 'Prescription Details'}
-                </h3>
+          <div className="col-span-full p-8 text-center text-text-muted bg-surface rounded-2xl border border-border">
+            {hasActiveFilters ? (
+              <div className="space-y-2">
+                <p className="font-medium">No prescriptions match your search.</p>
+                <button onClick={clearFilters} className="text-sm text-emerald-600 hover:underline">Clear filters</button>
               </div>
-              <div className="w-10 h-10 rounded-full bg-success-bg text-emerald-600 flex items-center justify-center shrink-0">
-                <FileText size={20} />
-              </div>
-            </div>
-
-            <div className="space-y-2.5 mb-6 flex-1">
-              <p className="text-sm flex items-center gap-2 text-text-muted">
-                <User size={15} className="text-text-light" /> <span className="font-semibold text-text">Patient:</span> {p.patient?.user?.name || 'Unknown Patient'}
-              </p>
-              <p className="text-sm flex items-center gap-2 text-text-muted">
-                <Stethoscope size={15} className="text-text-light" /> <span className="font-semibold text-text">Prescribed By:</span> Dr. {p.doctor?.user?.name || 'Unknown Doctor'}
-              </p>
-              <p className="text-sm flex items-center gap-2 text-text-muted">
-                <Calendar size={15} className="text-text-light" /> <span className="font-semibold text-text">Issued On:</span> {new Date(p.created_at).toLocaleDateString()}
-              </p>
-
-              <div className="mt-4 pt-3 border-t border-border/70 flex items-center gap-2 text-xs text-text-light bg-surface-hover/40 px-3 py-2 rounded-xl">
-                <span>🔒</span>
-                <span className="italic">Medication details are encrypted & confidential. Download official PDF to view.</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {user?.role === 'Doctor' && (
-                <button
-                  onClick={() => openEdit(p)}
-                  className="w-full flex items-center justify-center gap-2 bg-success-bg text-success-text py-2.5 rounded-xl font-medium hover:bg-emerald-100 transition-colors border border-success-border"
-                >
-                  <Edit size={17} /> Edit Prescription
-                </button>
-              )}
-              <button
-                onClick={() => handleDownload(p.id)}
-                disabled={downloadingId === p.id}
-                className="w-full flex items-center justify-center gap-2 bg-background text-text-muted py-2.5 rounded-xl font-medium hover:bg-success-bg hover:text-success-text transition-colors border border-border hover:border-emerald-200"
-              >
-                <Download size={18} /> {downloadingId === p.id ? 'Downloading...' : 'Download PDF'}
-              </button>
-            </div>
+            ) : 'No prescriptions found.'}
           </div>
-        ))}
+        ) : (
+          filtered.map(p => {
+            const issuedDate = new Date(p.created_at);
+            const expiryDate = new Date(issuedDate.getTime() + 180 * 24 * 60 * 60 * 1000);
+            const isExpired = new Date() > expiryDate;
+            const isNearing = !isExpired && (expiryDate.getTime() - new Date().getTime() <= 30 * 24 * 60 * 60 * 1000);
+
+            const badgeColor = isExpired ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30' :
+                               isNearing ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30 animate-pulse' :
+                               'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30';
+            const badgeLabel = isExpired ? 'Expired' : isNearing ? 'Nearing Expiry' : 'Active';
+
+            return (
+              <div key={p.id} className="bg-surface rounded-2xl p-6 shadow-sm border border-border flex flex-col">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono text-text-muted">RX-{String(p.id).padStart(6, '0')}</span>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${badgeColor}`}>
+                        {badgeLabel}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-lg text-text line-clamp-1 mt-0.5">
+                      {p.notes || 'Prescription Details'}
+                    </h3>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-success-bg text-emerald-600 flex items-center justify-center shrink-0">
+                    <FileText size={20} />
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 mb-6 flex-1">
+                  <p className="text-sm flex items-center gap-2 text-text-muted">
+                    <User size={15} className="text-text-light" /> <span className="font-semibold text-text">Patient:</span> {p.patient?.user?.name || 'Unknown Patient'}
+                  </p>
+                  <p className="text-sm flex items-center gap-2 text-text-muted">
+                    <Stethoscope size={15} className="text-text-light" /> <span className="font-semibold text-text">Prescribed By:</span> Dr. {p.doctor?.user?.name || 'Unknown Doctor'}
+                    {p.doctor?.license_no && (
+                      <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full font-mono font-medium ml-1">
+                        Lic. {p.doctor.license_no}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-sm flex items-center gap-2 text-text-muted">
+                    <Calendar size={15} className="text-text-light" /> <span className="font-semibold text-text">Issued On:</span> {issuedDate.toLocaleDateString()}
+                  </p>
+                  <p className="text-sm flex items-center gap-2 text-text-muted">
+                    <Clock size={15} className="text-text-light" /> <span className="font-semibold text-text">Expires On:</span> {expiryDate.toLocaleDateString()}
+                  </p>
+
+                  <div className="mt-4 pt-3 border-t border-border/70 flex items-center gap-2 text-xs text-text-light bg-surface-hover/40 px-3 py-2 rounded-xl">
+                    <span>🔒</span>
+                    <span className="italic">Medication details are encrypted & confidential. Download official PDF to view.</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {user?.role === 'Doctor' && (
+                    <button
+                      onClick={() => openEdit(p)}
+                      className="w-full flex items-center justify-center gap-2 bg-success-bg text-success-text py-2.5 rounded-xl font-medium hover:bg-emerald-100 transition-colors border border-success-border"
+                    >
+                      <Edit size={17} /> Edit Prescription
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDownload(p.id)}
+                    disabled={downloadingId === p.id}
+                    className="w-full flex items-center justify-center gap-2 bg-background text-text-muted py-2.5 rounded-xl font-medium hover:bg-success-bg hover:text-success-text transition-colors border border-border hover:border-emerald-200"
+                  >
+                    <Download size={18} /> {downloadingId === p.id ? 'Downloading...' : 'Download PDF'}
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Update E-Prescription">
@@ -595,13 +548,6 @@ export default function Prescriptions() {
                   ref={signatureCanvasRef}
                   width={720}
                   height={180}
-                  onMouseDown={startSignature}
-                  onMouseMove={drawSignature}
-                  onMouseUp={stopSignature}
-                  onMouseLeave={stopSignature}
-                  onTouchStart={startSignature}
-                  onTouchMove={drawSignature}
-                  onTouchEnd={stopSignature}
                   className="h-36 w-full rounded-xl bg-background cursor-crosshair touch-none border border-border shadow-inner"
                 />
               </div>

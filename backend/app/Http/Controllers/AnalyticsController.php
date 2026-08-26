@@ -157,6 +157,7 @@ class AnalyticsController extends Controller {
         $totalConsultations = (clone $query)->count();
         $completedConsultations = (clone $query)->where('status', 'Completed')->count();
         $scheduledConsultations = (clone $query)->whereIn('status', ['Scheduled'])->count();
+        $cancelledConsultations = (clone $query)->where('status', 'Cancelled')->count();
 
         $patientCountQuery = Patient::where('archived', false);
         if ($request->has('age_group') && $request->age_group !== '') {
@@ -260,6 +261,7 @@ class AnalyticsController extends Controller {
                 'total_consultations' => $totalConsultations,
                 'completed_consultations' => $completedConsultations,
                 'scheduled_consultations' => $scheduledConsultations,
+                'cancelled_consultations' => $cancelledConsultations,
                 'registered_patients' => $registeredPatientsCount,
                 'active_doctors' => $activeDoctorsCount,
                 'active_medicines' => $activeMedicines->count(),

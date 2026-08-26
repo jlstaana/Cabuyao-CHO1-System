@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { JitsiMeeting } from '@jitsi/react-sdk';
 import { useParams, useNavigate } from 'react-router-dom';
+import SignaturePad from 'signature_pad';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
 import Modal from '../../components/Modal';
@@ -240,9 +241,33 @@ function TeleconsultationRoomContent() {
   const audioContextRef = useRef(null);
   const noiseGateFrameRef = useRef(null);
   const chatListRef = useRef(null);
-  const signatureCanvasRef = useRef(null);
-  const signatureDrawingRef = useRef(false);
-  const signatureStrokesRef = useRef([]);
+  const signaturePadInstanceRef = useRef(null);
+  const signatureCanvasRef = useCallback((canvas) => {
+    if (canvas !== null) {
+      // Fix cursor alignment by setting internal resolution to match display size 1:1
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      if (signaturePadInstanceRef.current) {
+        signaturePadInstanceRef.current.off();
+      }
+      const pad = new SignaturePad(canvas, {
+        minWidth: 0.8,
+        maxWidth: 2.2,
+        penColor: '#0f2b5c',
+        throttle: 16,
+      });
+      pad.addEventListener('beginStroke', () => {
+        setHasSignature(true);
+      });
+      signaturePadInstanceRef.current = pad;
+    } else {
+      if (signaturePadInstanceRef.current) {
+        signaturePadInstanceRef.current.off();
+        signaturePadInstanceRef.current = null;
+      }
+    }
+  }, []);
   const selfieSegmentationRef = useRef(null);
   const canvasStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
@@ -1226,138 +1251,20 @@ function TeleconsultationRoomContent() {
 
       const lastPointRef = useRef(null);
 
-  const getSignaturePoint = (event) => {
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-    return {
-      x: ((clientX - rect.left) / rect.width) * canvas.width,
-      y: ((clientY - rect.top) / rect.height) * canvas.height,
-    };
-  };
-
-  const startSignature = (event) => {
-    event.preventDefault();
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const point = getSignaturePoint(event);
-    signatureDrawingRef.current = true;
-    lastPointRef.current = point;
-
-    signatureStrokesRef.current.push([point]);
-    setHasSignature(true);
-
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#0f2b5c';
-    ctx.lineWidth = 2.6;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, 1.3, 0, Math.PI * 2);
-    ctx.fillStyle = '#0f2b5c';
-    ctx.fill();
-  };
-
-  const drawSignature = (event) => {
-    if (!signatureDrawingRef.current) return;
-    event.preventDefault();
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const point = getSignaturePoint(event);
-    const prevPoint = lastPointRef.current;
-    if (!prevPoint) return;
-
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#0f2b5c';
-    ctx.lineWidth = 2.6;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    ctx.beginPath();
-    ctx.moveTo(prevPoint.x, prevPoint.y);
-    ctx.lineTo(point.x, point.y);
-    ctx.stroke();
-
-    lastPointRef.current = point;
-
-    const strokes = signatureStrokesRef.current;
-    if (strokes.length > 0) {
-      strokes[strokes.length - 1].push(point);
-    }
-  };
-
-  const stopSignature = () => {
-    signatureDrawingRef.current = false;
-    lastPointRef.current = null;
-  };
-
   const clearSignature = () => {
-    signatureStrokesRef.current = [];
-    lastPointRef.current = null;
+    if (signaturePadInstanceRef.current) {
+      signaturePadInstanceRef.current.clear();
+    }
     setHasSignature(false);
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  };
-
-  const redrawSignature = () => {
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#0f2b5c';
-    ctx.lineWidth = 2.6;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    signatureStrokesRef.current.forEach((stroke) => {
-      if (stroke.length < 2) return;
-      ctx.beginPath();
-      ctx.moveTo(stroke[0].x, stroke[0].y);
-      for (let i = 1; i < stroke.length; i += 1) {
-        ctx.lineTo(stroke[i].x, stroke[i].y);
-      }
-      ctx.stroke();
-    });
   };
 
   const buildSignatureSvg = () => {
-    const strokes = signatureStrokesRef.current;
-    if (!strokes.length) return '';
-    const points = strokes.flat();
-    if (points.length === 0) return '';
-
-    const rawMinX = Math.min(...points.map((p) => p.x));
-    const rawMinY = Math.min(...points.map((p) => p.y));
-    const rawMaxX = Math.max(...points.map((p) => p.x));
-    const rawMaxY = Math.max(...points.map((p) => p.y));
-
-    const minX = Math.max(0, rawMinX - 30);
-    const minY = Math.max(0, rawMinY - 20);
-    const maxX = Math.min(800, rawMaxX + 30);
-    const maxY = Math.min(240, rawMaxY + 20);
-    const viewBoxWidth = Math.max(120, maxX - minX);
-    const viewBoxHeight = Math.max(45, maxY - minY);
-
-    const paths = strokes
-      .map((stroke) => {
-        if (stroke.length === 1) {
-          return `<circle cx="${stroke[0].x.toFixed(1)}" cy="${stroke[0].y.toFixed(1)}" r="1.5" fill="#0f2b5c"/>`;
-        }
-        const [first, ...rest] = stroke;
-        const pathData = [
-          `M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`,
-          ...rest.map((point) => `L ${point.x.toFixed(1)} ${point.y.toFixed(1)}`),
-        ].join(' ');
-        return `<path d="${pathData}" fill="none" stroke="#0f2b5c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`;
-      })
-      .join('');
-
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${viewBoxWidth.toFixed(1)} ${viewBoxHeight.toFixed(1)}" width="140" height="42" preserveAspectRatio="xMidYMid meet">${paths}</svg>`;
+    if (!signaturePadInstanceRef.current || signaturePadInstanceRef.current.isEmpty()) {
+      return '';
+    }
+    const dataUrl = signaturePadInstanceRef.current.toDataURL("image/svg+xml");
+    const base64 = dataUrl.split(',')[1];
+    return atob(base64);
   };
 
   const completeConsultation = async (e) => {
@@ -1646,15 +1553,12 @@ function TeleconsultationRoomContent() {
                           ref={signatureCanvasRef}
                           width={720}
                           height={220}
-                          onMouseDown={startSignature}
-                          onMouseMove={drawSignature}
-                          onMouseUp={stopSignature}
-                          onMouseLeave={stopSignature}
-                          onTouchStart={startSignature}
-                          onTouchMove={drawSignature}
-                          onTouchEnd={stopSignature}
-                          className="mx-auto h-32 w-full rounded-xl bg-background cursor-crosshair touch-none border border-border"
+                          className="mx-auto h-32 w-full rounded-xl bg-background cursor-crosshair touch-none border border-border shadow-inner"
                         />
+                        <div className="text-center mt-2 border-t border-border/40 pt-2">
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Dr. {user?.name}</p>
+                          <p className="text-[10px] text-text-muted font-mono">PRC Lic. No.: {user?.doctor?.license_no || 'PRC-000000'}</p>
+                        </div>
                       </div>
                     </div>
                   )}

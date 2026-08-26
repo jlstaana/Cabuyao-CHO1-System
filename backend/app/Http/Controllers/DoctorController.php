@@ -58,7 +58,7 @@ class DoctorController extends Controller
 
         $doctor = $request->user()->doctor;
         if ($doctor) {
-            $doctor->update($request->only(['specialization', 'license_no']));
+            $doctor->update($request->only(['specialization', 'license_no', 'ptr_no']));
         }
 
         return response()->json($request->user()->load('doctor'));

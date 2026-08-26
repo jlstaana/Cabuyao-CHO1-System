@@ -26,6 +26,7 @@ function toHistoryItem(c) {
     specialization: c.doctor?.specialization || 'General Practice',
     date: when ? new Date(when).toLocaleDateString() : 'N/A',
     time: when ? new Date(when).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+    raw_date: when,
     type: 'Teleconsultation',
     status: c.status,
     diagnosis: c.form?.diagnosis,
@@ -66,8 +67,25 @@ export default function ConsultationHistory() {
     );
   }
 
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthlyHistory = history.filter(c => {
+    const d = new Date(c.raw_date);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
   const filtered = history.filter((c) => {
     const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
+    if (!matchesStatus) return false;
+
+    if (statusFilter === 'Completed' || statusFilter === 'Cancelled') {
+      const d = new Date(c.raw_date);
+      const isCurrentMonth = d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      if (!isCurrentMonth) return false;
+    }
+
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       c.doctor.toLowerCase().includes(q) ||
@@ -76,8 +94,10 @@ export default function ConsultationHistory() {
     return matchesStatus && matchesSearch;
   });
 
-  const completed = history.filter((c) => c.status === 'Completed').length;
-  const total = history.length;
+  const completed = monthlyHistory.filter((c) => c.status === 'Completed').length;
+  const cancelled = monthlyHistory.filter((c) => c.status === 'Cancelled' || c.status === 'Missed').length;
+  const total = monthlyHistory.length;
+  const prescriptionsCount = monthlyHistory.filter(c => c.prescription_id).length;
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
@@ -89,10 +109,10 @@ export default function ConsultationHistory() {
       {/* Summary stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Sessions',     value: total,     icon: ClipboardList, gradient: 'bg-gradient-to-br from-sky-500 to-blue-600', sub: 'All logged consultations' },
-          { label: 'Completed',          value: completed, icon: CheckCircle,   gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600', sub: 'Successfully finished' },
-          { label: 'Cancelled',          value: history.filter(c => c.status === 'Cancelled').length, icon: XCircle, gradient: 'bg-gradient-to-br from-slate-500 to-slate-700', sub: 'Discontinued requests' },
-          { label: 'Prescriptions',      value: history.filter(c => c.prescription_id).length, icon: FileText, gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600', sub: 'Received documents' },
+          { label: 'Total Sessions',     value: total,     icon: ClipboardList, gradient: 'bg-gradient-to-br from-sky-500 to-blue-600', sub: 'Requested this month' },
+          { label: 'Completed',          value: completed, icon: CheckCircle,   gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600', sub: 'Completed this month' },
+          { label: 'Cancelled',          value: cancelled, icon: XCircle, gradient: 'bg-gradient-to-br from-slate-500 to-slate-700', sub: 'Cancelled this month' },
+          { label: 'Prescriptions',      value: prescriptionsCount, icon: FileText, gradient: 'bg-gradient-to-br from-indigo-500 to-purple-600', sub: 'Received this month' },
         ].map((s) => {
           const Icon = s.icon;
           return (
@@ -142,21 +162,30 @@ export default function ConsultationHistory() {
 
       {!loading && (
         <p className="text-xs text-text-muted mt-1 mb-2">
-          Showing <span className="font-semibold text-text">{filtered.length}</span> of <span className="font-semibold text-text">{history.length}</span> consultations
+          {statusFilter === 'Scheduled' ? (
+            <>Showing <span className="font-semibold text-text">{filtered.length}</span> active scheduled appointments</>
+          ) : (
+            <>Showing <span className="font-semibold text-text">{filtered.length}</span> {statusFilter.toLowerCase() === 'all' ? 'total' : statusFilter.toLowerCase()} consultations <span className="font-semibold text-sky-600">for this month</span></>
+          )}
         </p>
       )}
 
       {/* History list */}
-      <div data-tour="page-list" className="space-y-3">
+      <div data-tour="page-list" className="relative pl-8 sm:pl-10 space-y-6">
+        {/* Central Vertical Roadmap Track */}
+        {filtered.length > 0 && !loading && (
+          <div className="absolute left-[15px] sm:left-[17px] top-3 bottom-3 w-0.5 bg-gradient-to-b from-sky-400 via-indigo-400 to-slate-200 dark:from-sky-500 dark:via-indigo-500 dark:to-slate-800" />
+        )}
+
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-surface rounded-2xl border border-border p-5 animate-pulse">
+            <div key={i} className="bg-surface rounded-2xl border border-border p-5 animate-pulse ml-2">
               <div className="h-5 bg-surface-hover rounded w-48 mb-3" />
               <div className="h-4 bg-surface-hover/50 rounded w-72" />
             </div>
           ))
         ) : filtered.length === 0 ? (
-          <div className="bg-surface rounded-2xl border border-border shadow-sm p-14 text-center">
+          <div className="bg-surface rounded-2xl border border-border shadow-sm p-14 text-center -ml-8 sm:-ml-10">
             <ClipboardList size={36} className="mx-auto mb-3 text-text-light opacity-60" />
             <p className="font-semibold text-text-muted">No consultations found</p>
             <p className="text-sm text-text-light mt-1">Try adjusting your search or filter.</p>
@@ -167,76 +196,89 @@ export default function ConsultationHistory() {
             const StatusIcon = statusCfg.icon;
             const isOpen = expanded === c.id;
 
+            const nodeBgColor = c.status === 'Completed' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' :
+                               c.status === 'Scheduled' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20 animate-pulse' :
+                               c.status === 'Cancelled' ? 'bg-slate-400 text-white shadow-md shadow-slate-400/20' :
+                               'bg-amber-500 text-white shadow-md shadow-amber-500/20';
+
             return (
-              <div key={c.id} className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-md dark:hover:shadow-none transition-shadow">
-                {/* Main row */}
-                <button
-                  type="button"
-                  onClick={() => setExpanded(isOpen ? null : c.id)}
-                  className="w-full flex items-center gap-4 p-5 text-left"
-                >
-                  {/* Type icon */}
-                  <div className="w-11 h-11 rounded-xl bg-primary-bg flex items-center justify-center flex-shrink-0">
-                    <Video size={20} className="text-sky-500" />
-                  </div>
+              <div key={c.id} className="relative group ml-2">
+                {/* Timeline Circle Node */}
+                <div className={`absolute -left-[30px] sm:-left-[31px] top-6 w-6 h-6 rounded-full flex items-center justify-center border-4 border-background dark:border-slate-900 z-10 shadow-sm ${nodeBgColor}`}>
+                  <StatusIcon size={10} />
+                </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-text">{c.doctor}</p>
-                      <span className="text-xs text-text-light"> | </span>
-                      <p className="text-sm text-text-muted">{c.specialization}</p>
+                {/* Main Accordion Card */}
+                <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-md dark:hover:shadow-none transition-shadow">
+                  {/* Main row */}
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(isOpen ? null : c.id)}
+                    className="w-full flex items-center gap-4 p-5 text-left"
+                  >
+                    {/* Type icon */}
+                    <div className="w-11 h-11 rounded-xl bg-primary-bg flex items-center justify-center flex-shrink-0">
+                      <Video size={20} className="text-sky-500" />
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-text-light">
-                      <span className="flex items-center gap-1"><Calendar size={12} /> {c.date}</span>
-                      <span className="flex items-center gap-1"><Clock size={12} /> {c.time}</span>
-                      <span className="bg-surface-hover/50 text-text-muted px-2 py-0.5 rounded-full font-medium">{c.type}</span>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ${statusCfg.color}`}>
-                      <StatusIcon size={12} />
-                      {c.status}
-                    </span>
-                    {isOpen ? <ChevronUp size={16} className="text-text-light" /> : <ChevronDown size={16} className="text-text-light" />}
-                  </div>
-                </button>
-
-                {/* Expanded detail */}
-                {isOpen && (
-                  <div className="border-t border-border px-5 pb-5 pt-4 space-y-4">
-                    {c.diagnosis && (
-                      <div>
-                        <p className="text-xs font-semibold text-text-light uppercase tracking-wide mb-1">Diagnosis</p>
-                        <p className="text-sm font-semibold text-text">{c.diagnosis}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-text">{c.doctor}</p>
+                        <span className="text-xs text-text-light"> | </span>
+                        <p className="text-sm text-text-muted">{c.specialization}</p>
                       </div>
-                    )}
-                    {c.notes && (
-                      <div>
-                        <p className="text-xs font-semibold text-text-light uppercase tracking-wide mb-1">Doctor's Notes</p>
-                        <p className="text-sm text-text-muted leading-relaxed">{c.notes}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-text-light">
+                        <span className="flex items-center gap-1"><Calendar size={12} /> {c.date}</span>
+                        <span className="flex items-center gap-1"><Clock size={12} /> {c.time}</span>
+                        <span className="bg-surface-hover/50 text-text-muted px-2 py-0.5 rounded-full font-medium">{c.type}</span>
                       </div>
-                    )}
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {c.status === 'Scheduled' && (
-                        <Link
-                          to={`/room/${c.id}`}
-                          className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors shadow-sm"
-                        >
-                          <Video size={15} /> Join Teleconsultation
-                        </Link>
-                      )}
-                      {c.prescription_id && (
-                        <Link
-                          to="/prescriptions"
-                          className="flex items-center gap-2 px-4 py-2 bg-success-bg text-success-text rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors border border-emerald-200"
-                        >
-                          <FileText size={15} /> View Prescription
-                        </Link>
-                      )}
                     </div>
-                  </div>
-                )}
+
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ${statusCfg.color}`}>
+                        <StatusIcon size={12} />
+                        {c.status}
+                      </span>
+                      {isOpen ? <ChevronUp size={16} className="text-text-light" /> : <ChevronDown size={16} className="text-text-light" />}
+                    </div>
+                  </button>
+
+                  {/* Expanded detail */}
+                  {isOpen && (
+                    <div className="border-t border-border px-5 pb-5 pt-4 space-y-4">
+                      {c.diagnosis && (
+                        <div>
+                          <p className="text-xs font-semibold text-text-light uppercase tracking-wide mb-1">Diagnosis</p>
+                          <p className="text-sm font-semibold text-text">{c.diagnosis}</p>
+                        </div>
+                      )}
+                      {c.notes && (
+                        <div>
+                          <p className="text-xs font-semibold text-text-light uppercase tracking-wide mb-1">Doctor's Notes</p>
+                          <p className="text-sm text-text-muted leading-relaxed">{c.notes}</p>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {c.status === 'Scheduled' && (
+                          <Link
+                            to={`/room/${c.id}`}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm font-medium hover:bg-indigo-600 transition-colors shadow-sm"
+                          >
+                            <Video size={15} /> Join Teleconsultation
+                          </Link>
+                        )}
+                        {c.prescription_id && (
+                          <Link
+                            to="/prescriptions"
+                            className="flex items-center gap-2 px-4 py-2 bg-success-bg text-success-text rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors border border-emerald-200"
+                          >
+                            <FileText size={15} /> View Prescription
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })

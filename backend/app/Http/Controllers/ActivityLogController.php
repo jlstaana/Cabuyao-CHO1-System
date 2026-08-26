@@ -10,6 +10,40 @@ class ActivityLogController extends Controller
     {
         $query = AuditLog::with('user:id,name,role')->latest();
 
+        $path = storage_path('app/logging_config.json');
+        $config = [];
+        if (file_exists($path)) {
+            $config = json_decode(file_get_contents($path), true) ?: [];
+        }
+
+        foreach (['system', 'software', 'security', 'hardware'] as $cat) {
+            if (isset($config[$cat]) && !$config[$cat]) {
+                $query->where(function ($q) use ($cat) {
+                    if ($cat === 'system') {
+                        $q->where('action', 'NOT LIKE', '%system%')
+                          ->where('action', 'NOT LIKE', '%startup%')
+                          ->where('action', 'NOT LIKE', '%reboot%')
+                          ->where('action', 'NOT LIKE', '%shutdown%');
+                    } elseif ($cat === 'software') {
+                        $q->where('action', 'NOT LIKE', '%app%')
+                          ->where('action', 'NOT LIKE', '%software%')
+                          ->where('action', 'NOT LIKE', '%update%')
+                          ->where('action', 'NOT LIKE', '%crash%')
+                          ->where('action', 'NOT LIKE', '%service%');
+                    } elseif ($cat === 'security') {
+                        $q->where('action', 'NOT LIKE', '%security%')
+                          ->where('action', 'NOT LIKE', '%firewall%')
+                          ->where('action', 'NOT LIKE', '%permission%');
+                    } elseif ($cat === 'hardware') {
+                        $q->where('action', 'NOT LIKE', '%hardware%')
+                          ->where('action', 'NOT LIKE', '%disk%')
+                          ->where('action', 'NOT LIKE', '%cpu%')
+                          ->where('action', 'NOT LIKE', '%connection%');
+                    }
+                });
+            }
+        }
+
         if ($request->filled('search')) {
             $q = $request->search;
             $query->where(function ($sub) use ($q) {
@@ -77,5 +111,46 @@ class ActivityLogController extends Controller
         });
 
         return response()->json($logs);
+    }
+
+    public function getLoggingConfig(Request $request)
+    {
+        $path = storage_path('app/logging_config.json');
+        if (!file_exists($path)) {
+            $default = [
+                'system' => true,
+                'software' => true,
+                'security' => true,
+                'hardware' => true,
+            ];
+            if (!is_dir(dirname($path))) {
+                mkdir(dirname($path), 0755, true);
+            }
+            file_put_contents($path, json_encode($default, JSON_PRETTY_PRINT));
+            return response()->json($default);
+        }
+        $config = json_decode(file_get_contents($path), true);
+        return response()->json($config ?: [
+            'system' => true,
+            'software' => true,
+            'security' => true,
+            'hardware' => true,
+        ]);
+    }
+
+    public function updateLoggingConfig(Request $request)
+    {
+        $path = storage_path('app/logging_config.json');
+        $config = [
+            'system' => (bool)$request->input('system', true),
+            'software' => (bool)$request->input('software', true),
+            'security' => (bool)$request->input('security', true),
+            'hardware' => (bool)$request->input('hardware', true),
+        ];
+        if (!is_dir(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
+        file_put_contents($path, json_encode($config, JSON_PRETTY_PRINT));
+        return response()->json($config);
     }
 }

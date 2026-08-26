@@ -145,9 +145,9 @@ export default function DashboardLayout() {
     };
   }, [user]);
 
-  // Fetch unread notifications count for ALL roles
+  // Fetch unread notifications count (only Patient and Doctor need this count check)
   useEffect(() => {
-    if (!user) return undefined;
+    if (!user || !['Patient', 'Doctor'].includes(user.role)) return undefined;
     
     let isNotifActive = true;
     const fetchUnreadCount = async () => {

@@ -29,6 +29,8 @@ const titleToEmoji = {
   'login': '🔐',
   'register': '📝',
   'home': '🏥',
+  'activity': '🛡️',
+  'log': '📜',
 };
 
 export default function SEO({ title, description, name, type }) {

@@ -14,6 +14,33 @@ class ConsultationController extends Controller {
             return response()->json(['message' => 'Unauthorized action'], 403);
         }
 
+        if (!$consultation->scheduled_at) {
+            return response()->json(['message' => 'This consultation does not have a scheduled time.'], 400);
+        }
+
+        $scheduled = \Carbon\Carbon::parse($consultation->scheduled_at);
+        $now = now();
+
+        // 1. Must be the same day
+        if (!$scheduled->isSameDay($now)) {
+            return response()->json(['message' => 'You can only call in early on the day of the scheduled consultation.'], 400);
+        }
+
+        // 2. Must be within the consultation daily hours (8:00 AM - 5:00 PM)
+        $hour = $now->hour;
+        if ($hour < 8 || $hour >= 17) {
+            return response()->json(['message' => 'Call In Early is only available during daily consultation hours (8:00 AM - 5:00 PM).'], 400);
+        }
+
+        // 3. Must be within 60 minutes before scheduled_at, up to 15 minutes after
+        $diffInMinutes = $now->diffInMinutes($scheduled, false); // positive if scheduled is in future
+        if ($diffInMinutes > 60) {
+            return response()->json(['message' => 'You can only call in early up to 60 minutes before the scheduled appointment.'], 400);
+        }
+        if ($diffInMinutes < -15) {
+            return response()->json(['message' => 'This appointment time has already passed.'], 400);
+        }
+
         $nowStr = now()->toDateTimeString();
         $notes = $consultation->notes ?: '';
         if (!str_contains($notes, '[EARLY_CALL]')) {

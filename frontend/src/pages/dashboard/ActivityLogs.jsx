@@ -59,6 +59,15 @@ export default function ActivityLogs() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo]     = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showConfigMenu, setShowConfigMenu] = useState(false);
+
+  const [config, setConfig] = useState({
+    system: true,
+    software: true,
+    security: true,
+    hardware: true,
+  });
+  const [savingConfig, setSavingConfig] = useState(false);
 
   const fetchLogs = useCallback(async (params = {}) => {
     if (!isAdminOrStaff) return;
@@ -81,6 +90,31 @@ export default function ActivityLogs() {
     fetchLogs();
   }, [fetchLogs]);
 
+  // Fetch logging config on mount
+  useEffect(() => {
+    if (user?.role !== 'Admin') return;
+    api.get('/admin/logging-config')
+      .then(res => setConfig(res.data))
+      .catch(() => {});
+  }, [user?.role]);
+
+  const handleToggleConfig = async (key) => {
+    if (user?.role !== 'Admin') return;
+    const newConfig = { ...config, [key]: !config[key] };
+    setConfig(newConfig);
+    setSavingConfig(true);
+    try {
+      await api.post('/admin/logging-config', newConfig);
+      toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} logging updated`);
+      fetchLogs({ page: 1 });
+    } catch {
+      toast.error('Failed to update logging config');
+      setConfig(config);
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
   const applyFilters = () => { setPage(1); fetchLogs({ page: 1 }); };
   const clearFilters = () => { setSearch(''); setRole(''); setDateFrom(''); setDateTo(''); setPage(1); };
   const hasActive = search || role || dateFrom || dateTo;
@@ -96,7 +130,7 @@ export default function ActivityLogs() {
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <PageTitle
           icon={ShieldCheck}
           title="Activity Logs"
@@ -105,13 +139,67 @@ export default function ActivityLogs() {
             : 'A record of your own access and activity within the Cabuyao CHO-I Telehealth System.'}
           iconClassName="bg-violet-100 text-violet-600"
         />
-        <button
-          id="activity-logs-refresh"
-          onClick={() => fetchLogs()}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-surface text-sm text-text-muted hover:bg-surface-hover transition-all"
-        >
-          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
-        </button>
+        <div className="flex items-center gap-2 relative self-end sm:self-auto">
+          {user?.role === 'Admin' && (
+            <div className="relative">
+              <button
+                onClick={() => setShowConfigMenu(v => !v)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all text-xs sm:text-sm font-extrabold ${
+                  showConfigMenu
+                    ? 'border-violet-300 bg-violet-50 dark:bg-violet-950/20 text-violet-700 dark:text-violet-300 shadow-sm'
+                    : 'border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text-muted dark:text-slate-400 hover:bg-surface-hover dark:hover:bg-slate-800/60'
+                }`}
+              >
+                ⚙️ Logging Status
+              </button>
+              
+              {/* Dropdown Popover Menu */}
+              {showConfigMenu && (
+                <div className="absolute right-0 top-full mt-2 w-72 bg-surface dark:bg-slate-900 border border-border dark:border-slate-800 rounded-2xl shadow-xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center justify-between gap-2 border-b border-border dark:border-slate-800 pb-2 mb-3">
+                    <span className="font-extrabold text-xs text-text dark:text-white">Logging Configurations</span>
+                    {savingConfig && (
+                      <span className="text-[10px] text-violet-600 dark:text-violet-400 animate-pulse font-bold flex items-center gap-0.5">
+                        <RefreshCw size={8} className="animate-spin" /> Saving...
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-4">
+                    {[
+                      { key: 'system', label: 'System Operations', desc: 'Reboots, startups, shutdowns' },
+                      { key: 'software', label: 'Software Events', desc: 'App updates, service status' },
+                      { key: 'security', label: 'Security Alerts', desc: 'Access rights, firewall alerts' },
+                      { key: 'hardware', label: 'Hardware Status', desc: 'CPU, disk, connections' },
+                    ].map(item => (
+                      <div
+                        key={item.key}
+                        onClick={() => handleToggleConfig(item.key)}
+                        className="flex items-center justify-between gap-3 cursor-pointer select-none group"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-bold text-xs text-text dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors block truncate">{item.label}</p>
+                          <p className="text-[9px] text-text-light dark:text-slate-450 leading-snug line-clamp-1 mt-0.5">{item.desc}</p>
+                        </div>
+                        <div className="shrink-0">
+                          <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 ${config[item.key] ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                            <div className={`bg-white dark:bg-slate-900 w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-200 ${config[item.key] ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <button
+            id="activity-logs-refresh"
+            onClick={() => fetchLogs()}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-xs sm:text-sm text-text-muted dark:text-slate-400 hover:bg-surface-hover dark:hover:bg-slate-800/60 transition-all font-semibold"
+          >
+            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Search & Filter */}
@@ -146,10 +234,10 @@ export default function ActivityLogs() {
               >
                 <option value="">All Events</option>
                 <option value="auth">Authentication (Logins, Passwords)</option>
-                <option value="system">System Operations (Reboots, Startups)</option>
-                <option value="software">Software Events (Updates, Crashes)</option>
-                <option value="security">Security Alerts (Firewalls, Access)</option>
-                <option value="hardware">Hardware Status (CPU, Disk)</option>
+                {config.system && <option value="system">System Operations (Reboots, Startups)</option>}
+                {config.software && <option value="software">Software Events (Updates, Crashes)</option>}
+                {config.security && <option value="security">Security Alerts (Firewalls, Access)</option>}
+                {config.hardware && <option value="hardware">Hardware Status (CPU, Disk)</option>}
               </select>
 
               <select

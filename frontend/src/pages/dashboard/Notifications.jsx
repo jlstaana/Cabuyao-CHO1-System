@@ -126,13 +126,23 @@ export default function Notifications() {
 
   useEffect(() => {
     let isActive = true;
-    Promise.all([api.get('/consultations'), api.get('/prescriptions')])
+    const isPatientOrDoctor = ['Patient', 'Doctor'].includes(role);
+    const fetchPromises = [api.get('/consultations')];
+    if (isPatientOrDoctor) {
+      fetchPromises.push(api.get('/prescriptions'));
+    }
+
+    Promise.all(fetchPromises)
       .then(([consultationRes, prescriptionRes]) => {
         if (isActive) {
           const readIds = getStoredReadIds(user?.id);
+          const consultNotifs = buildConsultationNotifications(consultationRes.data || [], role, readIds);
+          const prescriptionNotifs = prescriptionRes
+            ? buildPrescriptionNotifications(prescriptionRes.data || [], role, readIds)
+            : [];
           setNotifications([
-            ...buildConsultationNotifications(consultationRes.data || [], role, readIds),
-            ...buildPrescriptionNotifications(prescriptionRes.data || [], role, readIds),
+            ...consultNotifs,
+            ...prescriptionNotifs,
           ].sort((a, b) => new Date(b.time) - new Date(a.time)));
         }
       })

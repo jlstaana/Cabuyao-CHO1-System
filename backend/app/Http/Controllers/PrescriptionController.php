@@ -178,35 +178,7 @@ class PrescriptionController extends Controller {
             $doctorSignatureSrc = null;
 
             if (!empty($doctorSignatureSvg)) {
-                $normalizedSvg = preg_replace('/stroke-width="[^"]*"/i', 'stroke-width="2"', $doctorSignatureSvg);
-                $normalizedSvg = preg_replace('/stroke-linecap="[^"]*"/i', '', $normalizedSvg);
-                $normalizedSvg = preg_replace('/stroke-linejoin="[^"]*"/i', '', $normalizedSvg);
-                $normalizedSvg = preg_replace('/preserveAspectRatio="[^"]*"/i', '', $normalizedSvg);
-                $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+width="[^"]*"/i', '$1', $normalizedSvg);
-                $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+height="[^"]*"/i', '$1', $normalizedSvg);
-                
-                if (preg_match('/viewBox="([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)"/i', $normalizedSvg, $matches)) {
-                    $minX = (float) $matches[1];
-                    $minY = (float) $matches[2];
-                    $vWidth = (float) $matches[3];
-                    $vHeight = (float) $matches[4];
-                    
-                    $scaleX = 80 / max(1, $vWidth);
-                    $scaleY = 24 / max(1, $vHeight);
-                    $scale = min($scaleX, $scaleY);
-                    
-                    $sw = round(2 / max(0.1, $scale), 1);
-                    $normalizedSvg = preg_replace('/stroke-width="[^"]*"/i', 'stroke-width="' . $sw . '"', $normalizedSvg);
-                    
-                    $normalizedSvg = preg_replace('/(<svg[^>]*?)\s+viewBox="[^"]*"/i', '$1', $normalizedSvg);
-                    $normalizedSvg = preg_replace('/(<path)/i', '<g transform="scale(' . $scale . ') translate(-' . $minX . ', -' . $minY . ')">$1', $normalizedSvg);
-                    $normalizedSvg = preg_replace('/(<\/svg>)/i', '</g>$1', $normalizedSvg);
-                    $normalizedSvg = preg_replace('/(<svg)/i', '$1 viewBox="0 0 80 24" width="80" height="24"', $normalizedSvg, 1);
-                } else {
-                    $normalizedSvg = preg_replace('/(<svg)/i', '$1 width="80" height="24"', $normalizedSvg, 1);
-                }
-                
-                $base64Svg = base64_encode($normalizedSvg);
+                $base64Svg = base64_encode($doctorSignatureSvg);
                 $doctorSignatureSrc = '<img src="data:image/svg+xml;base64,' . $base64Svg . '" width="120" height="32" style="display: block; margin: 0 auto; border: none; vertical-align: bottom;"/>';
             }
 

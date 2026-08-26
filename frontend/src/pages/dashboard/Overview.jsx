@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import {
   Activity, Users, User, FileText, HeartPulse, Stethoscope,
   Clock, CheckCircle, Calendar, Pill, BarChart2, ShieldCheck,
-  Video, ClipboardList, AlertCircle, ImagePlus,
+  Video, ClipboardList, AlertCircle, ImagePlus, XCircle,
 } from 'lucide-react';
 import Footer from '../../components/Footer';
 import PageTitle from '../../components/PageTitle';
@@ -130,7 +130,45 @@ function RecentActivity({ stats }) {
 }
 
 function ConsultationQueue({ consultations, className = "lg:col-span-2" }) {
-  const rows = consultations.filter((c) => ['Scheduled'].includes(c.status)).slice(0, 5);
+  const scheduled = consultations.filter((c) => c.status === 'Scheduled');
+
+  // Interleaved Priority and Regular queue sorting
+  const priorityGroup = [];
+  const regularGroup = [];
+
+  scheduled.forEach(c => {
+    const isPWD = Boolean(c.patient?.category?.includes('PWD'));
+    const calcAge = (dob) => {
+      if (!dob) return 0;
+      const birth = new Date(dob);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const mDiff = today.getMonth() - birth.getMonth();
+      if (mDiff < 0 || (mDiff === 0 && today.getDate() < birth.getDate())) age--;
+      return age;
+    };
+    const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
+    
+    if (isPWD || isSenior) {
+      priorityGroup.push(c);
+    } else {
+      regularGroup.push(c);
+    }
+  });
+
+  const sortByDate = (a, b) => new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
+  priorityGroup.sort(sortByDate);
+  regularGroup.sort(sortByDate);
+
+  const interleaved = [];
+  let pIdx = 0;
+  let rIdx = 0;
+  while (pIdx < priorityGroup.length || rIdx < regularGroup.length) {
+    if (pIdx < priorityGroup.length) interleaved.push(priorityGroup[pIdx++]);
+    if (rIdx < regularGroup.length) interleaved.push(regularGroup[rIdx++]);
+  }
+
+  const rows = interleaved.slice(0, 5);
   return (
     <div data-tour="page-list" className={`${className} bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col`}>
       <div className="mb-5 flex items-start gap-3">
@@ -169,11 +207,13 @@ function AdminOverview({ user, stats }) {
       <header className="mb-8">
         <PageTitle icon={ShieldCheck} title="Health Officer Dashboard" description={`Welcome, ${user?.name}. Here's the current system overview.`} iconClassName="bg-primary-bg text-primary-text" />
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         <StatCard label="Total Patients" value={formatNumber(summary.registered_patients)} icon={Users} color="text-indigo-500" sub="Registered individuals" />
         <StatCard label="Total Doctors" value={formatNumber(summary.active_doctors)} icon={Activity} color="text-sky-500" sub="Active healthcare providers" />
-        <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} icon={ClipboardList} color="text-emerald-500" sub="Year-to-date complete consultations" />
-        <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-rose-500" sub="Generated prescriptions" />
+        <StatCard label="Total Consultations" value={formatNumber(summary.total_consultations)} icon={ClipboardList} color="text-blue-500" sub="Requested this month" />
+        <StatCard label="Completed Consults" value={formatNumber(summary.completed_consultations)} icon={CheckCircle} color="text-emerald-500" sub="Completed this month" />
+        <StatCard label="Cancelled Consults" value={formatNumber(summary.cancelled_consultations)} icon={XCircle} color="text-amber-500" sub="Cancelled / Missed this month" />
+        <StatCard label="Prescriptions Issued" value={formatNumber(summary.prescriptions_issued)} icon={FileText} color="text-rose-500" sub="Issued this month" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <VolumePanel stats={stats} />
@@ -240,22 +280,35 @@ function DoctorToDoList({ consultations }) {
 
 function DoctorOverview({ user, consultations, prescriptions }) {
   const now = new Date();
-  const completedThisMonth = consultations.filter(c => {
-    if (c.status !== 'Completed') return false;
-    const d = new Date(c.scheduled_at || c.created_at);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }).length;
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const doctorConsultations = consultations.filter(c => c.doctor_id === user?.doctor?.id);
   
-  const scheduledToday = consultations.filter((c) => c.status === 'Scheduled' && isToday(c.scheduled_at)).length;
+  // Filter doctor's work for the current calendar month
+  const monthlyConsultations = doctorConsultations.filter(c => {
+    const d = new Date(c.scheduled_at || c.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  const completedCount = monthlyConsultations.filter(c => c.status === 'Completed').length;
+  const cancelledCount = monthlyConsultations.filter(c => c.status === 'Cancelled' || c.status === 'Missed').length;
+
+  const monthlyPrescriptions = prescriptions.filter(p => {
+    const d = new Date(p.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
   return (
     <>
       <header className="mb-8">
-        <PageTitle icon={Stethoscope} title={`Good day, Dr. ${(user?.name?.split(' ')[0] || '').replace(/^Dr\.\s*/i, '')}!`} description="Here's your consultation overview." iconClassName="bg-success-bg text-emerald-600" />
+        <PageTitle icon={Stethoscope} title={`Good day, Dr. ${(user?.name || '').replace(/^Dr\.\s*/i, '').trim().split(' ')[0]}!`} description="Here's your consultation overview." iconClassName="bg-success-bg text-emerald-600" />
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <StatCard label="Scheduled Consultations" value={scheduledToday} icon={Calendar} color="text-sky-500" sub="Upcoming sessions for today" />
-        <StatCard label="Recent Prescriptions" value={prescriptions.length} icon={FileText} color="text-indigo-500" sub="Total generated prescriptions" />
-        <StatCard label="Completed Consultations" value={completedThisMonth} icon={CheckCircle} color="text-emerald-500" sub={<>As of <b>{new Date().toLocaleString('default', { month: 'long' })}</b></>} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard label="Scheduled Sessions" value={doctorConsultations.filter(c => c.status === 'Scheduled').length} icon={Calendar} color="text-sky-500" sub="Upcoming appointments" />
+        <StatCard label="Completed Sessions" value={completedCount} icon={CheckCircle} color="text-emerald-500" sub="Completed this month" />
+        <StatCard label="Cancelled Sessions" value={cancelledCount} icon={XCircle} color="text-amber-500" sub="Cancelled / Missed this month" />
+        <StatCard label="Recent Prescriptions" value={monthlyPrescriptions.length} icon={FileText} color="text-indigo-500" sub="Issued this month" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <DoctorToDoList consultations={consultations} />
@@ -278,26 +331,45 @@ function DoctorOverview({ user, consultations, prescriptions }) {
 }
 
 function PatientOverview({ user, consultations, prescriptions }) {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
   const isUpcoming = (dateStr) => {
     if (!dateStr) return false;
     const d = new Date(dateStr);
-    const now = new Date();
-    return (d.getTime() + 15 * 60 * 1000) > now.getTime();
+    const nowTime = new Date();
+    return (d.getTime() + 15 * 60 * 1000) > nowTime.getTime();
   };
+
   const upcoming = consultations.find((c) => c.status === 'Scheduled' && isUpcoming(c.scheduled_at));
-  const completedCount = consultations.filter((c) => c.status === 'Completed').length;
-  const totalRequests = consultations.length;
+
+  // Filter patient's consultations and prescriptions for the current calendar month
+  const monthlyConsultations = consultations.filter(c => {
+    const d = new Date(c.scheduled_at || c.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  const completedCount = monthlyConsultations.filter((c) => c.status === 'Completed').length;
+  const cancelledCount = monthlyConsultations.filter((c) => c.status === 'Cancelled' || c.status === 'Missed').length;
+  const totalRequests = monthlyConsultations.length;
+
+  const monthlyPrescriptions = prescriptions.filter(p => {
+    const d = new Date(p.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
 
   return (
     <>
       <header className="mb-8">
         <PageTitle icon={Stethoscope} title={`Hello, ${user?.name?.split(' ')[0]}!`} description="Here's your health summary and upcoming activities." iconClassName="bg-primary-bg text-primary-text" />
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard label="Total Consultations" value={totalRequests} icon={Stethoscope} color="text-sky-500" sub="All time appointments" />
-        <StatCard label="Completed Sessions" value={completedCount} icon={CheckCircle} color="text-emerald-500" sub="Completed medical visits" />
-        <StatCard label="Active Prescriptions" value={prescriptions.length} icon={FileText} color="text-amber-500" sub="Generated prescriptions" />
-        <StatCard label="Upcoming Appointment" value={upcoming?.scheduled_at ? new Date(upcoming.scheduled_at).toLocaleDateString() : 'None'} icon={Calendar} color="text-indigo-500" sub="Scheduled consultation" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <StatCard label="Total Consultations" value={totalRequests} icon={Stethoscope} color="text-sky-500" sub="Requested this month" />
+        <StatCard label="Completed Sessions" value={completedCount} icon={CheckCircle} color="text-emerald-500" sub="Completed this month" />
+        <StatCard label="Cancelled Sessions" value={cancelledCount} icon={XCircle} color="text-rose-500" sub="Cancelled / Missed this month" />
+        <StatCard label="Active Prescriptions" value={monthlyPrescriptions.length} icon={FileText} color="text-amber-500" sub="Issued this month" />
+        <StatCard label="Upcoming Appointment" value={upcoming?.scheduled_at ? new Date(upcoming.scheduled_at).toLocaleDateString() : 'None'} icon={Calendar} color="text-indigo-500" sub="Next scheduled visit" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <ConsultationQueue consultations={consultations} />
@@ -347,6 +419,8 @@ export default function Overview() {
   const [medicines, setMedicines] = useState([]);
 
   useEffect(() => {
+    if (!user?.role) return;
+
     let hasShownError = false;
     const handleError = (msg, fallback) => (err) => {
       console.error(msg, err);
@@ -357,11 +431,29 @@ export default function Overview() {
       return fallback;
     };
 
-    api.get('/consultations').then((res) => setConsultations(res.data || [])).catch((err) => setConsultations(handleError('Consultations API Error', [])(err)));
-    api.get('/prescriptions').then((res) => setPrescriptions(res.data || [])).catch((err) => setPrescriptions(handleError('Prescriptions API Error', [])(err)));
-    api.get('/medicines').then((res) => setMedicines(res.data || [])).catch((err) => setMedicines(handleError('Medicines API Error', [])(err)));
-    if (user?.role === 'Admin' || user?.role === 'Staff') {
-      api.get('/analytics/stats').then((res) => setStats({ ...EMPTY_STATS, ...res.data })).catch((err) => setStats(handleError('Stats API Error', EMPTY_STATS)(err)));
+    const role = user.role;
+
+    if (role === 'Admin') {
+      api.get('/analytics/stats')
+        .then((res) => setStats({ ...EMPTY_STATS, ...res.data }))
+        .catch((err) => setStats(handleError('Stats API Error', EMPTY_STATS)(err)));
+    } else if (role === 'Staff') {
+      api.get('/analytics/stats')
+        .then((res) => setStats({ ...EMPTY_STATS, ...res.data }))
+        .catch((err) => setStats(handleError('Stats API Error', EMPTY_STATS)(err)));
+      api.get('/consultations?show_all=1')
+        .then((res) => setConsultations(res.data || []))
+        .catch((err) => setConsultations(handleError('Consultations API Error', [])(err)));
+      api.get('/medicines')
+        .then((res) => setMedicines(res.data || []))
+        .catch((err) => setMedicines(handleError('Medicines API Error', [])(err)));
+    } else if (role === 'Doctor' || role === 'Patient') {
+      api.get('/consultations')
+        .then((res) => setConsultations(res.data || []))
+        .catch((err) => setConsultations(handleError('Consultations API Error', [])(err)));
+      api.get('/prescriptions')
+        .then((res) => setPrescriptions(res.data || []))
+        .catch((err) => setPrescriptions(handleError('Prescriptions API Error', [])(err)));
     }
   }, [user]);
 

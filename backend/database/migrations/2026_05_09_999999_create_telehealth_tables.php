@@ -35,6 +35,7 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('specialization');
             $table->string('license_no')->unique();
+            $table->string('ptr_no')->nullable();
             $table->timestamp('active_until')->nullable();
             $table->timestamps();
         });

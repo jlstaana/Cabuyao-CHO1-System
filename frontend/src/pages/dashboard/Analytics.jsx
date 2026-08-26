@@ -592,10 +592,33 @@ export default function Analytics() {
   ];
   const serviceMax = maxTotal(serviceRows);
 
+  const getActivePeriodText = () => {
+    if (filterDateFrom && filterDateTo) {
+      const start = new Date(filterDateFrom).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' });
+      const end = new Date(filterDateTo).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' });
+      return `Selected Period (${start} to ${end})`;
+    }
+    if (filterDateFrom) {
+      const start = new Date(filterDateFrom).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' });
+      return `From ${start} onwards`;
+    }
+    if (filterDateTo) {
+      const end = new Date(filterDateTo).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' });
+      return `Until ${end}`;
+    }
+    return `Month of ${currentMonthYear}`;
+  };
+
   return (
     <div className="animate-in fade-in duration-500 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports, health summaries, and service utilization charts." iconClassName="bg-brand-bg text-indigo-600" />
+        <div>
+          <PageTitle icon={BarChart2} title="Analytics & Reports" description="Generate descriptive analytics reports, health summaries, and service utilization charts." iconClassName="bg-brand-bg text-indigo-600" />
+          <div className="mt-2.5 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-sky-100 dark:border-sky-900/30 bg-sky-50/50 dark:bg-sky-950/20 text-sky-700 dark:text-sky-400 text-xs font-black shadow-sm">
+            <Calendar size={13} />
+            <span>Scope: {getActivePeriodText()}</span>
+          </div>
+        </div>
         <button
           data-tour="page-primary-action"
           onClick={() => setShowExportModal(true)}
