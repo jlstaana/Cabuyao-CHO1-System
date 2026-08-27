@@ -179,12 +179,14 @@ class ConsultationController extends Controller {
                 $q->whereNull('active_until')->orWhere('active_until', '>=', now());
             });
 
-        // Apply Typhoon Team staffing constraint (Team C acts as balance/standby for both A and B)
+        // Apply Typhoon Team staffing constraint (Team C acts as balance/standby for both A and B) only if scheduled for today
         $typhoonMode = $this->activeTyphoonMode();
-        if ($typhoonMode === 'team_a') {
-            $query->whereIn('team', ['A', 'C']);
-        } elseif ($typhoonMode === 'team_b') {
-            $query->whereIn('team', ['B', 'C']);
+        if ($scheduledAt && \Carbon\Carbon::parse($scheduledAt)->isToday()) {
+            if ($typhoonMode === 'team_a') {
+                $query->whereIn('team', ['A', 'C']);
+            } elseif ($typhoonMode === 'team_b') {
+                $query->whereIn('team', ['B', 'C']);
+            }
         }
 
         $doctors = $query->get();
@@ -227,13 +229,15 @@ class ConsultationController extends Controller {
     }
 
     private function doctorIsAvailable(Doctor $doctor, ?string $scheduledAt, ?int $ignoreConsultationId = null): bool {
-        // Typhoon Mode Team A/B staffing constraints (Team C acts as balance/standby for both A and B)
+        // Typhoon Mode Team A/B staffing constraints (Team C acts as balance/standby for both A and B) only if scheduled for today
         $typhoonMode = $this->activeTyphoonMode();
-        if ($typhoonMode === 'team_a' && !in_array($doctor->team, ['A', 'C'])) {
-            return false;
-        }
-        if ($typhoonMode === 'team_b' && !in_array($doctor->team, ['B', 'C'])) {
-            return false;
+        if ($scheduledAt && \Carbon\Carbon::parse($scheduledAt)->isToday()) {
+            if ($typhoonMode === 'team_a' && !in_array($doctor->team, ['A', 'C'])) {
+                return false;
+            }
+            if ($typhoonMode === 'team_b' && !in_array($doctor->team, ['B', 'C'])) {
+                return false;
+            }
         }
 
         $doctor->loadMissing('availability');
@@ -309,16 +313,16 @@ class ConsultationController extends Controller {
             return response()->json(['message' => 'Consultations cannot be scheduled on Philippine holidays.'], 422);
         }
 
-        // Typhoon Mode staff selection restriction (Team C acts as balance/standby for both A and B)
+        // Typhoon Mode staff selection restriction (Team C acts as balance/standby for both A and B) only if scheduled for today
         $typhoonMode = $this->activeTyphoonMode();
-        if (!empty($data['doctor_id'])) {
+        if ($scheduledAt->isToday() && !empty($data['doctor_id'])) {
             $doctor = Doctor::find($data['doctor_id']);
             if ($doctor) {
                 if ($typhoonMode === 'team_a' && !in_array($doctor->team, ['A', 'C'])) {
-                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Typhoon emergency staffing (Team A and Team C active). Only Team A & C doctors are available.'], 422);
+                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Malacañang work suspension staffing today (Team A and Team C active). Only Team A & C doctors are available today.'], 422);
                 }
                 if ($typhoonMode === 'team_b' && !in_array($doctor->team, ['B', 'C'])) {
-                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Typhoon emergency staffing (Team B and Team C active). Only Team B & C doctors are available.'], 422);
+                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Malacañang work suspension staffing today (Team B and Team C active). Only Team B & C doctors are available today.'], 422);
                 }
             }
         }
@@ -560,11 +564,13 @@ class ConsultationController extends Controller {
 
             if ($scheduledDoctor && !$this->doctorIsAvailable($scheduledDoctor, $scheduledAt, $c->id)) {
                 $typhoonMode = $this->activeTyphoonMode();
-                if ($typhoonMode === 'team_a' && !in_array($scheduledDoctor->team, ['A', 'C'])) {
-                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Typhoon emergency staffing (Team A and Team C active).'], 422);
-                }
-                if ($typhoonMode === 'team_b' && !in_array($scheduledDoctor->team, ['B', 'C'])) {
-                    return response()->json(['message' => 'The selected doctor is currently off-duty due to Typhoon emergency staffing (Team B and Team C active).'], 422);
+                if ($scheduledAt && \Carbon\Carbon::parse($scheduledAt)->isToday()) {
+                    if ($typhoonMode === 'team_a' && !in_array($scheduledDoctor->team, ['A', 'C'])) {
+                        return response()->json(['message' => 'The selected doctor is currently off-duty due to Malacañang work suspension staffing today (Team A and Team C active).'], 422);
+                    }
+                    if ($typhoonMode === 'team_b' && !in_array($scheduledDoctor->team, ['B', 'C'])) {
+                        return response()->json(['message' => 'The selected doctor is currently off-duty due to Malacañang work suspension staffing today (Team B and Team C active).'], 422);
+                    }
                 }
 
                 $message = $user->role === 'Doctor'

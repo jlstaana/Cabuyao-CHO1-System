@@ -864,11 +864,14 @@ function TeleconsultationRoomContent() {
       api.get('/medicines').then(res => setMedicines(res.data)).catch(console.error);
     }
 
+    localStorage.setItem('active_teleconsultation_id', id);
+
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
       stopAudioProcessing();
+      localStorage.removeItem('active_teleconsultation_id');
     };
   }, [id, stopAudioProcessing, user]);
 

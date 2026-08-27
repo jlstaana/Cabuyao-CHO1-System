@@ -132,43 +132,62 @@ function RecentActivity({ stats }) {
 function ConsultationQueue({ consultations, className = "lg:col-span-2" }) {
   const scheduled = consultations.filter((c) => c.status === 'Scheduled');
 
-  // Interleaved Priority and Regular queue sorting
-  const priorityGroup = [];
-  const regularGroup = [];
+  const todayKey = new Date().toDateString();
+  const isTodayCheck = (val) => val && new Date(val).toDateString() === todayKey;
+
+  const todayGroup = [];
+  const otherGroup = [];
 
   scheduled.forEach(c => {
-    const isPWD = Boolean(c.patient?.category?.includes('PWD'));
-    const calcAge = (dob) => {
-      if (!dob) return 0;
-      const birth = new Date(dob);
-      const today = new Date();
-      let age = today.getFullYear() - birth.getFullYear();
-      const mDiff = today.getMonth() - birth.getMonth();
-      if (mDiff < 0 || (mDiff === 0 && today.getDate() < birth.getDate())) age--;
-      return age;
-    };
-    const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
-    
-    if (isPWD || isSenior) {
-      priorityGroup.push(c);
+    if (isTodayCheck(c.scheduled_at)) {
+      todayGroup.push(c);
     } else {
-      regularGroup.push(c);
+      otherGroup.push(c);
     }
   });
 
-  const sortByDate = (a, b) => new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
-  priorityGroup.sort(sortByDate);
-  regularGroup.sort(sortByDate);
+  const calcAge = (dob) => {
+    if (!dob) return 0;
+    const birth = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const mDiff = today.getMonth() - birth.getMonth();
+    if (mDiff < 0 || (mDiff === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
 
-  const interleaved = [];
-  let pIdx = 0;
-  let rIdx = 0;
-  while (pIdx < priorityGroup.length || rIdx < regularGroup.length) {
-    if (pIdx < priorityGroup.length) interleaved.push(priorityGroup[pIdx++]);
-    if (rIdx < regularGroup.length) interleaved.push(regularGroup[rIdx++]);
-  }
+  const processGroup = (group) => {
+    const priorityGroup = [];
+    const regularGroup = [];
 
-  const rows = interleaved.slice(0, 5);
+    group.forEach(c => {
+      const isPWD = Boolean(c.patient?.category?.includes('PWD'));
+      const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
+      if (isPWD || isSenior) {
+        priorityGroup.push(c);
+      } else {
+        regularGroup.push(c);
+      }
+    });
+
+    const sortByDate = (a, b) => new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
+    priorityGroup.sort(sortByDate);
+    regularGroup.sort(sortByDate);
+
+    const interleaved = [];
+    let pIdx = 0;
+    let rIdx = 0;
+    while (pIdx < priorityGroup.length || rIdx < regularGroup.length) {
+      if (pIdx < priorityGroup.length) interleaved.push(priorityGroup[pIdx++]);
+      if (rIdx < regularGroup.length) interleaved.push(regularGroup[rIdx++]);
+    }
+    return interleaved;
+  };
+
+  const todayInterleaved = processGroup(todayGroup);
+  const otherInterleaved = processGroup(otherGroup);
+
+  const rows = [...todayInterleaved, ...otherInterleaved].slice(0, 5);
   return (
     <div data-tour="page-list" className={`${className} bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col`}>
       <div className="mb-5 flex items-start gap-3">
@@ -474,10 +493,10 @@ export default function Overview() {
           </div>
           <div>
             <h4 className="text-sm font-black text-rose-800 dark:text-rose-400 uppercase tracking-wide">
-              🌀 Typhoon Emergency Staffing Active ({typhoonMode === 'team_a' ? 'Team A & C' : 'Team B & C'} On-Duty)
+              🏛️ Malacañang Work Suspension Mode Active ({typhoonMode === 'team_a' ? 'Team A & C' : 'Team B & C'} On-Duty)
             </h4>
             <p className="text-xs text-rose-700 dark:text-rose-350 leading-relaxed mt-1">
-              Due to weather advisory and active local emergency protocols, normal teleconsultation staffing has been adjusted. Only <b>{typhoonMode === 'team_a' ? 'Team A & Team C (Standby)' : 'Team B & Team C (Standby)'}</b> physicians are currently active and taking calls.
+              Due to official government work suspension and active emergency protocols, skeletal force scheduling is active. Only <b>{typhoonMode === 'team_a' ? 'Team A & Team C (Standby)' : 'Team B & Team C (Standby)'}</b> physicians are currently on-duty and taking consultations.
             </p>
           </div>
         </div>
