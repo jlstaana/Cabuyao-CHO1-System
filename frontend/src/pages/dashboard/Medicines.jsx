@@ -11,8 +11,16 @@ const CATEGORIES = [
   'Analgesic', 'Antacid', 'Antibiotic', 'Antidiabetic', 'Antifungal',
   'Antihistamine', 'Antihypertensive', 'Cardiology', 'Corticosteroid',
   'Dermatology', 'Endocrinology', 'Gastroenterology', 'Infectious Disease',
-  'NSAID', 'Pediatrics', 'PhilHealth YAKAP', 'PhilHealth GAMOT',
-  'Pulmonology', 'Psychiatry', 'Vitamin', 'Other',
+  'NSAID', 'Pediatrics', 'Pulmonology', 'Psychiatry', 'Vitamin',
+  'PhilHealth YAKAP',
+  'TB-DOTS Program (Tuberculosis)',
+  'NCD Care Program (Hypertension/Diabetes)',
+  'Family Planning & Reproductive Health',
+  'National Immunization Program (EPI)',
+  'Animal Bite Treatment Program',
+  'Mental Health Program',
+  'General Outpatient Care',
+  'Other',
 ];
 
 function BatchManager({ medicine, fetchMedicines }) {
@@ -87,7 +95,7 @@ function BatchManager({ medicine, fetchMedicines }) {
       </div>
     </div>
   );
-  }
+}
 
 function ActionMenu({ m, onBatches, onEdit, onDeactivate }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -104,15 +112,21 @@ function ActionMenu({ m, onBatches, onEdit, onDeactivate }) {
   }, [isOpen]);
 
   return (
-    <div className="relative flex items-center justify-end" ref={menuRef}>
-      <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-text-muted hover:text-text hover:bg-surface-hover rounded-lg transition-colors">
-        <MoreVertical size={18} />
+    <div className="relative inline-block text-left" ref={menuRef}>
+      <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-text-light hover:text-text hover:bg-surface-hover rounded-xl transition-colors">
+        <MoreVertical size={16} />
       </button>
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-40 bg-surface border border-border rounded-xl shadow-lg z-50 flex flex-col overflow-hidden">
-          <button onClick={() => { setIsOpen(false); onBatches(); }} className="w-full text-left text-emerald-600 hover:text-emerald-800 text-sm font-semibold px-4 py-2.5 hover:bg-emerald-50 transition-colors flex items-center gap-2"><Pill size={14} /> Batches</button>
-          <button onClick={() => { setIsOpen(false); onEdit(); }} className="w-full text-left text-primary-text hover:text-sky-800 text-sm font-semibold px-4 py-2.5 hover:bg-primary-bg transition-colors flex items-center gap-2"><Pencil size={14} /> Edit</button>
-          {m.status && <button onClick={() => { setIsOpen(false); onDeactivate(); }} className="w-full text-left text-rose-500 hover:text-rose-700 text-sm font-semibold px-4 py-2.5 hover:bg-danger-bg transition-colors flex items-center gap-2"><Archive size={14} /> Deactivate</button>}
+        <div className="absolute right-0 mt-1 w-44 rounded-2xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 shadow-2xl p-1.5 z-40 space-y-0.5 animate-in fade-in zoom-in-95 duration-100">
+          <button onClick={() => { onBatches(m); setIsOpen(false); }} className="w-full flex items-center gap-2 px-3.5 py-2 text-sm text-text dark:text-slate-300 hover:bg-surface-hover dark:hover:bg-slate-800 rounded-xl transition-colors font-medium">
+            Manage Batches
+          </button>
+          <button onClick={() => { onEdit(m); setIsOpen(false); }} className="w-full flex items-center gap-2 px-3.5 py-2 text-sm text-text dark:text-slate-300 hover:bg-surface-hover dark:hover:bg-slate-800 rounded-xl transition-colors font-medium">
+            Edit Details
+          </button>
+          <button onClick={() => { onDeactivate(m); setIsOpen(false); }} className="w-full flex items-center gap-2 px-3.5 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-colors font-semibold">
+            Deactivate
+          </button>
         </div>
       )}
     </div>
@@ -136,23 +150,23 @@ function MedicineCategoryFilter({ categoryFilter, setCategoryFilter, categories,
   return (
     <div className="relative w-full sm:w-auto shrink-0" ref={ref}>
       <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-text-muted whitespace-nowrap hidden md:inline">Category:</span>
+        <span className="text-sm font-semibold text-text-muted whitespace-nowrap hidden md:inline">Category:</span>
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full sm:w-52 flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl border border-border dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background dark:bg-slate-950 text-text dark:text-white text-xs font-medium shadow-sm transition-all"
+          className="w-full sm:w-64 flex items-center justify-between gap-2 px-4 py-2 rounded-xl border border-border dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-background dark:bg-slate-950 text-text dark:text-white text-sm font-medium shadow-sm transition-all"
         >
           <span className="truncate text-left">{displayLabel}</span>
-          <ChevronDown size={14} className={`text-text-light shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown size={16} className={`text-text-light shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1.5 w-60 max-h-64 overflow-y-auto rounded-2xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 shadow-2xl p-1.5 z-50 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 top-full mt-1.5 w-72 max-h-72 overflow-y-auto rounded-2xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 shadow-2xl p-1.5 z-50 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
           <button
             type="button"
             onClick={() => { setCategoryFilter('All'); setIsOpen(false); }}
-            className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl transition-colors font-medium ${
+            className={`w-full flex items-center justify-between px-3.5 py-2 text-sm rounded-xl transition-colors font-medium ${
               categoryFilter === 'All'
                 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold'
                 : 'text-text dark:text-slate-300 hover:bg-surface-hover dark:hover:bg-slate-800'
@@ -171,7 +185,7 @@ function MedicineCategoryFilter({ categoryFilter, setCategoryFilter, categories,
                 key={c}
                 type="button"
                 onClick={() => { setCategoryFilter(c); setIsOpen(false); }}
-                className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl transition-colors font-medium ${
+                className={`w-full flex items-center justify-between px-3.5 py-2 text-sm rounded-xl transition-colors font-medium ${
                   isSelected
                     ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold'
                     : 'text-text dark:text-slate-300 hover:bg-surface-hover dark:hover:bg-slate-800'

@@ -28,7 +28,7 @@ class PatientController extends Controller {
             $request->user()->update(['name' => $request->name]);
         }
         $patient = $request->user()->patient;
-        $patient->update($request->only(['dob', 'address', 'contact_no', 'category']));
+        $patient->update($request->only(['dob', 'address', 'contact_no', 'category', 'gender']));
         return response()->json($request->user()->load('patient'));
     }
     public function history(Request $request) {
@@ -53,6 +53,7 @@ class PatientController extends Controller {
             'contact_no' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:1000',
             'category' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|in:Male,Female',
             'medical_history' => 'nullable|string|max:5000',
         ]);
 
@@ -67,6 +68,7 @@ class PatientController extends Controller {
                     'contact_no' => $patient->contact_no,
                     'address' => $patient->address,
                     'category' => $patient->category,
+                    'gender' => $patient->gender,
                     'medical_history' => $patient->record?->medical_history,
                 ],
                 'updated_by' => $request->user()->id,
@@ -78,6 +80,7 @@ class PatientController extends Controller {
                 'contact_no' => $data['contact_no'] ?? null,
                 'address' => $data['address'] ?? null,
                 'category' => $data['category'] ?? null,
+                'gender' => $data['gender'] ?? null,
             ]);
 
             PatientRecord::updateOrCreate(

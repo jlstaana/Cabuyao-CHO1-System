@@ -25,8 +25,6 @@ export const DOCUMENT_CATEGORIES = [
     category: 'Identification & Priority Cards',
     icon: '🆔',
     types: [
-      'PWD ID Card',
-      'Senior Citizen ID',
       'Disability Certificate',
       'PhilHealth Member ID',
       'Barangay Health Certificate / Indigency',
@@ -85,7 +83,7 @@ export default function MedicalImages() {
 
   const [previews, setPreviews] = useState([]); // files staged for upload
   const [selectedCategory, setSelectedCategory] = useState('Identification & Priority Cards');
-  const [imageType, setImageType] = useState('PWD ID Card');
+  const [imageType, setImageType] = useState('Disability Certificate');
   const [notes, setNotes] = useState('');
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);

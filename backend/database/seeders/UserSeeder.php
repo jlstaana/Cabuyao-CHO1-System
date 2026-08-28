@@ -35,25 +35,27 @@ class UserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        // 2. Create Exactly 3 General Doctors
         $doctorsData = [
             [
                 'email' => 'doctor@cabuyao.gov.ph',
                 'name' => 'Dr. Jose Dela Cruz',
                 'license_no' => 'PRC-1234567',
                 'ptr_no' => 'PTR-8765431',
+                's2_license_no' => 'S2-9876543A',
             ],
             [
                 'email' => 'doctor2@cabuyao.gov.ph',
                 'name' => 'Dr. Maria Teresa Santos',
                 'license_no' => 'PRC-7890123',
                 'ptr_no' => 'PTR-8765432',
+                's2_license_no' => 'S2-9876543B',
             ],
             [
                 'email' => 'doctor3@cabuyao.gov.ph',
                 'name' => 'Dr. Carlos Mendoza',
                 'license_no' => 'PRC-3456789',
                 'ptr_no' => 'PTR-8765433',
+                's2_license_no' => 'S2-9876543C',
             ]
         ];
 
@@ -71,14 +73,14 @@ class UserSeeder extends Seeder
                 'specialization' => 'General Medicine',
                 'license_no' => $doc['license_no'],
                 'ptr_no' => $doc['ptr_no'],
+                's2_license_no' => $doc['s2_license_no'],
             ]);
         }
 
-        // 3. Create Default Patient Accounts (with barangay address, categories & records)
         $defaultPatients = [
-            ['email' => 'patient@gmail.com', 'name' => 'CHO Patient', 'dob' => '1995-05-15', 'address' => 'Pulo, Cabuyao, Laguna', 'category' => 'Adult'],
-            ['email' => 'staanajulianalouise44@gmail.com', 'name' => 'Juliana Louise Sta Ana', 'dob' => '2004-10-22', 'address' => 'Mamatid, Cabuyao, Laguna', 'category' => 'Adult'],
-            ['email' => 'johnpeterpro13@gmail.com', 'name' => 'John Peter', 'dob' => '1960-03-30', 'address' => 'San Isidro, Cabuyao, Laguna', 'category' => 'Senior Citizen']
+            ['email' => 'patient@gmail.com', 'name' => 'CHO Patient', 'dob' => '1995-05-15', 'address' => 'Pulo, Cabuyao, Laguna', 'category' => 'Adult', 'gender' => 'Male'],
+            ['email' => 'staanajulianalouise44@gmail.com', 'name' => 'Juliana Louise Sta Ana', 'dob' => '2004-10-22', 'address' => 'Mamatid, Cabuyao, Laguna', 'category' => 'Adult', 'gender' => 'Female'],
+            ['email' => 'johnpeterpro13@gmail.com', 'name' => 'John Peter', 'dob' => '1960-03-30', 'address' => 'San Isidro, Cabuyao, Laguna', 'category' => 'Senior Citizen', 'gender' => 'Male']
         ];
 
         foreach ($defaultPatients as $dp) {
@@ -98,6 +100,7 @@ class UserSeeder extends Seeder
                 'dob' => $dp['dob'],
                 'address' => $dp['address'],
                 'category' => $dp['category'],
+                'gender' => $dp['gender'],
                 'contact_no' => '09' . rand(100000000, 999999999),
                 'created_at' => $regDate,
                 'updated_at' => $regDate,
@@ -179,6 +182,7 @@ class UserSeeder extends Seeder
                     'dob' => $dob,
                     'address' => $address,
                     'category' => $cData['cat'],
+                    'gender' => $isMale ? 'Male' : 'Female',
                     'contact_no' => '09' . rand(100000000, 999999999),
                     'created_at' => $regDate,
                     'updated_at' => $regDate,

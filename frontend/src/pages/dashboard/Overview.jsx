@@ -156,38 +156,11 @@ function ConsultationQueue({ consultations, className = "lg:col-span-2" }) {
     return age;
   };
 
-  const processGroup = (group) => {
-    const priorityGroup = [];
-    const regularGroup = [];
+  const sortByDate = (a, b) => new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
+  todayGroup.sort(sortByDate);
+  otherGroup.sort(sortByDate);
 
-    group.forEach(c => {
-      const isPWD = Boolean(c.patient?.category?.includes('PWD'));
-      const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
-      if (isPWD || isSenior) {
-        priorityGroup.push(c);
-      } else {
-        regularGroup.push(c);
-      }
-    });
-
-    const sortByDate = (a, b) => new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
-    priorityGroup.sort(sortByDate);
-    regularGroup.sort(sortByDate);
-
-    const interleaved = [];
-    let pIdx = 0;
-    let rIdx = 0;
-    while (pIdx < priorityGroup.length || rIdx < regularGroup.length) {
-      if (pIdx < priorityGroup.length) interleaved.push(priorityGroup[pIdx++]);
-      if (rIdx < regularGroup.length) interleaved.push(regularGroup[rIdx++]);
-    }
-    return interleaved;
-  };
-
-  const todayInterleaved = processGroup(todayGroup);
-  const otherInterleaved = processGroup(otherGroup);
-
-  const rows = [...todayInterleaved, ...otherInterleaved].slice(0, 5);
+  const rows = [...todayGroup, ...otherGroup].slice(0, 5);
   return (
     <div data-tour="page-list" className={`${className} bg-surface rounded-2xl shadow-sm border border-border p-6 flex flex-col`}>
       <div className="mb-5 flex items-start gap-3">

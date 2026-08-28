@@ -666,38 +666,11 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
       }
     });
 
-    const processGroup = (group) => {
-      const priorityGroup = [];
-      const regularGroup = [];
+    const sortByDate = (a, b) => new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
+    todayGroup.sort(sortByDate);
+    otherGroup.sort(sortByDate);
 
-      group.forEach(c => {
-        const isPWD = Boolean(c.patient?.category?.includes('PWD'));
-        const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
-        if (isPWD || isSenior) {
-          priorityGroup.push(c);
-        } else {
-          regularGroup.push(c);
-        }
-      });
-
-      const sortByDate = (a, b) => new Date(a.scheduled_at || a.created_at) - new Date(b.scheduled_at || b.created_at);
-      priorityGroup.sort(sortByDate);
-      regularGroup.sort(sortByDate);
-
-      const interleaved = [];
-      let pIdx = 0;
-      let rIdx = 0;
-      while (pIdx < priorityGroup.length || rIdx < regularGroup.length) {
-        if (pIdx < priorityGroup.length) interleaved.push(priorityGroup[pIdx++]);
-        if (rIdx < regularGroup.length) interleaved.push(regularGroup[rIdx++]);
-      }
-      return interleaved;
-    };
-
-    const todayInterleaved = processGroup(todayGroup);
-    const otherInterleaved = processGroup(otherGroup);
-
-    filtered.splice(0, filtered.length, ...todayInterleaved, ...otherInterleaved);
+    filtered.splice(0, filtered.length, ...todayGroup, ...otherGroup);
   } else {
     filtered.sort((a, b) => new Date(b.scheduled_at || b.created_at) - new Date(a.scheduled_at || a.created_at));
   }
@@ -856,7 +829,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
                   <div key={c.id}>
                     {showTodayHeader && (
                       <div className="px-5 py-2.5 bg-sky-50/50 dark:bg-slate-800/40 text-[10px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-400 border-b border-border/50 dark:border-slate-800 flex items-center gap-1.5 shadow-sm">
-                        <span>📅</span> Today's Queue (Priority Lane Active)
+                        <span>📅</span> Today's Queue
                       </div>
                     )}
                     {showUpcomingHeader && (
@@ -1304,7 +1277,7 @@ export default function Consultations() {
       });
     }
   }, [consultations, user, navigate]);
-  const [quickDocType, setQuickDocType] = useState('PWD ID Card');
+  const [quickDocType, setQuickDocType] = useState('Disability Certificate');
 
   const handleMiniUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -1976,8 +1949,6 @@ const fetchConsultations = async () => {
                   onChange={(e) => setQuickDocType(e.target.value)}
                   className="text-[11px] font-bold px-2 py-1 rounded-lg border border-border dark:border-slate-800 bg-surface dark:bg-slate-900 text-text dark:text-slate-200 outline-none"
                 >
-                  <option value="PWD ID Card">🆔 PWD ID Card</option>
-                  <option value="Senior Citizen ID">👴 Senior Citizen ID</option>
                   <option value="Disability Certificate">📄 Disability Certificate</option>
                   <option value="Lab Test Results">🩺 Lab Results</option>
                   <option value="Prescription Photo">💊 Prescription Rx</option>
@@ -1991,15 +1962,7 @@ const fetchConsultations = async () => {
               </div>
             </div>
 
-            {/* In-modal PWD / Senior ID reminder */}
-            {(user?.patient?.category?.includes('PWD') || user?.patient?.category === 'Senior Citizen') && (
-              <div className="p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/40 text-[11px] text-blue-800 dark:text-blue-300 flex items-center gap-2">
-                <span className="text-sm shrink-0">♿</span>
-                <p className="leading-tight">
-                  <b>Priority Verification:</b> Don't forget to attach your <b>PWD or Senior ID</b> so your doctor can verify your priority lane status.
-                </p>
-              </div>
-            )}
+
 
             {medicalImages.length > 0 ? (
               <div className="rounded-xl border border-border dark:border-slate-800 bg-surface dark:bg-slate-900/60 overflow-hidden shadow-sm">

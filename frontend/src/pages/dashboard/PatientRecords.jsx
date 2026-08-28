@@ -201,6 +201,7 @@ export default function PatientRecords() {
   const [editForm, setEditForm] = useState({ name: '', dob: '', contact_no: '', address: '', category: '', medical_history: '' });
   const [archiveReason, setArchiveReason] = useState('');
 
+
   // All hooks must run before any conditional return
   useEffect(() => {
     if (!['Doctor', 'Admin', 'Staff'].includes(user?.role)) {
@@ -311,6 +312,30 @@ export default function PatientRecords() {
       URL.revokeObjectURL(url);
     } catch {
       toast.error('Failed to download file');
+    }
+  };
+
+  const [downloadingRxId, setDownloadingRxId] = useState(null);
+  const handleDownloadPrescription = async (prescriptionId) => {
+    setDownloadingRxId(prescriptionId);
+    try {
+      const response = await api.get(`/prescriptions/${prescriptionId}/download`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `CHO1_Prescription_RX-${String(prescriptionId).padStart(6, '0')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success('Prescription PDF downloaded!');
+    } catch (err) {
+      toast.error('Failed to download prescription PDF');
+    } finally {
+      setDownloadingRxId(null);
     }
   };
 
@@ -534,6 +559,7 @@ export default function PatientRecords() {
                       {[
                         { key: 'overview',      label: 'Overview',         icon: User },
                         { key: 'consultations', label: 'Consultations',    icon: ClipboardList },
+                        { key: 'prescriptions', label: `Prescriptions (${patient.total_prescriptions})`, icon: Pill },
                         { key: 'images',        label: `Images (${patient.images.length})`, icon: ImagePlus },
                       ].map(({ key, label, icon: Icon }) => (
                         <button
@@ -663,12 +689,12 @@ export default function PatientRecords() {
                                 <Video size={15} /> Join Teleconsultation
                               </Link>
                             )}
-                            <Link
-                              to="/prescriptions"
-                              className="flex items-center gap-2 px-4 py-2 bg-success-bg dark:bg-emerald-950/40 text-success-text dark:text-emerald-300 rounded-xl text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-transparent dark:border-emerald-900/30 transition-colors"
+                            <button
+                              onClick={() => setTab(patient.id, 'prescriptions')}
+                              className="flex items-center gap-2 px-4 py-2 bg-success-bg dark:bg-emerald-950/40 text-success-text dark:text-emerald-300 rounded-xl text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-transparent dark:border-emerald-900/30 transition-colors shadow-sm active:scale-95"
                             >
-                              <FileText size={15} /> View E-Prescriptions
-                            </Link>
+                              <FileText size={15} /> View E-Prescriptions ({patient.total_prescriptions})
+                            </button>
                           </div>
                         </div>
                       )}
@@ -902,6 +928,73 @@ export default function PatientRecords() {
                         </div>
                       )}
 
+                      {/* ── Prescriptions tab ────────────────────────────────────── */}
+                      {tab === 'prescriptions' && (
+                        <div className="space-y-4">
+                          {patient.consultations.filter(c => c.prescription_id).length === 0 ? (
+                            <div className="text-center py-10 text-text-light dark:text-slate-500">
+                              <Pill size={28} className="mx-auto mb-2 opacity-30 text-text-light" />
+                              <p className="text-sm font-semibold text-text-muted dark:text-slate-400">No e-prescriptions on file for this patient.</p>
+                            </div>
+                          ) : (
+                            patient.consultations.filter(c => c.prescription_id).map((c) => (
+                              <div key={c.prescription_id} className="rounded-2xl border border-border dark:border-slate-800/90 bg-surface dark:bg-slate-900/60 p-4 space-y-3 shadow-sm hover:border-emerald-300 dark:hover:border-slate-700 transition-all">
+                                <div className="flex items-center justify-between gap-3 flex-wrap border-b border-border/60 dark:border-slate-800 pb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                                      RX-{String(c.prescription_id).padStart(6, '0')}
+                                    </span>
+                                    <span className="text-[10px] text-text-light dark:text-slate-400">
+                                      Issued for Encounter #{c.encounter_number}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full font-mono font-medium">
+                                    {c.date}
+                                  </span>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <p className="text-[11px] font-bold text-text-muted dark:text-slate-400 flex items-center gap-1">
+                                    <Pill size={11} className="text-emerald-500" /> Prescribed Medications:
+                                  </p>
+                                  <div className="divide-y divide-border/40 dark:divide-slate-800">
+                                    {c.prescription_items.map((item, idx) => (
+                                      <div key={idx} className="py-1.5 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1">
+                                        <span className="font-bold text-text dark:text-white">{item.medicine_name}</span>
+                                        <span className="text-text-muted dark:text-slate-400 text-[11px] leading-relaxed">
+                                          {item.dosage} {item.frequency && `· ${item.frequency}`} {item.duration && `(${item.duration})`}
+                                          {item.instructions && <span className="block text-[10px] italic text-text-light mt-0.5">{item.instructions}</span>}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {c.prescription_notes && (
+                                  <div className="text-[11px] bg-surface-hover/30 dark:bg-slate-800/30 p-2.5 rounded-lg border border-border/50 dark:border-slate-800/60 text-text-muted dark:text-slate-400 leading-relaxed">
+                                    <b>Notes:</b> {c.prescription_notes}
+                                  </div>
+                                )}
+
+                                <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/60 dark:border-slate-800 flex-wrap">
+                                  <p className="text-[10px] text-text-light dark:text-slate-500">
+                                    Prescribed by <span className="font-semibold text-indigo-600 dark:text-indigo-400">{c.doctor}</span>
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadPrescription(c.prescription_id)}
+                                    disabled={downloadingRxId === c.prescription_id}
+                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-700/60 text-white rounded-lg text-[11px] font-bold shadow-sm transition-all active:scale-95"
+                                  >
+                                    <Download size={12} /> {downloadingRxId === c.prescription_id ? 'Downloading...' : 'Download RX PDF'}
+                                  </button>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+
                       {/* ── Images tab ────────────────────────────────────── */}
                       {tab === 'images' && (
                         <div className="space-y-3">
@@ -1027,6 +1120,7 @@ export default function PatientRecords() {
           </form>
         )}
       </Modal>
+
     </div>
   );
 }

@@ -410,8 +410,19 @@
         $doctor = $prescription->doctor;
         $doctorUser = optional($doctor)->user;
         $patientAge = optional($patient)->dob ? \Carbon\Carbon::parse($patient->dob)->age : null;
+        
         $choLogoPath = public_path('images/cho1-logo.jpg');
         $municipalLogoPath = public_path('images/municipal-logo.jpg');
+
+        $choLogoBase64 = '';
+        if (file_exists($choLogoPath)) {
+            $choLogoBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($choLogoPath));
+        }
+
+        $municipalLogoBase64 = '';
+        if (file_exists($municipalLogoPath)) {
+            $municipalLogoBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($municipalLogoPath));
+        }
     @endphp
 
     <div class="container">
@@ -419,8 +430,8 @@
             <table class="header-table">
                 <tr>
                     <td class="logo-cell">
-                        @if(file_exists($municipalLogoPath))
-                            <img class="header-logo" src="{{ $municipalLogoPath }}" alt="City Government of Cabuyao Logo">
+                        @if(!empty($municipalLogoBase64))
+                            <img class="header-logo" src="{{ $municipalLogoBase64 }}" alt="City Government of Cabuyao Logo">
                         @else
                             <div class="seal-fallback">City of<br>Cabuyao</div>
                         @endif
@@ -432,8 +443,8 @@
                         <h2>Office of the City Health Officer</h2>
                     </td>
                     <td class="logo-cell">
-                        @if(file_exists($choLogoPath))
-                            <img class="header-logo" src="{{ $choLogoPath }}" alt="CHO-I Logo">
+                        @if(!empty($choLogoBase64))
+                            <img class="header-logo" src="{{ $choLogoBase64 }}" alt="CHO-I Logo">
                         @else
                             <div class="seal-fallback">CHO-I<br>Cabuyao</div>
                         @endif
@@ -466,7 +477,7 @@
                     </td>
                     <td width="14%">
                         <div class="label">Sex</div>
-                        <div class="line-value">N/A</div>
+                        <div class="line-value">{{ optional($patient)->gender ?: 'N/A' }}</div>
                     </td>
                     <td width="16%">
                         <div class="label">Date</div>
@@ -535,7 +546,10 @@
             <tr>
                 <td class="validity">
                     <p><strong>Reminder:</strong> Follow the prescribed dosage and consult your physician or the City Health Office for any adverse reaction.</p>
-                    <p>This electronically generated prescription is officially issued through the Cabuyao CHO-I Telehealth System.</p>
+                    <p style="color: #b91c1c; font-weight: bold; border: 1.5px solid #fee2e2; background-color: #fef2f2; padding: 3px 5px; margin-top: 3px; border-radius: 4px; font-size: 7px; line-height: 1.25;">
+                        WARNING: In accordance with RA 9165 / DDB rules, this electronic prescription is NOT valid for prescribing dangerous or regulated drug substances requiring special DOH yellow prescription forms.
+                    </p>
+                    <p style="margin-top: 4px;">This electronically generated prescription is officially issued through the Cabuyao CHO-I Telehealth System.</p>
                 </td>
                 <td class="signature-col">
                     <table width="140" align="center" style="margin: 0 auto; border-collapse: collapse;">
@@ -549,15 +563,31 @@
                     </table>
                     <p class="doctor-name">Dr. {{ optional($doctorUser)->name ?? 'Attending Physician' }}</p>
                     <p class="doctor-license">PRC Lic. No.: {{ optional($doctor)->license_no ?: 'PRC-' . str_pad($prescription->doctor_id, 6, '0', STR_PAD_LEFT) }}</p>
+                    @if(optional($doctor)->s2_license_no)
+                        <p class="doctor-license">S2 Lic. No.: {{ $doctor->s2_license_no }}</p>
+                    @endif
                     <p class="doctor-license">{{ optional($doctor)->specialization ?? 'General Practice' }}</p>
                     <p class="doctor-license">PTR No.: {{ optional($doctor)->ptr_no ?: 'PTR-' . (8765000 + $prescription->doctor_id) }}</p>
                 </td>
             </tr>
         </table>
 
-        <div class="small-note">
-            This electronically signed document is officially verified by the Cabuyao CHO-I Telehealth System.
-        </div>
+        <table style="width: 100%; margin-top: 6px; border-top: 1.5px solid #0369a1; padding-top: 4px; border-collapse: collapse;">
+            <tr>
+                <td style="width: 50px; text-align: left; vertical-align: middle; padding: 0;">
+                    @php
+                        $verifyUrl = "https://cabuyao-cho1.gov.ph/verify/rx/" . $prescription->id;
+                        $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=50x50&format=svg&data=" . urlencode($verifyUrl);
+                    @endphp
+                    <img src="{{ $qrCodeUrl }}" width="40" height="40" style="display: block; border: 1px solid #94a3b8;" alt="Verification QR">
+                </td>
+                <td style="text-align: left; vertical-align: middle; color: #64748b; font-size: 7.5px; line-height: 1.25; padding-left: 6px;">
+                    <strong>AUTHENTICITY VERIFICATION:</strong><br>
+                    Scan the QR code to verify this e-prescription directly from the official portal.<br>
+                    <strong>Tx Verification Hash:</strong> <span style="font-family: monospace; font-weight: bold; color: #334155;">{{ hash('sha256', $prescription->id . $prescription->created_at) }}</span>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 

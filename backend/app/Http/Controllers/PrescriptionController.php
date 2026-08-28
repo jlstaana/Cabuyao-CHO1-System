@@ -166,7 +166,7 @@ class PrescriptionController extends Controller {
     }
     public function download(Request $request, $id) {
         $user = $request->user();
-        $prescription = Prescription::with(['items.medicine', 'patient.user', 'doctor.user'])->findOrFail($id);
+        $prescription = Prescription::with(['items.medicine', 'patient.user', 'doctor.user', 'consultation.vitalSigns'])->findOrFail($id);
 
         // Permissions: Admin and Staff can download all. Patient can download their own. Doctor can download their own.
         if ($user->role === 'Patient' && $user->patient && (int) $prescription->patient_id !== (int) $user->patient->id) {
@@ -182,13 +182,17 @@ class PrescriptionController extends Controller {
                 $doctorSignatureSrc = '<img src="data:image/svg+xml;base64,' . $base64Svg . '" width="120" height="32" style="display: block; margin: 0 auto; border: none; vertical-align: bottom;"/>';
             }
 
-            $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))->setPaper('a5', 'portrait');
+            $pdf = Pdf::setOptions(['isRemoteEnabled' => true])
+                ->loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))
+                ->setPaper('a5', 'portrait');
             return $pdf->download("prescription_{$id}.pdf");
         } catch (\Throwable $e) {
             // Fallback without signature if SVG parser failed
             try {
                 $doctorSignatureSrc = null;
-                $pdf = Pdf::loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))->setPaper('a5', 'portrait');
+                $pdf = Pdf::setOptions(['isRemoteEnabled' => true])
+                    ->loadView('pdf.prescription', compact('prescription', 'doctorSignatureSrc'))
+                    ->setPaper('a5', 'portrait');
                 return $pdf->download("prescription_{$id}.pdf");
             } catch (\Throwable $fallbackError) {
                 return response()->json(['message' => 'Unable to generate PDF: ' . $fallbackError->getMessage()], 500);
