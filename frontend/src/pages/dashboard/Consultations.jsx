@@ -797,130 +797,88 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
           </div>
         ) : (
           <div className="divide-y divide-border/60 dark:divide-slate-800">
-            {(() => {
-              let todayIndex = 0;
-              let hasShownUpcomingHeader = false;
+            {filtered.map((c, i) => {
+              const isPWD = Boolean(c.patient?.category?.includes('PWD'));
+              const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
+              const isCalledEarly = Boolean(c.notes?.includes('[EARLY_CALL]'));
 
-              return filtered.map((c, i) => {
-                const isPWD = Boolean(c.patient?.category?.includes('PWD'));
-                const isSenior = Boolean(c.patient?.category?.includes('Senior') || (c.patient?.dob && calcAge(c.patient?.dob) >= 60));
-                const isCalledEarly = Boolean(c.notes?.includes('[EARLY_CALL]'));
-
-                const isTodayApp = isScheduledForToday(c.scheduled_at);
-                const showTodayHeader = tab === 'Scheduled' && i === 0 && isTodayApp;
-                const showUpcomingHeader = tab === 'Scheduled' && !isTodayApp && !hasShownUpcomingHeader;
-                if (showUpcomingHeader) {
-                  hasShownUpcomingHeader = true;
-                }
-
-                let queueNumberContent;
-                if (tab === 'Scheduled') {
-                  if (isTodayApp) {
-                    todayIndex++;
-                    queueNumberContent = `#${todayIndex}`;
-                  } else {
-                    queueNumberContent = <CalendarIcon size={14} className="text-text-light" />;
-                  }
-                } else {
-                  queueNumberContent = `#${i + 1}`;
-                }
-
-                return (
-                  <div key={c.id}>
-                    {showTodayHeader && (
-                      <div className="px-5 py-2.5 bg-sky-50/50 dark:bg-slate-800/40 text-[10px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-400 border-b border-border/50 dark:border-slate-800 flex items-center gap-1.5 shadow-sm">
-                        <span>📅</span> Today's Queue
+              return (
+                <div key={c.id}>
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 sm:p-5 hover:bg-background/40 dark:hover:bg-slate-800/30 transition-colors">
+                    <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                      {/* Queue number */}
+                      <div className="w-10 h-10 rounded-2xl bg-surface-hover/60 dark:bg-slate-800 text-text-muted dark:text-slate-300 flex items-center justify-center font-black text-sm shrink-0 border border-border/70 dark:border-slate-700 shadow-sm">
+                        #{i + 1}
                       </div>
-                    )}
-                    {showUpcomingHeader && (
-                      <div className="px-5 py-2.5 bg-slate-100/50 dark:bg-slate-800/40 text-[10px] font-black uppercase tracking-wider text-text-muted dark:text-slate-400 border-b border-border/50 dark:border-slate-800 flex items-center gap-1.5 shadow-sm">
-                        <span>📆</span> Upcoming Schedules (Future Days)
+
+                      {/* Patient Avatar */}
+                      <div className="w-11 h-11 rounded-2xl bg-sky-100 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold text-base shrink-0 border border-sky-200 dark:border-sky-800/50 shadow-sm">
+                        {(c.patient?.user?.name || 'P').charAt(0).toUpperCase()}
                       </div>
-                    )}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 sm:p-5 hover:bg-background/40 dark:hover:bg-slate-800/30 transition-colors">
-                      <div className="flex items-start sm:items-center gap-3.5 min-w-0">
-                        {/* Queue number */}
-                        <div className="w-10 h-10 rounded-2xl bg-surface-hover/60 dark:bg-slate-800 text-text-muted dark:text-slate-300 flex items-center justify-center font-black text-sm shrink-0 border border-border/70 dark:border-slate-700 shadow-sm">
-                          {queueNumberContent}
-                        </div>
 
-                        {/* Patient Avatar */}
-                        <div className="w-11 h-11 rounded-2xl bg-sky-100 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold text-base shrink-0 border border-sky-200 dark:border-sky-800/50 shadow-sm">
-                          {(c.patient?.user?.name || 'P').charAt(0).toUpperCase()}
-                        </div>
-
-                        {/* Info */}
-                        <div className="min-w-0 space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-black text-sm sm:text-base text-text dark:text-white truncate">
-                              {c.patient?.user?.name || 'Unknown Patient'}
-                            </p>
-                            {isPWD && (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
-                                ♿ PWD
-                              </span>
-                            )}
-                            {isSenior && (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                                👴 Senior
-                              </span>
-                            )}
-                            {isCalledEarly && (
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 animate-pulse">
-                                🔔 Called Early
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-text-light dark:text-slate-400">
-                            {c.scheduled_at && (
-                              <span className="flex items-center gap-1 font-semibold text-sky-700 dark:text-sky-400">
-                                <Clock size={13} /> {new Date(c.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            )}
-                            <span className="flex items-center gap-1">
-                              <Stethoscope size={13} /> {c.requested_specialization || 'General Medicine'}
+                      {/* Info */}
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-black text-sm sm:text-base text-text dark:text-white truncate">
+                            {c.patient?.user?.name || 'Unknown Patient'}
+                          </p>
+                          {isPWD && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                              ♿ PWD
                             </span>
-                          </div>
-
-                          {c.form?.symptoms && (
-                            <p className="text-xs text-text-muted dark:text-slate-300 line-clamp-1 italic">
-                              "{c.form.symptoms}"
-                            </p>
+                          )}
+                          {isSenior && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                              👴 Senior
+                            </span>
+                          )}
+                          {isCalledEarly && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 animate-pulse">
+                              🔔 Called Early
+                            </span>
                           )}
                         </div>
-                      </div>
 
-                      {/* Actions */}
-                      <div className="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-center">
-                        {c.status === 'Scheduled' && (
-                          <>
-                            {!isScheduledForToday(c.scheduled_at) ? (
-                              <button
-                                type="button"
-                                disabled
-                                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-text-muted dark:text-slate-500 font-extrabold text-xs flex items-center gap-1.5 cursor-not-allowed opacity-60"
-                                title="This teleconsultation is scheduled for another date."
-                              >
-                                <Video size={15} /> Join on {new Date(c.scheduled_at).toLocaleDateString()}
-                              </button>
-                            ) : activeCallId && String(activeCallId) !== String(c.id) ? (
-                              <button
-                                type="button"
-                                disabled
-                                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-text-muted dark:text-slate-500 font-extrabold text-xs flex items-center gap-1.5 cursor-not-allowed opacity-60"
-                                title="You have an active teleconsultation in progress in another room."
-                              >
-                                <Video size={15} /> In Other Call
-                              </button>
-                            ) : (
-                              <Link
-                                to={`/teleconsultation/${c.id}`}
-                                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm"
-                              >
-                                <Video size={15} /> Enter Room
-                              </Link>
-                            )}
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-text-light dark:text-slate-400">
+                          {c.scheduled_at && (
+                            <span className="flex items-center gap-1 font-semibold text-sky-700 dark:text-sky-400">
+                              <Clock size={13} /> {new Date(c.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Stethoscope size={13} /> {c.requested_specialization || 'General Medicine'}
+                          </span>
+                        </div>
+
+                        {c.form?.symptoms && (
+                          <p className="text-xs text-text-muted dark:text-slate-300 line-clamp-1 italic">
+                            "{c.form.symptoms}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-center">
+                      {c.status === 'Scheduled' && (
+                        <>
+                          {activeCallId && String(activeCallId) !== String(c.id) ? (
+                            <button
+                              type="button"
+                              disabled
+                              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-text-muted dark:text-slate-500 font-extrabold text-xs flex items-center gap-1.5 cursor-not-allowed opacity-60"
+                              title="You have an active teleconsultation in progress in another room."
+                            >
+                              <Video size={15} /> In Other Call
+                            </button>
+                          ) : (
+                            <Link
+                              to={`/teleconsultation/${c.id}`}
+                              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+                            >
+                              <Video size={15} /> Enter Room
+                            </Link>
+                          )}
                             {!isCalledEarly && (
                               <button
                                 type="button"
@@ -968,8 +926,7 @@ function DoctorView({ consultations, loading, onAccept, onReview, onReschedule, 
                     </div>
                   </div>
                 );
-              });
-            })()}
+            })}
           </div>
         )}
       </div>
