@@ -247,6 +247,21 @@ export default function DashboardLayout() {
 
   const navGroups = buildNavGroups(user.role);
 
+  // Extract all paths authorized for this user role
+  const authorizedPaths = new Set([
+    '/dashboard',
+    '/profile',
+    '/notifications'
+  ]);
+  
+  navGroups.forEach(group => {
+    group.links.forEach(link => {
+      authorizedPaths.add(link.path);
+    });
+  });
+
+  const isPathAuthorized = authorizedPaths.has(location.pathname);
+
   // Role badge config
   const roleBadge = {
     Admin:   { label: 'Health Officer / Admin', color: 'bg-primary-bg border-sky-100 text-primary-text', icon: ShieldCheck },
@@ -402,7 +417,50 @@ export default function DashboardLayout() {
 
         {/* Main Content Area */}
         <main data-tour="main-content" className="flex-1 min-w-0 overflow-y-auto bg-background relative p-4 md:p-8">
-          <Outlet />
+          {isPathAuthorized ? (
+            <Outlet />
+          ) : (
+            <div className="flex items-center justify-center p-6 text-text min-h-[70vh]">
+              <div className="w-full max-w-lg bg-surface dark:bg-slate-900 border border-border dark:border-slate-800 rounded-3xl p-8 text-center shadow-xl relative overflow-hidden">
+                <div className="w-20 h-20 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner animate-pulse">
+                  <ShieldCheck size={40} className="text-rose-500" />
+                </div>
+                
+                <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white mb-2 uppercase">
+                  🛡️ Security Warning
+                </h2>
+                <p className="text-text-muted dark:text-slate-400 text-xs font-semibold uppercase tracking-wider mb-6">
+                  Unauthorized Access Attempt Detected
+                </p>
+                
+                <div className="bg-background border border-border dark:border-slate-800 rounded-2xl p-4 text-left space-y-2 mb-8">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-text-muted dark:text-slate-500 font-bold uppercase tracking-wider">Attempted URL:</span>
+                    <span className="text-rose-600 dark:text-rose-400 font-mono font-bold">{location.pathname}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-text-muted dark:text-slate-500 font-bold uppercase tracking-wider">User Identity:</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-bold">{user.name}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-text-muted dark:text-slate-500 font-bold uppercase tracking-wider">Active Role:</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-bold bg-surface border border-border dark:border-slate-800 px-2 py-0.5 rounded-md text-[10px] uppercase font-black tracking-wider text-sky-500">{user.role}</span>
+                  </div>
+                </div>
+                
+                <p className="text-text-muted dark:text-slate-400 text-sm mb-8 leading-relaxed">
+                  Your account does not possess the credentials required to view this administrative module. This unauthorized route bypass attempt has been recorded in the security audit logs.
+                </p>
+                
+                <Link
+                  to="/dashboard"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-sm transition-all shadow-lg hover:shadow-sky-500/20 active:scale-95"
+                >
+                  Return to Dashboard
+                </Link>
+              </div>
+            </div>
+          )}
         </main>
       </div>
 
